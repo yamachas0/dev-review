@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>開発規模の設定 ― フォーマット固定スケルトン</title>
+<style>
+  :root{
+    --ink:#222; --line:#9aa0a6; --line-soft:#c8ccd0;
+    --hdr:#e3e6e8; --hdr2:#eef0f2; --rowlbl:#dfe2e4;
+    --green:#bcdcb4; --green-d:#7fb878;
+    --yellow:#fdf3b0; --yellow-l:#fef8d4;
+    --purple:#cdb3d8; --orange:#f4c79a;
+    --pink:#f1bcc9; --teal:#9fc6bd; --teal-d:#7fb3a8;
+    --blue:#a9c8e0; --grayblk:#d7dadd;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#f3f4f5;color:var(--ink);
+    font-family:"Meiryo","メイリオ","Hiragino Kaku Gothic ProN",sans-serif;
+    font-size:12px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .toolbar{position:sticky;top:0;z-index:10;display:flex;gap:12px;align-items:center;
+    background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;flex-wrap:wrap;}
+  .toolbar label{font-size:12px;color:#555;}
+  .toolbar select{font-size:13px;padding:4px 8px;border:1px solid var(--line);border-radius:4px;}
+  .toolbar .note{margin-left:auto;font-size:11px;color:#888;}
+  .sheet{max-width:1180px;margin:18px auto;background:#fff;border:1px solid var(--line);
+    padding:0 0 18px;}
+  .sheet-title{font-size:15px;font-weight:700;padding:8px 12px 6px;}
+  .sub-meta{font-size:11px;color:#666;padding:0 12px 8px;}
+
+  /* ===== 上半分：評価マトリクス表 ===== */
+  table.matrix{width:100%;border-collapse:collapse;table-layout:fixed;}
+  table.matrix td{border:1px solid var(--line);vertical-align:top;padding:5px 7px;}
+  .rowlbl{background:var(--rowlbl);text-align:center;width:56px;font-weight:600;
+    writing-mode:vertical-rl;text-orientation:upright;letter-spacing:2px;white-space:nowrap;}
+  .rowlbl-h{background:var(--hdr);width:56px;}
+  .colhdr{background:var(--hdr);text-align:center;font-weight:700;font-size:12px;line-height:1.4;}
+  .keikaku-hdr{background:var(--hdr);text-align:center;font-weight:700;width:130px;}
+  .cell-bullets{font-size:11px;line-height:1.55;}
+  .cell-bullets .grp{margin:0 0 8px;}
+  .cell-bullets .grp .gt{font-weight:700;}
+  .cell-bullets .gv{margin:2px 0 2px 2px;}
+  .cell-bullets .gv.big{font-size:13px;font-weight:700;}
+  .cell-bullets ul{margin:2px 0 4px;padding-left:1.1em;}
+  .cell-bullets li{margin:1px 0;}
+  .keikaku-num{font-size:34px;font-weight:800;text-align:center;letter-spacing:1px;
+    display:flex;align-items:center;justify-content:center;height:100%;}
+
+  /* 評価容積率の評価セル内の色ブロック */
+  .maxlimit{font-size:11px;font-weight:700;background:#f5f5f5;border:1px solid var(--line-soft);
+    padding:4px 6px;margin-bottom:6px;}
+  .evblock{display:flex;border:1px solid var(--line-soft);margin-bottom:5px;}
+  .evblock .tab{width:18px;flex:0 0 18px;display:flex;align-items:center;justify-content:center;
+    writing-mode:vertical-rl;font-weight:700;color:#fff;font-size:11px;padding:3px 0;}
+  .evblock .body{flex:1;padding:4px 6px;font-size:11px;line-height:1.5;}
+  .evblock .hyoka{font-weight:700;white-space:nowrap;}
+  .evblock .body .line{display:flex;justify-content:space-between;gap:8px;}
+  .tab.green{background:var(--green-d);} .tab.orange{background:#d98e3f;} .tab.purple{background:#9d6fb0;}
+
+  /* ===== 下半分：容積率バー（上の表と同一グリッドのtd内に描画） ===== */
+  .keikaku-cell{vertical-align:middle;}
+  .bar-cell{vertical-align:bottom;text-align:center;padding:12px 6px 8px;
+    border-top:2px solid var(--line);}
+  .bar-row{display:flex;gap:10px;justify-content:center;align-items:flex-end;}
+  .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;}
+  .bar-cap{font-size:10px;color:#555;margin-bottom:3px;text-align:center;min-height:24px;}
+  .bar{width:64px;height:300px;display:flex;flex-direction:column-reverse;position:relative;
+    border:1px solid var(--line);}
+  .seg{display:flex;align-items:center;justify-content:center;font-size:9.5px;
+    border-top:1px solid rgba(0,0,0,.18);text-align:center;line-height:1.15;overflow:hidden;}
+  .seg:first-child{border-top:none;}
+  .seg.commercial{background:var(--teal);} .seg.minaoshi{background:var(--yellow);}
+  .seg.kuchi{background:var(--green);} .seg.ichiji{background:var(--orange);}
+  .seg.shukuhaku{background:var(--purple);} .seg.ikusei{background:#dbe69a;}
+  .seg.gyomu-gai{background:#cfcfcf;color:#555;}
+  .seg.norestrict{background:#fff;color:#777;}
+  /* 縦割り（横並び2列以上）区間 */
+  .seg.split-region{padding:0;display:flex;flex-direction:row;align-items:stretch;}
+  .split-col{display:flex;align-items:center;justify-content:center;text-align:center;
+    font-size:9px;line-height:1.1;padding:2px;border-left:1px solid rgba(0,0,0,.25);overflow:hidden;}
+  .split-col:first-child{border-left:none;}
+  .split-col.norestrict{background:#fff;color:#777;}
+  .split-col.ikusei{background:#dbe69a;}
+  .split-col.shukuhaku{background:var(--purple);}
+  .split-col.kuchi{background:var(--green);}
+  .seg.gyomu{background:var(--teal);} .seg.gyomu-sup{background:#cfe0d8;}
+  .seg.shogyo{background:var(--pink);}
+  .bar-total{position:absolute;right:-6px;top:-7px;transform:translateX(100%);
+    font-size:12px;font-weight:800;white-space:nowrap;}
+  .dash-line{position:absolute;left:-2px;right:-2px;border-top:1px dashed #555;}
+  .bar-base-lbl{font-size:10px;margin-top:3px;background:#eef0f2;border:1px solid var(--line-soft);
+    padding:1px 8px;}
+  .empty-note{padding:40px;text-align:center;color:#999;font-size:13px;}
+  .seido-tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:3px;margin-left:8px;}
+  .tag-honmei{background:#1f7a3d;color:#fff;} .tag-maru{border:1px solid #2a6fb0;color:#2a6fb0;}
+  .tag-sankaku{background:#e8a33d;color:#fff;} .tag-x{background:#999;color:#fff;}
+
+  /* ===== スマホ最適化（PC不変・max-width:820pxのみ） ===== */
+  @media (max-width:820px){
+    .sheet{margin:10px;}
+    .toolbar .note{display:none;}
+    .toolbar select{flex:1;min-width:0;}
+    .sheet > div[style]{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    table.matrix{min-width:920px;}
+    .sheet-title{font-size:14px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label>制度シート：</label>
+  <select id="sheetSelect" onchange="render(this.value)"></select>
+</div>
+
+<div id="root"></div>
+
+<script>
+/* =====================================================================
+   ▼▼▼ ここだけ編集する。構造（描画関数・CSS）には触らない。 ▼▼▼
+   ・新しい制度のシート = SHEETS に1エントリ追加。
+   ・育成用途グラフ = ikusei.kyoten に拠点の位置づけを入れると
+     表1（運用イメージ）の対応パターンで自動描画される。
+   ※全数値は 仮／要確認。一次資料で照合してから確定値に差し替えること。
+   ===================================================================== */
+const SHEETS = {
+
+  "再開発等促進区（見直しあり案・700%）": {
+    tag:"本命", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"950%",
+    col1:{saisei:"指定なし（域外・確定）",ichizuke:"活力とにぎわいの拠点（活用方針 区域図で要確認）",youto:"商業地域・600%（当エリア上限600%・web都計図で確認）"},
+    col2:{shiteibasis:"相応の主要な公共施設整備（放25の新設・拡幅、区画道路新設、公園新設）と土地利用転換を根拠に、周辺600%に対し1段上の700%まで見直し（＝等高線の最上レイヤー）。800%への2段飛びは不可。100%単位。",kokyo:["放射第25号線（新設・拡幅＝土地利用転換）","区画道路（新設・付替）","公園（新設・拡大）"],minaoshiAfter:"商業地域・700%（公共施設整備＋土地利用転換／+100%・1段）"},
+    col3:{maxlimit:"【評価容積率の最高限度】活力とにぎわいの拠点＝250%（一般型・表13）／0.75V₀(600)=450% → 250%。基本スタンス＝上限まで詰める。",blocks:[{id:"①",cls:"green",name:"有効空地",rows:["純敷地面積（B）：6,720㎡","有効空地率：60%（P）※歩道状空地・広場等の公開空地分","評価算定式：（P-20）×5"],hyoka:"200%"},{id:"②",cls:"orange",name:"一時滞在施設",rows:["待機スペース床/敷地×100%×0.4","防災備蓄等の地区貢献"],hyoka:"50%"}]},
+    scaleMax:1000,
+    waterfall:[
+      {hd:"基準容積率",bars:[{cap:"《現況》",total:"600%",segs:[{cls:"commercial",val:600,t:"商業 600%"}]}]},
+      {hd:"見直し相当容積率",bars:[{cap:"+100%（公共施設整備）",total:"700%",dash:700,segs:[{cls:"commercial",val:600,t:"商業 600%"},{cls:"minaoshi",val:100,t:"《見直し相当》100%"}]}]},
+      {hd:"評価容積率",bars:[
+        {cap:"【評価容積率の内訳】",total:"950%",dash:[700,950],segs:[{cls:"commercial",val:600,t:"商業 600%"},{cls:"minaoshi",val:100,t:"《見直し相当》100%"},{cls:"kuchi",val:200,t:"有効空地 200%"},{cls:"ichiji",val:50,t:"一時滞在 50%"}]},
+        {cap:"【育成用途の設定割合】",total:"950%",dash:[700,950],segs:[{cls:"commercial",val:600,t:"商業 600%"},{cls:"minaoshi",val:100,t:"《見直し相当》100%"},{ikusei:"活力とにぎわいの拠点地区",band:250}]}
+      ]},
+      {hd:"計画容積率",bars:[{cap:"【用途構成】",total:"950%",segs:[{cls:"gyomu",val:689,t:"業務 689%"},{cls:"shogyo",val:135,t:"商業 135%"},{cls:"gyomu-sup",val:69,t:"医療･支援 69%"},{cls:"shukuhaku",val:57,t:"予備 57%"}]}]}
+    ]
+  },
+
+  "再開発等促進区（見直しなし案・600%）": {
+    tag:"○", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"850%",
+    col1:{saisei:"指定なし（域外・確定）",ichizuke:"活力とにぎわいの拠点（活用方針 区域図で要確認）",youto:"商業地域・600%（当エリア上限600%・web都計図で確認）"},
+    col2:{shiteibasis:"主要な公共施設整備・土地利用転換が限定的な場合は、用途地域の見直しによる増は取らず600%据置（周辺整合）。床は評価容積率（公共貢献・有効空地）で積む。",kokyo:["（見直しを取らないため公共施設による見直し評価は計上せず）"],minaoshiAfter:"商業地域・600%（見直しによる増なし）"},
+    col3:{maxlimit:"【評価容積率の最高限度】活力とにぎわいの拠点＝250%（一般型・表13）。基本スタンス＝上限まで詰める。",blocks:[{id:"①",cls:"green",name:"有効空地",rows:["純敷地面積（B）：6,720㎡","有効空地率：60%（P）※歩道状空地・広場等の公開空地分","評価算定式：（P-20）×5"],hyoka:"200%"},{id:"②",cls:"orange",name:"一時滞在施設",rows:["待機スペース床/敷地×100%×0.4","防災備蓄等の地区貢献"],hyoka:"50%"}]},
+    scaleMax:1000,
+    waterfall:[
+      {hd:"基準容積率",bars:[{cap:"《現況》",total:"600%",segs:[{cls:"commercial",val:600,t:"商業 600%"}]}]},
+      {hd:"見直し相当容積率",bars:[{cap:"当エリア600%上限＝増なし",total:"600%",dash:600,segs:[{cls:"commercial",val:600,t:"商業 600%"}]}]},
+      {hd:"評価容積率",bars:[
+        {cap:"【評価容積率の内訳】",total:"850%",dash:[600,850],segs:[{cls:"commercial",val:600,t:"商業 600%"},{cls:"kuchi",val:200,t:"有効空地 200%"},{cls:"ichiji",val:50,t:"一時滞在 50%"}]},
+        {cap:"【育成用途の設定割合】",total:"850%",dash:[600,850],segs:[{cls:"commercial",val:600,t:"商業 600%"},{ikusei:"活力とにぎわいの拠点地区",band:250}]}
+      ]},
+      {hd:"計画容積率",bars:[{cap:"【用途構成】",total:"850%",segs:[{cls:"gyomu",val:616,t:"業務 616%"},{cls:"shogyo",val:120,t:"商業 120%"},{cls:"gyomu-sup",val:62,t:"医療･支援 62%"},{cls:"shukuhaku",val:52,t:"予備 52%"}]}]}
+    ]
+  },
+
+  "高度利用地区": {
+    tag:"○", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"850%",
+    col1:{saisei:"指定なし（域外・確定）",ichizuke:"活力とにぎわいの拠点（活用方針 区域図で要確認）",youto:"商業地域・600%（当エリア上限600%・要確認）"},
+    col2:{shiteibasis:"適用対象外（見直し相当容積率の枠組みは再開発等促進区のもの）。",kokyo:[],minaoshiAfter:"適用対象外"},
+    col3:{maxlimit:"【容積率の最高限度】主要道路 W22m以上→幅員上限なし（第4-1(2)）。複層上限（敷地規模 最大400%／基準×1/2 等）の最小値で頭打ち。要精査。",blocks:[{id:"①",cls:"green",name:"空地・公共的屋内空間等",rows:["純敷地面積（B）：6,720㎡","空地確保＋公共的屋内空間・一時滞在・育成等","上限まで詰める想定・要精査"],hyoka:"250%"}]},
+    scaleMax:1000,
+    waterfall:[
+      {hd:"基準容積率",bars:[{cap:"《現況》",total:"600%",segs:[{cls:"commercial",val:600,t:"基準 600%"}]}]},
+      {hd:"見直し相当容積率",bars:[{cap:"適用対象外",total:"600%",segs:[{cls:"commercial",val:600,t:"基準 600%"}]}]},
+      {hd:"評価容積率",bars:[
+        {cap:"【緩和の内訳】",total:"850%",dash:[600,850],segs:[{cls:"commercial",val:600,t:"基準 600%"},{cls:"kuchi",val:250,t:"空地･屋内空間 250%"}]},
+        {cap:"【育成用途の設定割合】",total:"850%",dash:[600,850],segs:[{cls:"commercial",val:600,t:"基準 600%"},{ikusei:"活力とにぎわいの拠点地区",band:250}]}
+      ]},
+      {hd:"計画容積率",bars:[{cap:"【用途構成】",total:"850%",segs:[{cls:"gyomu",val:616,t:"業務 616%"},{cls:"shogyo",val:120,t:"商業 120%"},{cls:"gyomu-sup",val:62,t:"医療･支援 62%"},{cls:"shukuhaku",val:52,t:"予備 52%"}]}]}
+    ]
+  },
+
+  "特定街区": {
+    tag:"△", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"800%",
+    col1:{saisei:"指定なし（域外・確定）",ichizuke:"活力とにぎわいの拠点（活用方針 区域図で要確認）",youto:"商業地域・600%（当エリア上限600%・要確認）"},
+    col2:{shiteibasis:"適用対象外（見直し相当容積率の枠組みは再開発等促進区のもの）。",kokyo:[],minaoshiAfter:"適用対象外"},
+    col3:{maxlimit:"【割増容積率の限度】別表1：200〜500% かつ 基準×0.5〜1.0倍（=300〜600%）。市街地再開発事業と併用不可。要精査。",blocks:[{id:"①",cls:"green",name:"有効空地",rows:["有効空地率：50%（P）","評価算定式：（P-40）×5"],hyoka:"50%"},{id:"②",cls:"orange",name:"計画的設計・公共貢献",rows:["計画的設計・公共貢献（別表1枠内）"],hyoka:"150%"}]},
+    scaleMax:1000,
+    waterfall:[
+      {hd:"基準容積率",bars:[{cap:"《現況》",total:"600%",segs:[{cls:"commercial",val:600,t:"基準 600%"}]}]},
+      {hd:"見直し相当容積率",bars:[{cap:"適用対象外",total:"600%",segs:[{cls:"commercial",val:600,t:"基準 600%"}]}]},
+      {hd:"評価容積率",bars:[
+        {cap:"【割増の内訳】",total:"800%",dash:[600,800],segs:[{cls:"commercial",val:600,t:"基準 600%"},{cls:"kuchi",val:50,t:"有効空地 50%"},{cls:"ichiji",val:150,t:"計画的設計等 150%"}]},
+        {cap:"【育成用途の設定割合】",total:"800%",dash:[600,800],segs:[{cls:"commercial",val:600,t:"基準 600%"},{ikusei:"活力とにぎわいの拠点地区",band:200}]}
+      ]},
+      {hd:"計画容積率",bars:[{cap:"【用途構成】",total:"800%",segs:[{cls:"gyomu",val:580,t:"業務 580%"},{cls:"shogyo",val:113,t:"商業 113%"},{cls:"gyomu-sup",val:58,t:"医療･支援 58%"},{cls:"shukuhaku",val:49,t:"予備 49%"}]}]}
+    ]
+  },
+
+  "総合設計": {
+    tag:"○", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"690%",
+    col1:{saisei:"指定なし（域外・確定）",ichizuke:"活力とにぎわいの拠点（活用方針 区域図で要確認）",youto:"商業地域・600%（当エリア上限600%・要確認）"},
+    col2:{shiteibasis:"適用対象外（見直し相当容積率の枠組みは再開発等促進区のもの）。",kokyo:[],minaoshiAfter:"適用対象外"},
+    col3:{maxlimit:"【割増容積率の限度】割増(%)=(P-Po)×α×((Vo/400)+Kx×β)×γ×Ky。前面道路 商業8m要件クリア。域外貢献の対象外。Pを上げ上限まで。",blocks:[{id:"①",cls:"green",name:"公開空地",rows:["有効公開空地率：67%（P）／Po=20","質係数α=1.3（評価A）","Vo/400=1.5、Kx×β≒0、γ=1.0、Ky=1.0","算定：(67-20)×1.3×1.5×1.0×1.0 ≒ 90%"],hyoka:"90%"}]},
+    scaleMax:1000,
+    waterfall:[
+      {hd:"基準容積率",bars:[{cap:"《現況》",total:"600%",segs:[{cls:"commercial",val:600,t:"基準 Vo 600%"}]}]},
+      {hd:"見直し相当容積率",bars:[{cap:"適用対象外",total:"600%",segs:[{cls:"commercial",val:600,t:"基準 Vo 600%"}]}]},
+      {hd:"評価容積率",bars:[
+        {cap:"【割増の内訳】",total:"690%",dash:[600,690],segs:[{cls:"commercial",val:600,t:"基準 Vo 600%"},{cls:"kuchi",val:90,t:"公開空地 90%"}]},
+        {cap:"【育成用途の設定割合】",total:"690%",dash:[600,690],segs:[{cls:"commercial",val:600,t:"基準 Vo 600%"},{ikusei:"活力とにぎわいの拠点地区",band:90}]}
+      ]},
+      {hd:"計画容積率",bars:[{cap:"【用途構成】",total:"690%",segs:[{cls:"gyomu",val:500,t:"業務 500%"},{cls:"shogyo",val:98,t:"商業 98%"},{cls:"gyomu-sup",val:50,t:"医療･支援 50%"},{cls:"shukuhaku",val:42,t:"予備 42%"}]}]}
+    ]
+  },
+
+  "都市再生特別地区（適用不可）": {
+    tag:"×", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）／適用不可", keikakuYoseki:"―",
+    col1:{saisei:"指定なし（域外・確定）→適用不可",ichizuke:"活力とにぎわいの拠点（活用方針 区域図で要確認）",youto:"商業地域・600%（当エリア上限600%・要確認）"},
+    col2:{shiteibasis:"都市再生緊急整備地域内が前提。内閣府一覧で飯田橋・神楽坂は域外＝適用不可（確定）。",kokyo:[],minaoshiAfter:"適用対象外"},
+    col3:{maxlimit:"適用不可のため評価対象外。",blocks:[]},
+    scaleMax:1000,
+    waterfall:[
+      {hd:"基準容積率",bars:[{cap:"《現況》",total:"600%",segs:[{cls:"commercial",val:600,t:"商業 600%"}]}]},
+      {hd:"見直し相当容積率",bars:[{cap:"適用対象外",total:"600%",segs:[{cls:"commercial",val:600,t:"商業 600%"}]}]},
+      {hd:"評価容積率",bars:[{cap:"適用不可（域外）",total:"600%",segs:[{cls:"commercial",val:600,t:"緩和適用なし"}]}]},
+      {hd:"計画容積率",bars:[{cap:"―",total:"600%",segs:[{cls:"commercial",val:600,t:"商業 600%"}]}]}
+    ]
+  }
+};
+
+/* 育成用途パターン辞書（表1 運用イメージ＝image1 より。すべて 仮／要確認） */
+const IKUSEI_PATTERNS = {
+  // 1/2 型：割増の1/2以上を育成用途。残りは用途制限なし
+  "中核的な拠点地区":           {mode:"ratio", r:0.5, rlabel:"1/2"},
+  "中核的な拠点周辺地区":       {mode:"ratio", r:0.5, rlabel:"1/2"},
+  "活力とにぎわいの拠点地区群": {mode:"ratio", r:0.5, rlabel:"1/2"},
+  // ステップ型：1/5、ただし200%超部分は2/5
+  "活力とにぎわいの拠点地区":   {mode:"stepped", r1:0.2, r2:0.4, thr:200, rlabel:"1/5（200%超は2/5）"},
+  // スタック型：育成用途＋業務以外（用途制限なしの帯がない）
+  "左記以外":                  {mode:"stack", split:0.5, rlabel:"育成用途＋業務以外"}
+};
+
+/* 上表の列見出し＝下ウォーターフォールの段見出し。共通定数で永久に一致させる */
+const COL_HEADERS = ["基準容積率","見直し相当容積率","評価容積率","計画容積率"];
+
+const SEIDO_TAG = {
+  "本命":{cls:"tag-honmei",t:"◎ 本命"},
+  "○":{cls:"tag-maru",t:"○"},
+  "△":{cls:"tag-sankaku",t:"△"},
+  "×":{cls:"tag-x",t:"× 適用不可"}
+};
+
+/* =====================================================================
+   ▲▲▲ 編集はここまで。以下は描画ロジック＝構造。触らない。 ▲▲▲
+   ===================================================================== */
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+// col1：上位計画の位置づけ（固定3項目）
+function col1Cell(c){
+  if(!c) return "";
+  const g=(label,val)=>`<div class="grp"><div class="gt">【${esc(label)}】</div><div class="gv">${val}</div></div>`;
+  return g("都市再生緊急整備地域", esc(c.saisei||"－"))
+       + g("諸制度活用方針上の位置づけ", esc(c.ichizuke||"－"))
+       + g("用途地域", esc(c.youto||"－"));
+}
+
+// col2：見直し相当容積率の評価（固定3項目）
+function col2Cell(c){
+  if(!c) return "";
+  const grp=(label,inner)=>`<div class="grp"><div class="gt">【${esc(label)}】</div>${inner}</div>`;
+  const kokyo = Array.isArray(c.kokyo)
+    ? `<ul>${c.kokyo.map(k=>`<li>${esc(k)}</li>`).join("")}</ul>`
+    : `<div class="gv">${esc(c.kokyo||"－")}</div>`;
+  return grp("用途地域等に関する指定方針及び指定基準", `<div class="gv">${esc(c.shiteibasis||"－")}</div>`)
+       + grp("主要な公共施設（想定）", kokyo)
+       + grp("見直し後の用途地域及び容積率", `<div class="gv big">${esc(c.minaoshiAfter||"－")}</div>`);
+}
+
+// col3：評価容積率の評価（対象施設は出さない）
+function col3Cell(col3){
+  if(!col3) return "";
+  const max = col3.maxlimit ? `<div class="maxlimit">${esc(col3.maxlimit)}</div>` : "";
+  const blocks = (col3.blocks||[]).map(b=>{
+    const rows = b.rows.map((r,i)=>{
+      if(i===b.rows.length-1){
+        return `<div class="line"><span>${esc(r)}</span><span class="hyoka">●評価容積率：${esc(b.hyoka)}</span></div>`;
+      }
+      return `<div>${esc(r)}</div>`;
+    }).join("");
+    return `<div class="evblock">
+        <div class="tab ${b.cls}">${esc(b.id)}${esc(b.name)}</div>
+        <div class="body">${rows}</div>
+      </div>`;
+  }).join("");
+  return max + blocks;
+}
+
+// 育成用途グラフ：拠点パターンから区間HTMLを生成
+function ikuseiRegion(kyoten, band, scaleMax, H){
+  const p = IKUSEI_PATTERNS[kyoten];
+  if(!p){
+    const h=band/scaleMax*H;
+    return `<div class="seg ikusei" style="height:${h}px">育成用途<br>（拠点未定義・要確認）</div>`;
+  }
+  if(p.mode==="ratio"){
+    const h=band/scaleMax*H;
+    return `<div class="seg split-region" style="height:${h}px">
+       <div class="split-col norestrict" style="flex:${1-p.r}">用途制限なし</div>
+       <div class="split-col ikusei" style="flex:${p.r}">育成用途<br>（${esc(p.rlabel)}）</div>
+     </div>`;
+  }
+  if(p.mode==="stepped"){
+    const low=Math.min(band,p.thr), high=Math.max(0,band-p.thr);
+    const lowH=low/scaleMax*H, highH=high/scaleMax*H;
+    // column-reverse：DOM先頭＝下段。下＝1/5、上＝2/5
+    let html = `<div class="seg split-region" style="height:${lowH}px">
+       <div class="split-col norestrict" style="flex:${1-p.r1}">用途制限なし</div>
+       <div class="split-col ikusei" style="flex:${p.r1}">育成 1/5</div></div>`;
+    if(highH>0){
+      html += `<div class="seg split-region" style="height:${highH}px">
+        <div class="split-col norestrict" style="flex:${1-p.r2}">用途制限なし</div>
+        <div class="split-col ikusei" style="flex:${p.r2}">育成 2/5</div></div>`;
+    }
+    return html;
+  }
+  if(p.mode==="stack"){
+    const h=band/scaleMax*H;
+    const botH=h*(1-p.split), topH=h*p.split;
+    // 下＝業務以外、上＝育成用途
+    return `<div class="seg gyomu-gai" style="height:${botH}px">業務以外</div>
+            <div class="seg ikusei" style="height:${topH}px">育成用途</div>`;
+  }
+  return "";
+}
+
+function barHTML(bar, scaleMax){
+  const H = 300;
+  const segs = bar.segs.map(s=>{
+    if(s.ikusei){
+      return ikuseiRegion(s.ikusei, s.band, scaleMax, H);
+    }
+    const h = (s.val/scaleMax)*H;
+    if(s.split){
+      const cols = s.columns.map(c=>
+        `<div class="split-col ${c.cls}" style="${c.flex?('flex:'+c.flex):''}">${esc(c.t||"")}</div>`).join("");
+      return `<div class="seg split-region" style="height:${h}px">${cols}</div>`;
+    }
+    return `<div class="seg ${s.cls}" style="height:${h}px">${esc(s.t||"")}</div>`;
+  }).join("");
+  let dashes = "";
+  if(bar.dash){
+    const arr = Array.isArray(bar.dash)?bar.dash:[bar.dash];
+    dashes = arr.map(d=>`<div class="dash-line" style="bottom:${(d/scaleMax)*H}px"></div>`).join("");
+  }
+  const total = bar.total ? `<div class="bar-total" style="bottom:${(parseFloat(bar.total)/scaleMax)*H}px">${esc(bar.total)}</div>` : "";
+  const cap = `<div class="bar-cap">${esc(bar.cap||"")}</div>`;
+  return `<div class="bar-wrap">${cap}<div class="bar">${segs}${dashes}${total}</div></div>`;
+}
+
+function barsCell(stage, scaleMax){
+  return `<div class="bar-row">${stage.bars.map(b=>barHTML(b,scaleMax)).join("")}</div>`;
+}
+
+function render(key){
+  const d = SHEETS[key];
+  const root = document.getElementById("root");
+  if(!d){
+    root.innerHTML = `<div class="sheet"><div class="empty-note">
+      このシートはデータ未入力。<br>
+      下部 <code>SHEETS["${esc(key)}"]</code> に「サンプル」と同じ形でデータを記入しろ。<br>
+      構造（描画関数・CSS）は触るな。数値だけ入れれば1枚目フォーマットで描画される。
+    </div></div>`;
+    return;
+  }
+  const tag = d.tag && SEIDO_TAG[d.tag]
+    ? `<span class="seido-tag ${SEIDO_TAG[d.tag].cls}">${esc(SEIDO_TAG[d.tag].t)}</span>` : "";
+
+  const sm = d.scaleMax||1000;
+  const wf = d.waterfall||[];
+  const barCell  = i => `<td class="bar-cell">${wf[i]?barsCell(wf[i],sm):""}</td>`;
+
+  // 上の表と下のバーを単一テーブルの同一5列グリッドに統合（罫線が必ず揃う）
+  const tbl = `
+  <table class="matrix">
+    <colgroup>
+      <col style="width:52px">
+      <col style="width:23%"><col style="width:27%"><col style="width:27%">
+      <col style="width:128px">
+    </colgroup>
+    <tr>
+      <td class="rowlbl-h"></td>
+      <td class="colhdr">${esc(COL_HEADERS[0])}</td>
+      <td class="colhdr">${esc(COL_HEADERS[1])}</td>
+      <td class="colhdr">${esc(COL_HEADERS[2])}</td>
+      <td class="keikaku-hdr">${esc(COL_HEADERS[3])}</td>
+    </tr>
+    <tr>
+      <td class="rowlbl">算定根拠</td>
+      <td class="cell-bullets">${col1Cell(d.col1)}</td>
+      <td class="cell-bullets">${col2Cell(d.col2)}</td>
+      <td class="cell-bullets">${col3Cell(d.col3)}</td>
+      <td class="keikaku-cell"><div class="keikaku-num">${esc(d.keikakuYoseki||"")}</div></td>
+    </tr>
+    <tr>
+      <td class="rowlbl">容積率</td>
+      ${barCell(0)}${barCell(1)}${barCell(2)}${barCell(3)}
+    </tr>
+  </table>`;
+
+  root.innerHTML = `<div class="sheet">
+    <div class="sheet-title">${esc(d.title||"●開発規模の設定")}${tag}</div>
+    <div class="sub-meta">対象：${esc(d.site||"")} ／ ※全数値は 仮・要確認</div>
+    <div style="padding:0 8px;">${tbl}</div>
+  </div>`;
+}
+
+(function init(){
+  const sel = document.getElementById("sheetSelect");
+  Object.keys(SHEETS).forEach(k=>{
+    const o = document.createElement("option");
+    o.value = k; o.textContent = k;
+    sel.appendChild(o);
+  });
+  render(sel.value);
+})();
+</script>
+</body>
+</html>
