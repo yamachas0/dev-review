@@ -126,36 +126,36 @@
 const SHEETS = {
 
   "再開発等促進区（見直しあり案・700%）": {
-    tag:"本命", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"931%",
+    tag:"本命", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"946%",
     col1:{saisei:"指定なし（域外・確定）",ichizuke:"活力とにぎわいの拠点（活用方針 区域図で要確認）",youto:"商業地域・600%（当エリア上限600%・web都計図で確認）"},
     col2:{shiteibasis:"相応の主要な公共施設整備（放25の新設・拡幅、区画道路新設、公園新設）と土地利用転換を根拠に、周辺600%と整合する範囲で700%まで見直し。800%への飛躍は不可。100%単位。",kokyo:["放射第25号線（新設・拡幅＝土地利用転換）","区画道路（新設・付替）","公園（新設・拡大）"],minaoshiAfter:"商業地域・700%（公共施設整備＋土地利用転換）"},
-    col3:{maxlimit:"【評価容積率の最高限度】活力とにぎわいの拠点＝250%（一般型・表13）。基本スタンス＝上限を超えない範囲でゴールシークし最大限積む。",blocks:[{id:"①",cls:"green",name:"有効空地",rows:["純敷地面積（B）：6,720㎡","有効空地面積：約4,450㎡（歩道状空地・広場等の公開空地）","有効空地率：66.2%（P）","評価算定式：（P-20）×5"],hyoka:"231%"}]},
-    scaleMax:931,
+    col3:{maxlimit:"【評価容積率の最高限度】活力とにぎわいの拠点＝250%（一般型・表13）。上限を超えない範囲でゴールシーク（246%）。",blocks:[{id:"①",cls:"green",name:"有効空地",rows:["純敷地面積（B）：6,720㎡","有効空地面積：約4,610㎡（歩道状空地・広場等の公開空地）","有効空地率：68.6%（P）","評価算定式：（P-20）×5"],hyoka:"243%"},{id:"②",cls:"orange",name:"一時滞在施設",rows:["待機スペース床：約500㎡","評価算定式：（A/B）×100%×0.4"],hyoka:"3%"}]},
+    scaleMax:946,
     waterfall:[
       {hd:"基準容積率",bars:[{cap:"《現況》",total:"600%",segs:[{cls:"commercial",val:600,t:"商業 600%"}]}]},
       {hd:"見直し相当容積率",bars:[{cap:"公共施設整備で+100%",total:"700%",dash:700,segs:[{cls:"commercial",val:600,t:"商業 600%"},{cls:"minaoshi",val:100,t:"《見直し相当》100%"}]}]},
       {hd:"評価容積率",bars:[
-        {cap:"【評価容積率の内訳】",total:"931%",dash:[700,931],segs:[{cls:"commercial",val:600,t:"商業 600%"},{cls:"minaoshi",val:100,t:"《見直し相当》100%"},{cls:"kuchi",val:231,t:"有効空地 231%"}]},
-        {cap:"【育成用途の設定割合】",total:"931%",dash:[700,931],segs:[{cls:"commercial",val:600,t:"商業 600%"},{cls:"minaoshi",val:100,t:"《見直し相当》100%"},{ikusei:"活力とにぎわいの拠点地区",band:231}]}
+        {cap:"【評価容積率の内訳】",total:"946%",dash:[700,946],segs:[{cls:"commercial",val:600,t:"商業 600%"},{cls:"minaoshi",val:100,t:"《見直し相当》100%"},{cls:"kuchi",val:243,t:"有効空地 243%"},{cls:"ichiji",val:3,t:""}]},
+        {cap:"【育成用途の設定割合】",total:"946%",dash:[700,946],segs:[{cls:"commercial",val:600,t:"商業 600%"},{cls:"minaoshi",val:100,t:"《見直し相当》100%"},{ikusei:"活力とにぎわいの拠点地区",band:246}]}
       ]},
-      {hd:"計画容積率",bars:[{cap:"【用途構成】",total:"931%",segs:[{cls:"gyomu",val:675,t:"業務 675%"},{cls:"shogyo",val:132,t:"商業 132%"},{cls:"gyomu-sup",val:68,t:"医療･支援 68%"},{cls:"shukuhaku",val:56,t:"予備 56%"}]}]}
+      {hd:"計画容積率",bars:[{cap:"【用途構成】",total:"946%",segs:[{cls:"gyomu",val:686,t:"業務 686%"},{cls:"shogyo",val:134,t:"商業 134%"},{cls:"gyomu-sup",val:69,t:"医療･支援 69%"},{cls:"shukuhaku",val:57,t:"予備 57%"}]}]}
     ]
   },
 
   "再開発等促進区（見直しなし案・600%）": {
-    tag:"○", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"831%",
+    tag:"○", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"846%",
     col1:{saisei:"指定なし（域外・確定）",ichizuke:"活力とにぎわいの拠点（活用方針 区域図で要確認）",youto:"商業地域・600%（当エリア上限600%・web都計図で確認）"},
     col2:{shiteibasis:"主要な公共施設整備・土地利用転換が限定的な場合は、用途地域の見直しによる増は取らず600%据置（周辺整合）。床は評価容積率（公共貢献・有効空地）で積む。",kokyo:["（見直しを取らないため公共施設による見直し評価は計上せず）"],minaoshiAfter:"商業地域・600%（見直しによる増なし）"},
-    col3:{maxlimit:"【評価容積率の最高限度】活力とにぎわいの拠点＝250%（一般型・表13）。上限を超えない範囲でゴールシーク。",blocks:[{id:"①",cls:"green",name:"有効空地",rows:["純敷地面積（B）：6,720㎡","有効空地面積：約4,450㎡（歩道状空地・広場等の公開空地）","有効空地率：66.2%（P）","評価算定式：（P-20）×5"],hyoka:"231%"}]},
-    scaleMax:831,
+    col3:{maxlimit:"【評価容積率の最高限度】活力とにぎわいの拠点＝250%（一般型・表13）。上限を超えない範囲でゴールシーク（246%）。",blocks:[{id:"①",cls:"green",name:"有効空地",rows:["純敷地面積（B）：6,720㎡","有効空地面積：約4,610㎡（歩道状空地・広場等の公開空地）","有効空地率：68.6%（P）","評価算定式：（P-20）×5"],hyoka:"243%"},{id:"②",cls:"orange",name:"一時滞在施設",rows:["待機スペース床：約500㎡","評価算定式：（A/B）×100%×0.4"],hyoka:"3%"}]},
+    scaleMax:846,
     waterfall:[
       {hd:"基準容積率",bars:[{cap:"《現況》",total:"600%",segs:[{cls:"commercial",val:600,t:"商業 600%"}]}]},
       {hd:"見直し相当容積率",bars:[{cap:"当エリア600%上限＝増なし",total:"600%",dash:600,segs:[{cls:"commercial",val:600,t:"商業 600%"}]}]},
       {hd:"評価容積率",bars:[
-        {cap:"【評価容積率の内訳】",total:"831%",dash:[600,831],segs:[{cls:"commercial",val:600,t:"商業 600%"},{cls:"kuchi",val:231,t:"有効空地 231%"}]},
-        {cap:"【育成用途の設定割合】",total:"831%",dash:[600,831],segs:[{cls:"commercial",val:600,t:"商業 600%"},{ikusei:"活力とにぎわいの拠点地区",band:231}]}
+        {cap:"【評価容積率の内訳】",total:"846%",dash:[600,846],segs:[{cls:"commercial",val:600,t:"商業 600%"},{cls:"kuchi",val:243,t:"有効空地 243%"},{cls:"ichiji",val:3,t:""}]},
+        {cap:"【育成用途の設定割合】",total:"846%",dash:[600,846],segs:[{cls:"commercial",val:600,t:"商業 600%"},{ikusei:"活力とにぎわいの拠点地区",band:246}]}
       ]},
-      {hd:"計画容積率",bars:[{cap:"【用途構成】",total:"831%",segs:[{cls:"gyomu",val:602,t:"業務 602%"},{cls:"shogyo",val:118,t:"商業 118%"},{cls:"gyomu-sup",val:60,t:"医療･支援 60%"},{cls:"shukuhaku",val:51,t:"予備 51%"}]}]}
+      {hd:"計画容積率",bars:[{cap:"【用途構成】",total:"846%",segs:[{cls:"gyomu",val:613,t:"業務 613%"},{cls:"shogyo",val:120,t:"商業 120%"},{cls:"gyomu-sup",val:61,t:"医療･支援 61%"},{cls:"shukuhaku",val:52,t:"予備 52%"}]}]}
     ]
   },
 
