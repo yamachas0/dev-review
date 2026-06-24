@@ -104,6 +104,13 @@
     table.matrix{min-width:920px;}
     .sheet-title{font-size:14px;}
   }
+  /* 制度適用可否 枠 */
+  .tekiyo{margin:6px 8px 10px;border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+  .tekiyo .th{background:var(--hdr);font-weight:700;font-size:12px;padding:5px 10px;border-bottom:1px solid var(--line-soft);}
+  .tekiyo .cond{font-size:11.5px;padding:7px 10px;line-height:1.8;color:#333;}
+  .tekiyo .kahi{padding:5px 10px;font-weight:800;font-size:13px;border-top:1px solid var(--line-soft);}
+  .tekiyo .kahi.ok{background:#e3f0e8;color:#1f7a3d;}
+  .tekiyo .kahi.ng{background:#f1e3e3;color:#a4313c;}
 </style>
 </head>
 <body>
@@ -127,6 +134,7 @@ const SHEETS = {
 
   "再開発等促進区（見直しあり案・700%）": {
     tag:"本命", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"946%",
+    tekiyo:{cond:"【区域面積】約0.85ha（0.5ha以上を満たす）　【活用方針の位置付け】活力とにぎわいの拠点　【接道】放射第25号線 W30m＋外堀通り",kahi:"適用可"},
     col1:{saisei:"指定なし（域外）",ichizuke:"活力とにぎわいの拠点",youto:"商業地域・600%"},
     col2:{shiteibasis:"相応の主要な公共施設整備（放25の新設・拡幅、区画道路新設、公園新設）により、周辺（概ね600%）と整合する範囲で700%に見直し。",kokyo:["放射第25号線（新設・拡幅）","区画道路（新設・付替）","公園（新設・拡大）"],minaoshiAfter:"商業地域・700%"},
     col3:{maxlimit:"【評価容積率の最高限度】一般型（表13）：活力とにぎわいの拠点＝250%／0.75V₀(600)=450% → 250%。",blocks:[{id:"①",cls:"green",name:"有効空地",rows:["純敷地面積（B）：6,720㎡","有効空地面積：約4,610㎡（歩道状空地・広場等の公開空地）","有効空地率：68.6%（P）","評価算定式：（P-20）×5"],hyoka:"243%"},{id:"②",cls:"orange",name:"一時滞在施設",rows:["待機スペース床：約500㎡","評価算定式：（A/B）×100%×0.4"],hyoka:"3%"}]},
@@ -144,6 +152,7 @@ const SHEETS = {
 
   "再開発等促進区（見直しなし案・600%）": {
     tag:"○", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"846%",
+    tekiyo:{cond:"【区域面積】約0.85ha（0.5ha以上を満たす）　【活用方針の位置付け】活力とにぎわいの拠点　【接道】放射第25号線 W30m＋外堀通り",kahi:"適用可"},
     col1:{saisei:"指定なし（域外）",ichizuke:"活力とにぎわいの拠点",youto:"商業地域・600%"},
     col2:{shiteibasis:"主要な公共施設整備が限定的な場合は見直しによる増は取らず600%据置（周辺と同水準）。床は評価容積率で積む。",kokyo:["（見直しを取らないため計上せず）"],minaoshiAfter:"商業地域・600%"},
     col3:{maxlimit:"【評価容積率の最高限度】一般型（表13）：活力とにぎわいの拠点＝250%／0.75V₀(600)=450% → 250%。",blocks:[{id:"①",cls:"green",name:"有効空地",rows:["純敷地面積（B）：6,720㎡","有効空地面積：約4,610㎡（歩道状空地・広場等の公開空地）","有効空地率：68.6%（P）","評価算定式：（P-20）×5"],hyoka:"243%"},{id:"②",cls:"orange",name:"一時滞在施設",rows:["待機スペース床：約500㎡","評価算定式：（A/B）×100%×0.4"],hyoka:"3%"}]},
@@ -161,15 +170,16 @@ const SHEETS = {
 
   "高度利用地区": {
     tag:"○", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"900%",
+    tekiyo:{cond:"【地区規模】おおむね0.5ha以上を満たす　【主要道路】放射第25号線 W30m（幅員12m以上）　【建築面積】最低200㎡以上",kahi:"適用可"},
     col1:{saisei:"指定なし（域外）",ichizuke:"活力とにぎわいの拠点",youto:"商業地域・600%"},
     col2:{shiteibasis:"適用対象外（見直し相当容積率の枠組みは再開発等促進区のもの）。",kokyo:[],minaoshiAfter:"適用対象外"},
-    col3:{maxlimit:"【容積率緩和の最高限度】一般型（第4-1(1)ア）：基準容積率×1/2＝300% ∧ 300 → 300%。※幅員（W22m以上＝上限なし・第4-1(2)）／敷地規模（5,000㎡以上＝400%・第4-1(3)）より小さい300%が頭打ち。",blocks:[{id:"①",cls:"green",name:"空地確保の緩和（第5-1）",rows:["建蔽率低減・壁面後退・広場等の組合せ","50%単位で 50〜300%（上限まで）"],hyoka:"300%"}]},
+    col3:{maxlimit:"【容積率緩和の最高限度】一般型（第4-1(1)ア）：基準容積率×1/2＝300% ∧ 300 → 300%。※幅員（W22m以上＝上限なし）／敷地規模（5,000㎡以上＝400%）より小さい300%が頭打ち。",blocks:[{id:"①",cls:"green",name:"空地確保の緩和（第5-1(6)ア）",rows:["300%緩和のメニュー＝第5-1(6)ア","建蔽率：指定建蔽率−30","壁面後退5m以上 ＋ 広場等25%以上（(4)アに各+1m/+5%）"],hyoka:"300%"}]},
     scaleMax:900,
     waterfall:[
       {hd:"基準容積率",bars:[{cap:"《現況》",total:"600%",segs:[{cls:"commercial",val:600,t:"基準 600%"}]}]},
       {hd:"見直し相当容積率",bars:[{cap:"適用対象外",total:"600%",segs:[{cls:"commercial",val:600,t:"基準 600%"}]}]},
       {hd:"評価容積率",bars:[
-        {cap:"【緩和の内訳】",total:"900%",dash:[600,900],segs:[{cls:"commercial",val:600,t:"基準 600%"},{cls:"kuchi",val:300,t:"空地確保 300%"}]},
+        {cap:"【緩和の内訳】",total:"900%",dash:[600,900],segs:[{cls:"commercial",val:600,t:"基準 600%"},{cls:"kuchi",val:300,t:"空地確保(6)ア 300%"}]},
         {cap:"【育成用途の設定割合】",total:"900%",dash:[600,900],segs:[{cls:"commercial",val:600,t:"基準 600%"},{ikusei:"活力とにぎわいの拠点地区",band:300}]}
       ]},
       {hd:"計画容積率",bars:[{cap:"【用途構成】",total:"900%",segs:[{cls:"gyomu",val:820,t:"業務 820%"},{cls:"ikusei",val:80,t:"育成用途 80%"}]}]}
@@ -177,24 +187,26 @@ const SHEETS = {
   },
 
   "特定街区": {
-    tag:"△", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"820%",
+    tag:"△", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"850%",
+    tekiyo:{cond:"【街区面積】約0.85ha（0.5ha以上・最小0.2ha）　【有効空地率】最低限度を満たす計画　【整形街区】に好適",kahi:"適用可"},
     col1:{saisei:"指定なし（域外）",ichizuke:"活力とにぎわいの拠点",youto:"商業地域・600%"},
     col2:{shiteibasis:"適用対象外（見直し相当容積率の枠組みは再開発等促進区のもの）。",kokyo:[],minaoshiAfter:"適用対象外"},
-    col3:{maxlimit:"【割増容積率の限度】一般型・別表1：200〜500% かつ 基準×0.5〜1.0倍（=300〜600%）。市街地再開発事業と併用不可。",blocks:[{id:"①",cls:"green",name:"有効空地による割増ΔV0（第3-1）",rows:["有効空地率：64%（P）","算定式（商業 400<V0≤700）：（P-20)×5"],hyoka:"220%"}]},
-    scaleMax:820,
+    col3:{maxlimit:"【割増容積率の上限】一般型・別表1：活力とにぎわいの拠点＝250% かつ 基準容積率×0.5倍(=300%) → 250%。",blocks:[{id:"①",cls:"green",name:"有効空地による割増ΔV0（第3-1）",rows:["有効空地率：70%（P）","算定式（商業 400<V0≤700）：（P-20)×5","上限250%（別表1）まで詰める"],hyoka:"250%"}]},
+    scaleMax:850,
     waterfall:[
       {hd:"基準容積率",bars:[{cap:"《現況》",total:"600%",segs:[{cls:"commercial",val:600,t:"基準 600%"}]}]},
       {hd:"見直し相当容積率",bars:[{cap:"適用対象外",total:"600%",segs:[{cls:"commercial",val:600,t:"基準 600%"}]}]},
       {hd:"評価容積率",bars:[
-        {cap:"【割増の内訳】",total:"820%",dash:[600,820],segs:[{cls:"commercial",val:600,t:"基準 600%"},{cls:"kuchi",val:220,t:"有効空地ΔV0 220%"}]},
-        {cap:"【育成用途の設定割合】",total:"820%",dash:[600,820],segs:[{cls:"commercial",val:600,t:"基準 600%"},{ikusei:"活力とにぎわいの拠点地区",band:220}]}
+        {cap:"【割増の内訳】",total:"850%",dash:[600,850],segs:[{cls:"commercial",val:600,t:"基準 600%"},{cls:"kuchi",val:250,t:"有効空地ΔV0 250%"}]},
+        {cap:"【育成用途の設定割合】",total:"850%",dash:[600,850],segs:[{cls:"commercial",val:600,t:"基準 600%"},{ikusei:"活力とにぎわいの拠点地区",band:250}]}
       ]},
-      {hd:"計画容積率",bars:[{cap:"【用途構成】",total:"820%",segs:[{cls:"gyomu",val:772,t:"業務 772%"},{cls:"ikusei",val:48,t:"育成用途 48%"}]}]}
+      {hd:"計画容積率",bars:[{cap:"【用途構成】",total:"850%",segs:[{cls:"gyomu",val:790,t:"業務 790%"},{cls:"ikusei",val:60,t:"育成用途 60%"}]}]}
     ]
   },
 
   "総合設計": {
     tag:"○", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）代表商業街区（仮）", keikakuYoseki:"688%",
+    tekiyo:{cond:"【敷地規模】一定規模以上　【前面道路】商業8m以上（放25/外堀通り）　【公開空地】一定割合以上を設置",kahi:"適用可"},
     col1:{saisei:"指定なし（域外）",ichizuke:"活力とにぎわいの拠点",youto:"商業地域・600%"},
     col2:{shiteibasis:"適用対象外（見直し相当容積率の枠組みは再開発等促進区のもの）。",kokyo:[],minaoshiAfter:"適用対象外"},
     col3:{maxlimit:"【割増容積率の限度】一般型：割増(%)=(P-Po)×α×((Vo/400)+Kx×β)×γ×Ky。前面道路 商業8m要件クリア。域外貢献の対象外。",blocks:[{id:"①",cls:"green",name:"公開空地",rows:["有効公開空地率：65%（P）／Po=20","質係数α=1.3（評価A）","Vo/400=1.5、Kx×β≒0、γ=1.0、Ky=1.0","算定：(65-20)×1.3×1.5×1.0×1.0 ≒ 88%"],hyoka:"88%"}]},
@@ -212,6 +224,7 @@ const SHEETS = {
 
   "都市再生特別地区（適用不可）": {
     tag:"×", title:"●開発規模の設定", site:"放射第25号線沿道地区（新宿区 飯田橋）／適用不可", keikakuYoseki:"―",
+    tekiyo:{cond:"【適用の前提】都市再生緊急整備地域内であること　【当地区】飯田橋・神楽坂は域外（内閣府の地域一覧）",kahi:"適用不可"},
     col1:{saisei:"指定なし（域外）→適用不可",ichizuke:"活力とにぎわいの拠点",youto:"商業地域・600%"},
     col2:{shiteibasis:"都市再生緊急整備地域内が前提。内閣府一覧で飯田橋・神楽坂は域外＝適用不可。",kokyo:[],minaoshiAfter:"適用対象外"},
     col3:{maxlimit:"適用不可のため評価対象外。",blocks:[]},
@@ -408,6 +421,7 @@ function render(key){
   root.innerHTML = `<div class="sheet">
     <div class="sheet-title">${esc(d.title||"●開発規模の設定")}${tag}</div>
     <div class="sub-meta">対象：${esc(d.site||"")}</div>
+    ${d.tekiyo?`<div class="tekiyo"><div class="th">制度適用可否</div><div class="cond">${esc(d.tekiyo.cond)}</div><div class="kahi ${d.tekiyo.kahi.indexOf("不可")>=0?"ng":"ok"}">【適用可否】${esc(d.tekiyo.kahi)}</div></div>`:""}
     <div style="padding:0 8px;">${tbl}</div>
   </div>`;
 }
