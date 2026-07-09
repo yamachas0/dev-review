@@ -1,0 +1,69 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>都市開発 諸制度シミュレーター 全体フロー（スペースデータ向け）</title>
+<style>
+ body{font-family:"Hiragino Sans","Yu Gothic",sans-serif;margin:0;background:#f5f6f8;color:#1f2933;line-height:1.7}
+ header{padding:22px 20px;background:linear-gradient(135deg,#243b53,#334e68);color:#fff}
+ h1{margin:0;font-size:19px} .lead{font-size:13px;color:#cbd7e6;margin-top:6px}
+ .step{margin:0 12px 14px;background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden}
+ .step .head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #eef1f4}
+ .num{flex:none;width:30px;height:30px;border-radius:50%;background:#2b6cb0;color:#fff;
+   display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+ .num.p25{background:#7048c0} .num.p3{background:#2f855a} .num.pa{background:#b7791f}
+ .head h2{margin:0;font-size:15px} .head .tag{font-size:11px;color:#829ab1}
+ .body{padding:12px 16px} .body img{max-width:100%;border-radius:8px;border:1px solid #e6eaee;margin:6px 0}
+ .body p{margin:6px 0;font-size:13px} .body .k{font-weight:700;color:#243b53}
+ .arrow{text-align:center;color:#9fb2c8;font-size:20px;margin:-4px 0 8px}
+ ul{margin:6px 0;padding-left:20px;font-size:13px} li{margin:2px 0}
+ .foot{font-size:11px;color:#829ab1;margin:14px 12px 30px}
+ @media(prefers-color-scheme:dark){body{background:#0e1621;color:#dce6f0}
+   .step{background:#16212e;box-shadow:none} .step .head{border-color:#243140}
+   .body img{border-color:#24313f} .body .k{color:#8fb4e0}}
+</style></head><body>
+<header><h1>都市開発 諸制度シミュレーター ― 全体フロー</h1>
+ <div class="lead">敷地トレースから法規ボリューム・配棟・3D、そして parseai（ViewSim）取り込みまで。実在街区（西新橋・虎ノ門周辺）での実行例。</div></header>
+
+<div class="step"><div class="head"><span class="num">1</span><h2>Phase 1 ― 敷地トレース</h2><span class="tag">site-trace-mvp</span></div>
+<div class="body">
+ <p>実地図（GSI航空写真＋建物footprint）上で対象区域を描き、<span class="k">道路縁の街区にスナップ</span>して敷地形状を確定。接道（前面道路の幅員・方位）を自動判定し、隅切りも識別。</p>
+ <img src="flow_p1.png" alt="Phase1 敷地・接道・壁面後退線">
+ <p>出力＝敷地ポリゴン＋接道情報（GeoJSON, ENU座標, origin共有）。上図は接道（橙, 太さ=幅員）と壁面後退線（青破線）。</p>
+</div></div>
+<div class="arrow">▼</div>
+
+<div class="step"><div class="head"><span class="num">2</span><h2>Phase 2 ― 諸制度の容積緩和</h2><span class="tag">制度選択</span></div>
+<div class="body">
+ <p>敷地条件から適用可能な<span class="k">都市開発諸制度</span>（高度利用地区／再開発等促進区／特定街区／特区／総合設計）を判定し、各制度の容積率・壁面後退・高さ制限を算定。<span class="k">最大容積のメニュー</span>を選ぶ。</p>
+ <img src="flow_p2.png" alt="制度別 容積・配棟サマリー">
+ <p>この街区では <span class="k">特区＋促進区で容積1,100%（延床約84,000㎡）</span>が最大。制度ごとに壁面後退線内の建てられる範囲が決まる。</p>
+</div></div>
+<div class="arrow">▼</div>
+
+<div class="step"><div class="head"><span class="num p25">2.5</span><h2>Phase 2.5 ― 配棟パターン検証（AI）</h2><span class="tag">Fable(vision) × engine</span></div>
+<div class="body">
+ <p>壁面後退線の内側で、<span class="k">広場状空地とタワーの配置</span>を複数案、平面的に比較。配置の判断は<span class="k">生成AI（空間認識）が敷地平面図を見てスケッチ</span>し、法規計算エンジンが基壇・歩道状空地・容積・不変条件チェックを乗せる。</p>
+ <img src="flow_p25.png" alt="Phase2.5 配棟4案(Fable配置)">
+ <p>広場を街に開く「顔」としてどの街区角に取るか（北東＝大通り交差点／南西＝静かな中庭 等）で4案。<span class="k">人間の設計者の工数を自動化</span>し、有効案を即座に絞り込む。</p>
+</div></div>
+<div class="arrow">▼</div>
+
+<div class="step"><div class="head"><span class="num p3">3</span><h2>Phase 3 ― ボリューム3D確認</h2><span class="tag">Web 3Dビューア</span></div>
+<div class="body">
+ <p>選んだ配棟を3Dボリュームとして起こし、高さ・斜線・天空率の成立性を確認。基壇＋タワーを法規に沿って積み上げる。</p>
+ <img src="flow_p3.png" alt="Phase3 3Dボリューム">
+ <p>特区＋促進区案＝タワー約83m。壁面後退線内で一定断面タワー＋低層基壇、頂部は斜線（天空率で突破）。</p>
+</div></div>
+<div class="arrow">▼</div>
+
+<div class="step"><div class="head"><span class="num pa">4</span><h2>parseai（ViewSim）取り込み</h2><span class="tag">3D眺望シミュ・photorealize</span></div>
+<div class="body">
+ <p>Phase3のボリューム（基壇＋タワー、ENU座標＋高さ）を、<span class="k">origin（緯度経度）を共有</span>して parseai の 3Dビューア <span class="k">ViewSim</span> のシーン形式に変換。周辺のPLATEAU 3D都市モデルと重ねて眺望・日影・景観を検討できる。</p>
+ <ul>
+  <li>アダプタ：Phase3配棟 → ViewSim lod1（footprint＋高さ）シーンJSON。<span class="k">origin共有＝1枚のENUアダプタ</span>で接続。</li>
+  <li>現状＝取り込み経路を実装（skeleton）。今後：用途別階高・コア・外装をViewSimのマテリアルに反映、photorealizeで実景合成。</li>
+ </ul>
+ <p style="color:#829ab1;font-size:12px">※本フローの各段は実在街区で実行済み。Phase1のトレースから parseai 取り込みまで、GeoJSON／ENU座標／origin を一貫して共有する設計。</p>
+</div></div>
+
+<div class="foot">都市開発 諸制度シミュレーター（site-trace-mvp ＋ Phase2/2.5/3 エンジン）× parseai2 ViewSim ／ 実行例＝西新橋・虎ノ門周辺の街区（実在再開発と桁一致を確認済み）。</div>
+</body></html>
