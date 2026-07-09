@@ -1,73 +1,103 @@
 <!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>都市開発 諸制度シミュレーター ― フロー説明</title>
+<title>都市開発 諸制度シミュレーター ― フロー説明｜MUD-Ai</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
  :root{
-  --ink:#0b1a2b; --ink2:#0f2136; --paper:#eae4d6; --amber:#e5a13a; --amber2:#f2c078;
-  --line:rgba(234,228,214,.14); --mut:#8ba0b6; --cyan:#5fd0d6;
+  --black:#0A0A0A; --white:#FFFFFF;
+  --accent:#10B981; --accent-dark:#059669;
+  --g50:#F9FAFB; --g100:#F3F4F6; --g200:#E5E7EB; --g300:#D1D5DB;
+  --g400:#9CA3AF; --g500:#6B7280; --g600:#4B5563; --g700:#374151;
+  --g900:#111827; --highlight:#ECFDF5;
+  --font:'Noto Sans JP','Hiragino Kaku Gothic ProN','Meiryo',system-ui,sans-serif;
  }
  *{box-sizing:border-box;margin:0;padding:0}
  html{scroll-snap-type:y mandatory;scroll-behavior:smooth}
- body{background:var(--ink);color:var(--paper);font-family:"Zen Kaku Gothic New",sans-serif;-webkit-font-smoothing:antialiased}
+ body{background:var(--g200);color:var(--g900);font-family:var(--font);-webkit-font-smoothing:antialiased}
  .deck{width:100%}
  .slide{position:relative;min-height:100vh;scroll-snap-align:start;display:flex;flex-direction:column;
-   justify-content:center;padding:6vh 7vw;overflow:hidden;
-   background:
-     linear-gradient(180deg,var(--ink),var(--ink2));}
- /* blueprint grid */
- .slide::before{content:"";position:absolute;inset:0;pointer-events:none;
-   background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
-   background-size:44px 44px;mask-image:radial-gradient(ellipse 90% 80% at 50% 45%,#000 55%,transparent 100%);opacity:.55}
- .slide::after{content:"";position:absolute;right:-8vw;top:-8vw;width:34vw;height:34vw;border-radius:50%;
-   background:radial-gradient(circle,rgba(229,161,58,.16),transparent 62%);pointer-events:none}
+   justify-content:center;padding:7vh 8vw;overflow:hidden;background:var(--white)}
+ .slide.dark{background:var(--black);color:var(--white)}
  .inner{position:relative;z-index:2;max-width:1180px;margin:0 auto;width:100%}
- .kick{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.32em;color:var(--amber);
-   text-transform:uppercase;display:flex;align-items:center;gap:12px}
- .kick::before{content:"";width:34px;height:1px;background:var(--amber)}
- h1{font-family:"Shippori Mincho B1",serif;font-weight:800;line-height:1.1;letter-spacing:.01em}
- h2{font-family:"Shippori Mincho B1",serif;font-weight:700;line-height:1.14}
- .lede{color:var(--mut);font-size:clamp(13px,1.5vw,16px);line-height:1.9;max-width:56ch}
- .pnum{font-family:"Space Mono",monospace;font-weight:700;color:var(--amber);
-   font-size:clamp(40px,7vw,86px);line-height:.9;opacity:.9}
- .grid2{display:grid;grid-template-columns:1.05fr .95fr;gap:5vw;align-items:center}
- @media(max-width:820px){.grid2{grid-template-columns:1fr;gap:22px}}
- .shot{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#081422;
-   box-shadow:0 30px 60px -30px rgba(0,0,0,.7),0 0 0 1px rgba(229,161,58,.12)}
+
+ /* ロゴ・ワードマーク */
+ .logo{font-weight:900;letter-spacing:.02em;font-size:15px}
+ .logo .h{color:var(--accent)}
+ .slide.dark .logo{color:var(--white)}
+
+ /* running header (content) */
+ .rhead{position:absolute;top:0;left:0;right:0;padding:22px 8vw 14px;display:flex;justify-content:space-between;
+   align-items:center;border-bottom:1px solid var(--g200);z-index:3}
+ .rhead .doc{font-size:11px;color:var(--g400);letter-spacing:.08em}
+ .foot{position:absolute;left:8vw;right:8vw;bottom:3.2vh;display:flex;justify-content:space-between;
+   align-items:center;z-index:3;padding-top:12px;border-top:1px solid var(--g200)}
+ .foot .co{font-size:11px;color:var(--black);font-weight:700}
+ .foot .cc{font-size:11px;color:var(--g400);letter-spacing:.04em}
+ .slide.dark .foot{border-top-color:rgba(255,255,255,.14)}
+ .pageno{font-size:11px;color:var(--accent-dark);font-weight:700}
+
+ /* kicker & heading */
+ .kick{font-size:12px;letter-spacing:.22em;color:var(--accent-dark);font-weight:700;text-transform:uppercase}
+ .secno{font-size:12px;letter-spacing:.14em;color:var(--accent-dark);font-weight:700;margin-bottom:8px}
+ h2.head{position:relative;padding-left:18px;font-weight:700;color:var(--black);
+   font-size:clamp(24px,3.4vw,38px);line-height:1.18}
+ h2.head::before{content:"";position:absolute;left:0;top:.12em;bottom:.12em;width:4px;background:var(--accent);border-radius:2px}
+
+ .grid2{display:grid;grid-template-columns:1.02fr .98fr;gap:5vw;align-items:center;margin-top:30px}
+ @media(max-width:860px){.grid2{grid-template-columns:1fr;gap:24px}}
+
+ /* bullets: emerald square */
+ ul.pts{list-style:none;display:flex;flex-direction:column;gap:14px;margin-top:4px}
+ ul.pts li{position:relative;padding-left:22px;font-size:clamp(13px,1.4vw,15.5px);line-height:1.75;color:var(--g700)}
+ ul.pts li::before{content:"";position:absolute;left:0;top:.6em;width:9px;height:9px;background:var(--accent);border-radius:2px}
+ .k{color:var(--accent-dark);font-weight:700}
+
+ /* screenshot frame */
+ .shot{border:1px solid var(--g200);border-radius:2px;overflow:hidden;background:var(--g50)}
  .shot img{display:block;width:100%}
- .shot .cap{font-family:"Space Mono",monospace;font-size:11px;color:var(--mut);padding:8px 12px;border-top:1px solid var(--line);letter-spacing:.06em}
- ul.pts{list-style:none;display:flex;flex-direction:column;gap:12px;margin-top:6px}
- ul.pts li{position:relative;padding-left:20px;font-size:clamp(13px,1.4vw,15.5px);line-height:1.75;color:#dcd6c8}
- ul.pts li::before{content:"";position:absolute;left:0;top:.62em;width:8px;height:8px;background:var(--amber);
-   transform:rotate(45deg)}
- .k{color:var(--amber2);font-weight:700}
- .foot{position:absolute;left:7vw;bottom:3.4vh;z-index:2;font-family:"Space Mono",monospace;
-   font-size:11px;letter-spacing:.14em;color:var(--mut)}
- .pageno{position:absolute;right:7vw;bottom:3.4vh;z-index:2;font-family:"Space Mono",monospace;font-size:11px;color:var(--amber)}
- /* title slide */
- .title h1{font-size:clamp(30px,6.4vw,74px)}
- .title .sub{margin-top:22px;font-size:clamp(14px,1.8vw,19px);color:#cdc6b6;font-weight:500;letter-spacing:.02em}
+ .shot .cap{font-size:11px;color:var(--g500);padding:9px 12px;border-top:1px solid var(--g200);letter-spacing:.04em}
+
+ /* callout */
+ .callout{background:var(--highlight);border-left:4px solid var(--accent);padding:14px 18px;border-radius:2px;
+   font-size:clamp(13px,1.4vw,15px);color:var(--g700);line-height:1.7;margin-top:22px}
+
+ /* ---- title slide ---- */
+ .title-top{display:flex;justify-content:space-between;align-items:flex-start}
+ .title h1{font-size:clamp(30px,5.6vw,58px);font-weight:900;line-height:1.14;letter-spacing:.01em;color:var(--white)}
+ .rule{width:92px;height:4px;background:var(--accent);margin:26px 0 20px;border-radius:2px}
+ .title .sub{font-size:clamp(14px,1.7vw,18px);color:var(--g400);font-weight:500;line-height:1.8;max-width:60ch}
  .flowbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:34px}
- .chip{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--paper);
-   border:1px solid var(--line);border-radius:100px;padding:7px 14px;background:rgba(255,255,255,.02)}
- .chip b{color:var(--amber)}
+ .chip{font-size:11px;letter-spacing:.06em;color:var(--white);border:1px solid rgba(255,255,255,.18);
+   border-radius:100px;padding:7px 15px;background:rgba(255,255,255,.02)}
+ .chip b{color:var(--accent)}
+ .meta-r{text-align:right;font-size:11px;color:var(--g400);line-height:1.9}
+ .meta-r b{color:var(--white);font-weight:700}
+
+ /* section number ghost */
+ .ghost{position:absolute;right:5vw;top:6vh;font-weight:900;font-size:clamp(120px,24vw,300px);
+   color:var(--g50);line-height:.8;z-index:1;pointer-events:none;user-select:none}
+
  /* reveal */
- .inner>*{opacity:0;transform:translateY(14px);animation:rise .8s cubic-bezier(.2,.7,.2,1) forwards}
- .inner>*:nth-child(2){animation-delay:.08s}.inner>*:nth-child(3){animation-delay:.16s}
- .inner>*:nth-child(4){animation-delay:.24s}.inner>*:nth-child(5){animation-delay:.32s}
+ .inner>*{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
+ .inner>*:nth-child(2){animation-delay:.07s}.inner>*:nth-child(3){animation-delay:.14s}
+ .inner>*:nth-child(4){animation-delay:.21s}.inner>*:nth-child(5){animation-delay:.28s}
  @keyframes rise{to{opacity:1;transform:none}}
  @media(prefers-reduced-motion:reduce){.inner>*{animation:none;opacity:1;transform:none}}
- .big-num{position:absolute;right:5vw;top:8vh;font-family:"Shippori Mincho B1",serif;font-weight:800;
-   font-size:clamp(120px,26vw,320px);color:rgba(229,161,58,.06);line-height:.8;z-index:1;pointer-events:none}
 </style></head><body>
 <div class="deck">
 
-<section class="slide title">
+<!-- 01 表紙（黒） -->
+<section class="slide dark title">
  <div class="inner">
-  <div class="kick">Urban Regulation × AI ／ 都市開発シミュレーター</div>
+  <div class="title-top">
+   <div class="logo">MUD<span class="h">-</span>Ai</div>
+   <div class="meta-r"><b>SPACEDATA</b><br>都市開発ユニット 御中<br>2026.07</div>
+  </div>
+  <div class="kick" style="margin-top:8vh">Urban Regulation × AI ／ 都市開発シミュレーター</div>
   <h1>敷地から、法規ボリューム、配棟、<br>そして3D都市へ。</h1>
+  <div class="rule"></div>
   <div class="sub">実在街区で回した、都市開発 諸制度シミュレーターの全体フロー<br>― 敷地トレースから parseai（ViewSim）取り込みまで ―</div>
   <div class="flowbar">
    <span class="chip"><b>1</b>&nbsp;敷地トレース</span>
@@ -77,36 +107,41 @@
    <span class="chip"><b>→</b>&nbsp;parseai / ViewSim</span>
   </div>
  </div>
- <div class="foot">SPACEDATA ／ 都市開発ユニット</div>
- <div class="pageno">01</div>
+ <div class="foot"><span class="cc" style="color:var(--g400)">合同会社MUD-Ai</span><span class="pageno" style="color:var(--accent)">01</span></div>
 </section>
 
+<!-- 02 Phase1 -->
 <section class="slide">
- <span class="big-num">1</span>
+ <div class="rhead"><div class="logo">MUD<span class="h">-</span>Ai</div><div class="doc">都市開発シミュレーター ／ 全体フロー</div></div>
+ <span class="ghost">1</span>
  <div class="inner">
-  <div class="kick">Phase 1 ― Site Trace</div>
+  <div class="secno">PHASE 01</div>
+  <div class="kick" style="letter-spacing:.14em">Site Trace ― 敷地トレース</div>
   <div class="grid2">
    <div>
-    <h2 style="font-size:clamp(24px,3.4vw,40px)">実地図の上で、敷地を起こす。</h2>
+    <h2 class="head">実地図の上で、敷地を起こす。</h2>
     <ul class="pts">
      <li>GSI航空写真＋建物footprint上で対象区域を描き、<span class="k">道路縁の街区にスナップ</span>して敷地形状を確定</li>
      <li>前面道路の<span class="k">幅員・方位を自動判定</span>、隅切りも識別</li>
      <li>出力＝敷地ポリゴン＋接道情報（<span class="k">GeoJSON・ENU座標・origin共有</span>）</li>
     </ul>
    </div>
-   <div class="shot"><img src="flow_p1.png" alt="Phase1 敷地平面図"><div class="cap">SITE PLAN ／ 接道(橙=幅員) ・ 壁面後退線(青破線)</div></div>
+   <div class="shot"><img src="flow_p1.png" alt="Phase1 敷地平面図"><div class="cap">SITE PLAN ／ 接道（幅員）・壁面後退線</div></div>
   </div>
  </div>
- <div class="pageno">02</div>
+ <div class="foot"><span class="co">合同会社MUD-Ai</span><span class="cc">無駄とAIのカケザンで、まだ見ぬ社会を創造する</span><span class="pageno">02</span></div>
 </section>
 
+<!-- 03 Phase2 -->
 <section class="slide">
- <span class="big-num">2</span>
+ <div class="rhead"><div class="logo">MUD<span class="h">-</span>Ai</div><div class="doc">都市開発シミュレーター ／ 全体フロー</div></div>
+ <span class="ghost">2</span>
  <div class="inner">
-  <div class="kick">Phase 2 ― Regulation & FAR</div>
+  <div class="secno">PHASE 02</div>
+  <div class="kick" style="letter-spacing:.14em">Regulation &amp; FAR ― 諸制度・容積</div>
   <div class="grid2">
    <div>
-    <h2 style="font-size:clamp(24px,3.4vw,40px)">諸制度で、容積を解く。</h2>
+    <h2 class="head">諸制度で、容積を解く。</h2>
     <ul class="pts">
      <li>適用可能な<span class="k">都市開発諸制度</span>（高度利用地区／促進区／特定街区／特区／総合設計）を判定</li>
      <li>各制度の容積率・壁面後退・高さ制限を算定し<span class="k">最大容積メニュー</span>を選定</li>
@@ -116,35 +151,41 @@
    <div class="shot"><img src="flow_p2.png" alt="制度別サマリー"><div class="cap">制度別 容積・配棟サマリー（全7制度）</div></div>
   </div>
  </div>
- <div class="pageno">03</div>
+ <div class="foot"><span class="co">合同会社MUD-Ai</span><span class="cc">無駄とAIのカケザンで、まだ見ぬ社会を創造する</span><span class="pageno">03</span></div>
 </section>
 
+<!-- 04 Phase2.5 -->
 <section class="slide">
- <span class="big-num">2.5</span>
+ <div class="rhead"><div class="logo">MUD<span class="h">-</span>Ai</div><div class="doc">都市開発シミュレーター ／ 全体フロー</div></div>
+ <span class="ghost">2.5</span>
  <div class="inner">
-  <div class="kick">Phase 2.5 ― Massing by AI</div>
+  <div class="secno">PHASE 02.5</div>
+  <div class="kick" style="letter-spacing:.14em">Massing by AI ― 配棟</div>
   <div class="grid2">
    <div>
-    <h2 style="font-size:clamp(24px,3.4vw,40px)">配棟は、AIがスケッチする。</h2>
+    <h2 class="head">配棟は、AIがスケッチする。</h2>
     <ul class="pts">
      <li>壁面後退線の内側で<span class="k">広場状空地とタワーの配置</span>を複数案、平面比較</li>
      <li>配置判断は<span class="k">生成AIが敷地平面図を見てスケッチ</span>、法規エンジンが基壇・歩道状空地・容積・成立性を計算</li>
      <li>広場を街に開く「顔」としてどの街区角に取るか＝<span class="k">設計者の工数を自動化</span>し有効案を即絞る</li>
     </ul>
    </div>
-   <div class="shot"><img src="flow_p25.png" alt="配棟4案"><div class="cap">配棟4案 ／ 広場を4隅に振り分け（AI配置）</div></div>
+   <div class="shot"><img src="flow_p25.png" alt="配棟4案"><div class="cap">配棟4案 ／ 広場を街区の角に振り分け（AI配置）</div></div>
   </div>
  </div>
- <div class="pageno">04</div>
+ <div class="foot"><span class="co">合同会社MUD-Ai</span><span class="cc">無駄とAIのカケザンで、まだ見ぬ社会を創造する</span><span class="pageno">04</span></div>
 </section>
 
+<!-- 05 Phase3 -->
 <section class="slide">
- <span class="big-num">3</span>
+ <div class="rhead"><div class="logo">MUD<span class="h">-</span>Ai</div><div class="doc">都市開発シミュレーター ／ 全体フロー</div></div>
+ <span class="ghost">3</span>
  <div class="inner">
-  <div class="kick">Phase 3 ― 3D Volume</div>
+  <div class="secno">PHASE 03</div>
+  <div class="kick" style="letter-spacing:.14em">3D Volume ― 3Dボリューム</div>
   <div class="grid2">
    <div>
-    <h2 style="font-size:clamp(24px,3.4vw,40px)">ボリュームを、立ち上げる。</h2>
+    <h2 class="head">ボリュームを、立ち上げる。</h2>
     <ul class="pts">
      <li>選んだ配棟を<span class="k">3Dボリューム</span>に起こし、高さ・斜線・天空率の成立性を確認</li>
      <li>壁面後退線内で<span class="k">一定断面タワー＋低層基壇</span>、頂部は斜線（天空率で突破）</li>
@@ -154,28 +195,30 @@
    <div class="shot"><img src="flow_p3.png" alt="3Dボリューム"><div class="cap">Phase3 3Dボリューム ／ 基壇＋タワー＋広場</div></div>
   </div>
  </div>
- <div class="pageno">05</div>
+ <div class="foot"><span class="co">合同会社MUD-Ai</span><span class="cc">無駄とAIのカケザンで、まだ見ぬ社会を創造する</span><span class="pageno">05</span></div>
 </section>
 
-<section class="slide">
- <span class="big-num">→</span>
+<!-- 06 連携（黒 中扉＋内容） -->
+<section class="slide dark">
+ <span class="ghost" style="color:rgba(255,255,255,.04)">→</span>
  <div class="inner">
-  <div class="kick">Integration ― parseai / ViewSim</div>
-  <h2 style="font-size:clamp(26px,4vw,52px);max-width:20ch">parseai の3D都市へ、<span class="k">origin一枚で</span>接続する。</h2>
-  <div class="grid2" style="margin-top:26px;align-items:start">
+  <div class="secno" style="color:var(--accent)">INTEGRATION</div>
+  <div class="kick">parseai ／ ViewSim 取り込み</div>
+  <h2 class="head" style="color:var(--white)">parseai の3D都市へ、<span class="k" style="color:var(--accent)">origin一枚で</span>接続する。</h2>
+  <div class="rule"></div>
+  <div class="grid2" style="margin-top:20px;align-items:start">
    <ul class="pts">
-    <li>Phase3のボリューム（基壇＋タワー、ENU座標＋高さ）を<span class="k">origin（緯度経度）共有</span>で ViewSim シーン形式に変換</li>
-    <li>周辺の<span class="k">PLATEAU 3D都市モデル</span>と重ね、眺望・日影・景観を検討</li>
-    <li>接続の要＝<span class="k">1枚のENUアダプタ</span>（GeoJSON→ENU、origin共有）。取り込み経路を実装済</li>
+    <li style="color:var(--g300)">Phase3のボリューム（基壇＋タワー、ENU座標＋高さ）を<span class="k" style="color:var(--accent)">origin（緯度経度）共有</span>で ViewSim シーン形式に変換</li>
+    <li style="color:var(--g300)">周辺の<span class="k" style="color:var(--accent)">PLATEAU 3D都市モデル</span>と重ね、眺望・日影・景観を検討</li>
+    <li style="color:var(--g300)">接続の要＝<span class="k" style="color:var(--accent)">1枚のENUアダプタ</span>（GeoJSON→ENU、origin共有）。取り込み経路を実装済</li>
    </ul>
    <div>
-    <div class="shot" style="padding:0"><img src="flow_p3.png" alt="ViewSim連携" style="opacity:.9"><div class="cap">Phase3 → ViewSim（lod1：footprint＋高さ）</div></div>
-    <p class="lede" style="margin-top:14px">今後：用途別階高・コア・外装をViewSimのマテリアルへ、photorealizeで実景合成。</p>
+    <div class="shot" style="background:#111"><img src="flow_p3.png" alt="ViewSim連携" style="opacity:.92"><div class="cap" style="color:var(--g400);border-top-color:rgba(255,255,255,.14)">Phase3 → ViewSim（lod1：footprint＋高さ）</div></div>
+    <p style="margin-top:14px;font-size:13px;color:var(--g400);line-height:1.8">今後：用途別階高・コア・外装をViewSimのマテリアルへ、photorealizeで実景合成。</p>
    </div>
   </div>
  </div>
- <div class="foot">敷地トレース → 法規ボリューム → 配棟(AI) → 3D → parseai ／ GeoJSON・ENU・origin を一貫共有</div>
- <div class="pageno">06</div>
+ <div class="foot"><span class="cc" style="color:var(--g400)">敷地トレース → 法規ボリューム → 配棟(AI) → 3D → parseai ／ GeoJSON・ENU・origin を一貫共有</span><span class="pageno" style="color:var(--accent)">06</span></div>
 </section>
 
 </div>
