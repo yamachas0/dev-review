@@ -1,69 +1,115 @@
 <!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>都市開発 諸制度シミュレーター 全体フロー（スペースデータ向け）</title>
+<title>都市開発 諸制度シミュレーター 全体フロー｜MUD-Ai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
- body{font-family:"Hiragino Sans","Yu Gothic",sans-serif;margin:0;background:#f5f6f8;color:#1f2933;line-height:1.7}
- header{padding:22px 20px;background:linear-gradient(135deg,#243b53,#334e68);color:#fff}
- h1{margin:0;font-size:19px} .lead{font-size:13px;color:#cbd7e6;margin-top:6px}
- .step{margin:0 12px 14px;background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden}
- .step .head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #eef1f4}
- .num{flex:none;width:30px;height:30px;border-radius:50%;background:#2b6cb0;color:#fff;
-   display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
- .num.p25{background:#7048c0} .num.p3{background:#2f855a} .num.pa{background:#b7791f}
- .head h2{margin:0;font-size:15px} .head .tag{font-size:11px;color:#829ab1}
- .body{padding:12px 16px} .body img{max-width:100%;border-radius:8px;border:1px solid #e6eaee;margin:6px 0}
- .body p{margin:6px 0;font-size:13px} .body .k{font-weight:700;color:#243b53}
- .arrow{text-align:center;color:#9fb2c8;font-size:20px;margin:-4px 0 8px}
- ul{margin:6px 0;padding-left:20px;font-size:13px} li{margin:2px 0}
- .foot{font-size:11px;color:#829ab1;margin:14px 12px 30px}
- @media(prefers-color-scheme:dark){body{background:#0e1621;color:#dce6f0}
-   .step{background:#16212e;box-shadow:none} .step .head{border-color:#243140}
-   .body img{border-color:#24313f} .body .k{color:#8fb4e0}}
+ :root{
+  --black:#0A0A0A; --white:#FFFFFF;
+  --accent:#10B981; --accent-dark:#059669;
+  --g50:#F9FAFB; --g100:#F3F4F6; --g200:#E5E7EB; --g300:#D1D5DB;
+  --g400:#9CA3AF; --g500:#6B7280; --g600:#4B5563; --g700:#374151;
+  --g900:#111827; --highlight:#ECFDF5;
+  --font:'Noto Sans JP','Hiragino Kaku Gothic ProN','Meiryo',system-ui,sans-serif;
+ }
+ *{box-sizing:border-box;margin:0;padding:0}
+ body{font-family:var(--font);margin:0;background:var(--g100);color:var(--g900);line-height:1.7;-webkit-font-smoothing:antialiased}
+ .wrap{max-width:640px;margin:0 auto;background:var(--white);min-height:100vh}
+
+ header{padding:24px 20px 20px;background:var(--black);color:var(--white)}
+ .logo{font-weight:900;letter-spacing:.02em;font-size:15px;margin-bottom:14px}
+ .logo .h{color:var(--accent)}
+ header h1{font-size:19px;font-weight:700;line-height:1.35}
+ .rule{width:80px;height:4px;background:var(--accent);border-radius:2px;margin:14px 0 12px}
+ header .lead{font-size:12.5px;color:var(--g400);line-height:1.7}
+
+ .step{margin:20px 14px 0;background:var(--white);border:1px solid var(--g200);border-radius:2px;overflow:hidden}
+ .step .head{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--g200)}
+ .num{flex:none;min-width:30px;height:30px;padding:0 8px;border-radius:100px;background:var(--black);color:var(--white);
+   display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+ .num.acc{background:var(--accent-dark)}
+ .head h2{margin:0;font-size:15.5px;font-weight:700;color:var(--black)}
+ .head .tag{margin-left:auto;font-size:10.5px;color:var(--white);background:var(--g600);padding:3px 9px;border-radius:100px;white-space:nowrap;font-weight:500}
+ .head .tag.acc{background:var(--accent-dark)}
+ .body{padding:14px 16px}
+ .body img{max-width:100%;border-radius:2px;border:1px solid var(--g200);margin:8px 0;display:block}
+ .body p{margin:8px 0;font-size:13px;color:var(--g700)}
+ .body .k{font-weight:700;color:var(--accent-dark)}
+ .callout{background:var(--highlight);border-left:4px solid var(--accent);padding:12px 14px;border-radius:2px;
+   font-size:12.5px;color:var(--g700);margin:10px 0 2px;line-height:1.7}
+ ul{margin:8px 0;padding-left:0;list-style:none}
+ li{position:relative;padding-left:20px;margin:6px 0;font-size:13px;color:var(--g700)}
+ li::before{content:"";position:absolute;left:0;top:.55em;width:8px;height:8px;background:var(--accent);border-radius:2px}
+ .arrow{text-align:center;color:var(--g300);font-size:20px;margin:6px 0 -2px;font-weight:700}
+
+ .note{font-size:11px;color:var(--g400);margin:18px 14px;padding:12px 14px;background:var(--g50);
+   border-left:4px solid var(--g200);border-radius:2px;line-height:1.7}
+ footer{border-top:1px solid var(--g200);margin:0 14px;padding:16px 2px 28px;display:flex;
+   justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px}
+ footer .co{color:var(--black);font-weight:700}
+ footer .cc{color:var(--g400)}
 </style></head><body>
-<header><h1>都市開発 諸制度シミュレーター ― 全体フロー</h1>
- <div class="lead">敷地トレースから法規ボリューム・配棟・3D、そして parseai（ViewSim）取り込みまで。実在街区（西新橋・虎ノ門周辺）での実行例。</div></header>
+<div class="wrap">
+<header>
+ <div class="logo">MUD<span class="h">-</span>Ai</div>
+ <h1>都市開発 諸制度シミュレーター<br>― 全体フロー</h1>
+ <div class="rule"></div>
+ <div class="lead">敷地トレースから法規ボリューム・配棟・3D、そして parseai（ViewSim）取り込みまで。実在街区（西新橋・虎ノ門周辺）での実行例。</div>
+</header>
 
-<div class="step"><div class="head"><span class="num">1</span><h2>Phase 1 ― 敷地トレース</h2><span class="tag">site-trace-mvp</span></div>
-<div class="body">
- <p>実地図（GSI航空写真＋建物footprint）上で対象区域を描き、<span class="k">道路縁の街区にスナップ</span>して敷地形状を確定。接道（前面道路の幅員・方位）を自動判定し、隅切りも識別。</p>
- <img src="flow_p1.png" alt="Phase1 敷地・接道・壁面後退線">
- <p>出力＝敷地ポリゴン＋接道情報（GeoJSON, ENU座標, origin共有）。上図は接道（橙, 太さ=幅員）と壁面後退線（青破線）。</p>
-</div></div>
+<div class="step">
+ <div class="head"><span class="num">1</span><h2>Phase 1 ― 敷地トレース</h2><span class="tag">site-trace-mvp</span></div>
+ <div class="body">
+  <p>実地図（GSI航空写真＋建物footprint）上で対象区域を描き、<span class="k">道路縁の街区にスナップ</span>して敷地形状を確定。接道（前面道路の幅員・方位）を自動判定し、隅切りも識別。</p>
+  <img src="flow_p1.png" alt="Phase1 敷地・接道・壁面後退線">
+  <p>出力＝敷地ポリゴン＋接道情報（GeoJSON, ENU座標, origin共有）。上図は接道（太さ=幅員）と壁面後退線。</p>
+ </div>
+</div>
 <div class="arrow">▼</div>
 
-<div class="step"><div class="head"><span class="num">2</span><h2>Phase 2 ― 諸制度の容積緩和</h2><span class="tag">制度選択</span></div>
-<div class="body">
- <p>敷地条件から適用可能な<span class="k">都市開発諸制度</span>（高度利用地区／再開発等促進区／特定街区／特区／総合設計）を判定し、各制度の容積率・壁面後退・高さ制限を算定。<span class="k">最大容積のメニュー</span>を選ぶ。</p>
- <img src="flow_p2.png" alt="制度別 容積・配棟サマリー">
- <p>この街区では <span class="k">特区＋促進区で容積1,100%（延床約84,000㎡）</span>が最大。制度ごとに壁面後退線内の建てられる範囲が決まる。</p>
-</div></div>
+<div class="step">
+ <div class="head"><span class="num">2</span><h2>Phase 2 ― 諸制度の容積緩和</h2><span class="tag">制度選択</span></div>
+ <div class="body">
+  <p>敷地条件から適用可能な<span class="k">都市開発諸制度</span>（高度利用地区／再開発等促進区／特定街区／特区／総合設計）を判定し、各制度の容積率・壁面後退・高さ制限を算定。<span class="k">最大容積のメニュー</span>を選ぶ。</p>
+  <img src="flow_p2.png" alt="制度別 容積・配棟サマリー">
+  <div class="callout">この街区では <span class="k">特区＋促進区で容積1,100%（延床約84,000㎡）</span>が最大。制度ごとに壁面後退線内の建てられる範囲が決まる。</div>
+ </div>
+</div>
 <div class="arrow">▼</div>
 
-<div class="step"><div class="head"><span class="num p25">2.5</span><h2>Phase 2.5 ― 配棟パターン検証（AI）</h2><span class="tag">Fable(vision) × engine</span></div>
-<div class="body">
- <p>壁面後退線の内側で、<span class="k">広場状空地とタワーの配置</span>を複数案、平面的に比較。配置の判断は<span class="k">生成AI（空間認識）が敷地平面図を見てスケッチ</span>し、法規計算エンジンが基壇・歩道状空地・容積・不変条件チェックを乗せる。</p>
- <img src="flow_p25.png" alt="Phase2.5 配棟4案(Fable配置)">
- <p>広場を街に開く「顔」としてどの街区角に取るか（北東＝大通り交差点／南西＝静かな中庭 等）で4案。<span class="k">人間の設計者の工数を自動化</span>し、有効案を即座に絞り込む。</p>
-</div></div>
+<div class="step">
+ <div class="head"><span class="num acc">2.5</span><h2>Phase 2.5 ― 配棟パターン検証（AI）</h2><span class="tag acc">AI × engine</span></div>
+ <div class="body">
+  <p>壁面後退線の内側で、<span class="k">広場状空地とタワーの配置</span>を複数案、平面的に比較。配置の判断は<span class="k">生成AI（空間認識）が敷地平面図を見てスケッチ</span>し、法規計算エンジンが基壇・歩道状空地・容積・不変条件チェックを乗せる。</p>
+  <img src="flow_p25.png" alt="Phase2.5 配棟4案(AI配置)">
+  <p>広場を街に開く「顔」としてどの街区角に取るか（大通りの交差点／静かな中庭 等）で複数案。<span class="k">人間の設計者の工数を自動化</span>し、有効案を即座に絞り込む。</p>
+ </div>
+</div>
 <div class="arrow">▼</div>
 
-<div class="step"><div class="head"><span class="num p3">3</span><h2>Phase 3 ― ボリューム3D確認</h2><span class="tag">Web 3Dビューア</span></div>
-<div class="body">
- <p>選んだ配棟を3Dボリュームとして起こし、高さ・斜線・天空率の成立性を確認。基壇＋タワーを法規に沿って積み上げる。</p>
- <img src="flow_p3.png" alt="Phase3 3Dボリューム">
- <p>特区＋促進区案＝タワー約83m。壁面後退線内で一定断面タワー＋低層基壇、頂部は斜線（天空率で突破）。</p>
-</div></div>
+<div class="step">
+ <div class="head"><span class="num">3</span><h2>Phase 3 ― ボリューム3D確認</h2><span class="tag">Web 3Dビューア</span></div>
+ <div class="body">
+  <p>選んだ配棟を3Dボリュームとして起こし、高さ・斜線・天空率の成立性を確認。基壇＋タワーを法規に沿って積み上げる。</p>
+  <img src="flow_p3.png" alt="Phase3 3Dボリューム">
+  <p>特区＋促進区案＝<span class="k">タワー約83m</span>。壁面後退線内で一定断面タワー＋低層基壇、頂部は斜線（天空率で突破）。</p>
+ </div>
+</div>
 <div class="arrow">▼</div>
 
-<div class="step"><div class="head"><span class="num pa">4</span><h2>parseai（ViewSim）取り込み</h2><span class="tag">3D眺望シミュ・photorealize</span></div>
-<div class="body">
- <p>Phase3のボリューム（基壇＋タワー、ENU座標＋高さ）を、<span class="k">origin（緯度経度）を共有</span>して parseai の 3Dビューア <span class="k">ViewSim</span> のシーン形式に変換。周辺のPLATEAU 3D都市モデルと重ねて眺望・日影・景観を検討できる。</p>
- <ul>
-  <li>アダプタ：Phase3配棟 → ViewSim lod1（footprint＋高さ）シーンJSON。<span class="k">origin共有＝1枚のENUアダプタ</span>で接続。</li>
-  <li>現状＝取り込み経路を実装（skeleton）。今後：用途別階高・コア・外装をViewSimのマテリアルに反映、photorealizeで実景合成。</li>
- </ul>
- <p style="color:#829ab1;font-size:12px">※本フローの各段は実在街区で実行済み。Phase1のトレースから parseai 取り込みまで、GeoJSON／ENU座標／origin を一貫して共有する設計。</p>
-</div></div>
+<div class="step">
+ <div class="head"><span class="num acc">→</span><h2>parseai（ViewSim）取り込み</h2><span class="tag acc">3D眺望・photorealize</span></div>
+ <div class="body">
+  <p>Phase3のボリューム（基壇＋タワー、ENU座標＋高さ）を、<span class="k">origin（緯度経度）を共有</span>して parseai の 3Dビューア <span class="k">ViewSim</span> のシーン形式に変換。周辺のPLATEAU 3D都市モデルと重ねて眺望・日影・景観を検討できる。</p>
+  <ul>
+   <li>アダプタ：Phase3配棟 → ViewSim lod1（footprint＋高さ）シーンJSON。<span class="k">origin共有＝1枚のENUアダプタ</span>で接続。</li>
+   <li>現状＝取り込み経路を実装（skeleton）。今後：用途別階高・コア・外装をViewSimのマテリアルに反映、photorealizeで実景合成。</li>
+  </ul>
+ </div>
+</div>
 
-<div class="foot">都市開発 諸制度シミュレーター（site-trace-mvp ＋ Phase2/2.5/3 エンジン）× parseai2 ViewSim ／ 実行例＝西新橋・虎ノ門周辺の街区（実在再開発と桁一致を確認済み）。</div>
+<div class="note">※本フローの各段は実在街区で実行済み。Phase1のトレースから parseai 取り込みまで、GeoJSON／ENU座標／origin を一貫して共有する設計。実行例＝西新橋・虎ノ門周辺の街区（実在再開発と桁一致を確認済み）。</div>
+<footer><span class="co">合同会社MUD-Ai</span><span class="cc">無駄とAIのカケザンで、まだ見ぬ社会を創造する</span></footer>
+</div>
 </body></html>
