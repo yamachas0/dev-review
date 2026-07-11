@@ -1,0 +1,111 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ファラBOT 移行 詳細設計書（案A）</title>
+<style>
+:root{color-scheme:light dark}
+body{font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.85;margin:0;padding:20px 16px 60px;max-width:760px;margin-inline:auto;background:#faf9f7;color:#1c1a17}
+@media(prefers-color-scheme:dark){body{background:#14140f;color:#e9e6df}code{background:#2a2820;color:#e0c58a}h2{border-color:#3a3730}.tag{background:#23211a;color:#b8b3a8}}
+h1{font-size:21px;line-height:1.4}h2{font-size:18px;margin-top:30px;border-top:1px solid #e0dccf;padding-top:16px}h3{font-size:15px;margin-top:20px;color:#8a6a2a}
+code{background:#efe9dd;padding:1px 6px;border-radius:5px;font-size:13.5px;font-family:ui-monospace,Menlo,monospace}
+ul{padding-left:22px}li{margin:5px 0}p{margin:12px 0}hr{border:none;border-top:2px dashed #cfc8b8;margin:24px 0}
+.tag{display:inline-block;font-size:12px;letter-spacing:.06em;background:#efece6;padding:3px 12px;border-radius:12px;margin-bottom:10px}
+strong{color:inherit}a{color:#9a6b1a}
+</style></head><body>
+<span class="tag">レビュー用 ・ 実装前の設計書 ・ 案A（既存土台）</span>
+<h1>ファラBOT Firestore→SQLite移行 詳細設計書（案A：既存土台・その場差し替え）</h1>
+<p><strong>方針一言</strong>：本番で動いているPharaBOT2はそのまま。触るのは「保存先」と「PP処理の呼び出し方」だけ。会話(Gemini返信)は1行も変えない。</p>
+<hr>
+<h2>1. 全体方針</h2>
+<ul>
+<li>土台＝現本番コード(PharaBOT2)。<strong>新フォルダは作らない</strong>。</li>
+<li>前回事故（別フォルダに書き直し→comment.js未移植でBOT沈黙）の再発防止として、<strong>「新規ファイル作成は下記3つのみ・既存ファイルの書き換えは2ファイルのみ」を上限</strong>とする。</li>
+</ul>
+<p>改修対象（これ以外は無改造）:</p>
+<ul>
+<li><strong>書き換える既存ファイル（2つ）</strong></li>
+<li style="margin-left:20px"><code>functions/firestoreService.js</code> → 中身をSQLite実装に置換（関数名・引数は不変）</li>
+<li style="margin-left:20px"><code>Discord/botEntry.js</code> → 起動時にDB open＋cron登録を数行追加</li>
+<li><strong>新規に置くファイル（3つ・全部pharabot-gceからのコピー流用）</strong></li>
+<li style="margin-left:20px"><code>db/</code> (better-sqlite3接続層 = pharabot-gceのdb.js + migrations)</li>
+<li style="margin-left:20px"><code>domain/ppService.js</code> (PP計算 = pharabot-gceのppService.js + pp.js)</li>
+<li style="margin-left:20px"><code>jobs/scheduled.js</code> (定期5本のcron化。中身はrevel.jsのロジック移植)</li>
+</ul>
+<ul>
+<li>comment.js・react.jsは<strong>呼び出し先が同名関数のままなので原則ノータッチ</strong>（PP発火の1行追加のみ）。</li>
+<li>掃除・ファイル分割・スキーマ刷新は<strong>やらない</strong>（安定稼働後に別案件）。</li>
+</ul>
+<h2>2. DB差し替え（firestoreService.jsの中身入れ替え）</h2>
+<p>ファイル名・関数名（＝呼び出し方の形）を<strong>完全に維持</strong>して中身だけSQLiteにする。呼び出し側(react.js/comment.js)は無改修で動く。</p>
+<ul>
+<li><code>saveMessageToFirestore(message)</code> → messagesテーブルへINSERT（同じ項目）。<strong>保存直後にppService.onMessageSaved()を同期で呼ぶ</strong>。</li>
+<li><code>incrementReactionCount(messageId)</code> → total_reactions を+1。</li>
+<li><code>addGreetingPP(...)</code> → 今はHTTPでCloud Functionsを呼んでるが、<strong>同一プロセス内のppService直呼びに変更</strong>（ネット越し→関数呼び出し。速く確実に）。</li>
+<li><code>recordGreetingEvent / fetchRecentGreetingEvents</code> → greeting_eventsテーブルのINSERT/SELECT。二重保存を1テーブルに統合。</li>
+<li><code>claimScheduleExecution(key)</code> → schedule_locksに INSERT OR IGNORE（二重実行防止）。</li>
+<li><code>getDb()</code> → SQLiteハンドルを返す。</li>
+</ul>
+<p><strong>部品流用</strong>：pharabot-gceの db.js（WALモード・migration自動適用は実装済み）と初期スキーマSQLをコピー。無い表(schedule_locks)は1枚追加。</p>
+<p><strong>DBファイル</strong>：GCE上 <code>/var/lib/pharabot/bot.db</code>（環境変数で変更可、こもやんと同方式）。</p>
+<h2>3. PP処理のBot内移設</h2>
+<p>現状：Firestoreに保存→クラウド側が自動検知(onMessageWrite)→PP計算。</p>
+<p>移行後：<strong>Botがメッセージ保存した直後に、自分でPP計算関数を呼ぶ</strong>（自動検知の仕組みはSQLiteに無いため。呼び忘れリスクは保存関数の中に組み込んで排除）。</p>
+<ul>
+<li>接続点：<code>saveMessageToFirestore</code> の末尾で <code>ppService.onMessageSaved()</code> を呼ぶ1箇所のみ。comment.js/react.jsは触らない。</li>
+<li>ppServiceに残す機能（revel.jsのロジックを移植、pharabot-gce実装分を土台にrevel.jsと等価確認）:</li>
+<li style="margin-left:20px">日次キャップ（1日に稼げるPP上限）</li>
+<li style="margin-left:20px">レベル計算・レベルアップ時のWebhook通知（お祝い投稿）→通知URL等のenv引き継ぎ</li>
+<li style="margin-left:20px">100投稿ごとのDNA解析（OpenAI呼出）→カウンタ到達で発火。<strong>失敗してもPP付与は成功扱い</strong>。</li>
+</ul>
+<h2>4. 定期処理（onSchedule 5本の置き換え）</h2>
+<p>revel.jsの5本（週次レポ 月9:00 / 月次レポ 1日9:00 / 週次ボーナス 月6:00 / 月次ボーナス 1日6:00 / 年次ボーナス 2/1 6:00、全てJST）を、<strong>Bot内node-cron</strong>（プログラム内の目覚まし時計。PharaBOT2は既に利用実績あり）で再現。</p>
+<ul>
+<li><code>jobs/scheduled.js</code> に5本を移植、botEntry起動時にcron登録。</li>
+<li>各実行冒頭でロック確認（再起動直後の二重実行防止）。</li>
+<li>systemd timerは使わない（Bot本体が常駐してるので同居が簡単）。</li>
+</ul>
+<h2>5. 会話(comment.js)/Gemini — 無改造</h2>
+<ul>
+<li>comment.js（約1500行）は<strong>1行も変更しない</strong>。これが案Aの核。</li>
+<li>引き継ぐenv：GEMINI_API_KEY、OpenAIキー、Webhook URL、Discordトークン → GCEの .env ＋常駐設定に転記。<strong>切替前にenv一覧の棚卸しチェックリストを作る</strong>（キー漏れ＝沈黙事故の典型）。</li>
+<li>comment.jsがfirestoreServiceの関数を呼ぶ箇所はシグネチャ不変でそのまま動く。<strong>comment.js/react.js内に直接firebase参照が無いかをgrepで最終確認</strong>（受け入れ前の必須チェック）。</li>
+</ul>
+<h2>6. データ移行・カットオーバー（切替）手順</h2>
+<ul>
+<li>移行スクリプト＝pharabot-gceの migrate_firestore.js（--sinceバグ修正済み）を流用。messages / PPログ / users / greeting履歴をSQLiteへ。</li>
+<li>手順（本番は最後の数分だけ止める）:</li>
+<li><strong>事前</strong>：GCEに全部構築→過去データ全量移行→ステージング（テスト用ch）で受け入れ条件を確認</li>
+<li><strong>深夜 2:00</strong>：旧Bot停止 → --sinceで差分だけ再移行（数分）→ 新Bot起動 → 疎通確認（おファラオ1発）</li>
+<li><strong>旧側は消さない</strong>：Cloud Run/Functionsは停止のみで温存。異常時は旧Bot再起動で<strong>5分でロールバック</strong>（Firestoreデータは無傷）</li>
+<li>1週間安定を確認してから旧環境を畳む</li>
+</ul>
+<h2>7. 受け入れ条件（ステージングで全部緑になるまで本番切替しない）</h2>
+<ul>
+<li>「おファラオ」にGemini返信が返る（会話が生きている＝前回事故の再発チェック）</li>
+<li>メッセージ投稿でPPが付く（日次キャップ・挨拶PPも）</li>
+<li>週次ボーナスがcron発火で動く（時刻を仮変更して強制発火テスト）</li>
+<li><strong>新旧PP一致</strong>：移行後SQLite集計とFirestore集計を全ユーザー突き合わせ、差分ゼロ</li>
+<li>Bot再起動後もデータが残り、定期処理が二重実行されない</li>
+</ul>
+<h2>8. リスクと落とし穴</h2>
+<ul>
+<li><strong>最大リスク＝「動いてるコードの見落とし」</strong>：revel.jsにはaddGreetingBonus/getLeaderboard等のHTTP関数もある。<strong>Botや外部から叩かれてる口を全部棚卸しし、移設or廃止を明示</strong>。</li>
+<li>comment.js内の隠れfirestore直参照（想定は無いが、grep確認をマイルストーン条件に）。</li>
+<li>DNA解析・レポートのOpenAIコスト/キー引き継ぎ漏れ。</li>
+<li>SQLite単一ファイル破損 → こもやんと同じ日次バックアップを初日から。</li>
+<li>e2-microのメモリ：ステージングで常駐メモリ実測。</li>
+</ul>
+<h2>9. マイルストーン（Opusコーダーに渡す粒度）</h2>
+<ul>
+<li><strong>M1 DB層差し替え</strong>：db層移植＋firestoreService.js中身置換＋PP発火接続。完了条件＝受け入れ①②相当がローカルで緑＋firebase参照grepゼロ</li>
+<li><strong>M2 定期処理移植</strong>：jobs/scheduled.js（5本＋ロック）＋getLeaderboard等HTTP口の棚卸し対応。完了条件＝強制発火テスト緑</li>
+<li><strong>M3 データ移行＆検証</strong>：migrate実行＋新旧PP突き合わせ。完了条件＝差分ゼロレポート</li>
+<li><strong>M4 GCE構築＆ステージング</strong>：e2-micro＋常駐＋env転記＋バックアップ。受け入れ①〜⑤全緑</li>
+<li><strong>M5 カットオーバー</strong>：深夜切替＋1週間監視＋旧環境温存</li>
+</ul>
+<hr>
+<h2>施主への確認ポイント（2つだけ）</h2>
+<ul>
+<li><strong>切替深夜の日程</strong>（いつやる？）</li>
+<li><strong>getLeaderboard等のHTTP機能を現在使っているか</strong>（使ってなければ移設不要でスコープが軽くなる）</li>
+</ul>
+</body></html>
