@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>砂に沈んだ王国 — ファラオDAO 活性 深掘り分析</title>
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ph-bg:#1a1915; --ph-bg2:#211f1a; --ph-card:#262624; --ph-line:#3a372f;
+  --ph-ink:#ece7de; --ph-ink2:#a39c8f; --ph-ink-strong:#fdf6e9;
+  --ph-coral:#d97757; --ph-coral-soft:#3a2a20; --ph-gold:#c9a86a; --ph-gold-bright:#e0a95c;
+  --ph-mint:#7fbfa1; --ph-mint-soft:#1f2f27;
+  --ph-radius:20px; --ph-radius-sm:12px;
+  --ph-shadow:0 2px 4px rgba(0,0,0,.28),0 10px 24px rgba(0,0,0,.36);
+  --ph-font:"Zen Kaku Gothic New","Yu Gothic UI","Meiryo",sans-serif;
+  --ph-font-disp:"Kaisei Decol","Zen Kaku Gothic New",serif;
+  --ph-font-num:"Fraunces","Zen Kaku Gothic New",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ph-bg);color:var(--ph-ink);font-family:var(--ph-font);
+  line-height:1.9;font-weight:400;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 600px at 50% -200px,rgba(217,119,87,.10),transparent 60%),
+    radial-gradient(900px 500px at 90% 400px,rgba(201,168,106,.06),transparent 60%);}
+.wrap{max-width:960px;margin:0 auto;padding:0 22px}
+.num{font-family:var(--ph-font-num);font-variant-numeric:tabular-nums;color:var(--ph-gold);font-weight:700}
+
+/* HERO */
+.hero{text-align:center;padding:92px 22px 60px;position:relative}
+.hero .glyph{font-size:56px;line-height:1;color:var(--ph-gold);opacity:.9}
+.hero h1{font-family:var(--ph-font-disp);font-weight:700;font-size:clamp(32px,6vw,58px);
+  color:var(--ph-ink-strong);line-height:1.3;margin:22px 0 8px;letter-spacing:.02em}
+.hero .sub{color:var(--ph-ink2);font-size:15px;letter-spacing:.28em;margin-bottom:34px}
+.hero .catch{max-width:720px;margin:0 auto 44px;font-size:clamp(16px,2.4vw,21px);
+  color:var(--ph-ink);font-family:var(--ph-font-disp);line-height:1.85;
+  border-left:3px solid var(--ph-coral);border-right:3px solid var(--ph-coral);padding:0 22px}
+.hero .catch b{color:var(--ph-gold-bright)}
+.statrow{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:10px}
+.stat{background:var(--ph-card);border:1px solid var(--ph-line);border-radius:var(--ph-radius);
+  padding:22px 30px;min-width:150px;box-shadow:var(--ph-shadow)}
+.stat .v{font-family:var(--ph-font-num);font-variant-numeric:tabular-nums;font-size:34px;font-weight:700;color:var(--ph-gold);line-height:1}
+.stat .l{color:var(--ph-ink2);font-size:12.5px;letter-spacing:.14em;margin-top:9px}
+
+/* CHAPTERS */
+.chap{padding:56px 0 8px}
+.chap-head{border-left:4px solid var(--ph-coral);padding-left:18px;margin-bottom:30px}
+.chap-head .kick{color:var(--ph-coral);font-size:12.5px;letter-spacing:.3em;font-weight:700}
+.chap-head h2{font-family:var(--ph-font-disp);font-weight:700;font-size:clamp(24px,4.2vw,36px);
+  color:var(--ph-ink-strong);line-height:1.35;margin-top:6px}
+.chap p{margin:0 0 20px;font-size:16.5px;color:var(--ph-ink)}
+.chap p .num,.chap p b{color:var(--ph-gold-bright);font-weight:700}
+.chap p b{color:var(--ph-ink-strong)}
+.lead{font-size:18px !important;color:var(--ph-ink-strong) !important}
+
+.record{background:var(--ph-coral-soft);border:1px solid #5a3d2c;border-radius:var(--ph-radius-sm);
+  padding:18px 22px;margin:26px 0;position:relative}
+.record .tag{color:var(--ph-gold-bright);font-size:12.5px;letter-spacing:.18em;font-weight:700;display:block;margin-bottom:6px}
+.record .tag::before{content:"𓊪 "}
+.record .q{font-family:var(--ph-font-disp);font-size:16.5px;color:var(--ph-ink-strong);line-height:1.75}
+
+.card{background:var(--ph-card);border:1px solid var(--ph-line);border-radius:var(--ph-radius);
+  padding:26px 26px 22px;margin:30px 0;box-shadow:var(--ph-shadow)}
+.card h3{font-family:var(--ph-font-disp);font-size:18px;color:var(--ph-ink-strong);font-weight:500;margin-bottom:4px}
+.card .cap{color:var(--ph-ink2);font-size:13.5px;margin-bottom:18px;line-height:1.7}
+.card .foot{color:var(--ph-ink2);font-size:13px;margin-top:14px;line-height:1.7;border-top:1px dashed var(--ph-line);padding-top:12px}
+.svg-scroll{width:100%;overflow-x:auto}
+svg{display:block;max-width:100%;height:auto}
+
+/* intervention map */
+.imap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+.iq{background:var(--ph-bg2);border:1px solid var(--ph-line);border-radius:var(--ph-radius-sm);padding:18px 20px}
+.iq .t{color:var(--ph-coral);font-weight:700;font-size:13px;letter-spacing:.16em;margin-bottom:8px}
+.iq .b{font-size:15px;color:var(--ph-ink)}
+.iq .b b{color:var(--ph-ink-strong)}
+.iq .m{font-family:var(--ph-font-num);color:var(--ph-gold);font-weight:700}
+
+.close{text-align:center;padding:50px 22px 30px}
+.close .big{font-family:var(--ph-font-disp);font-size:clamp(20px,3.2vw,28px);color:var(--ph-ink-strong);line-height:1.7;max-width:760px;margin:0 auto 18px}
+.close .big b{color:var(--ph-coral)}
+.close .g{font-size:40px;color:var(--ph-gold);margin-top:12px}
+footer{text-align:center;color:var(--ph-ink2);font-size:12.5px;padding:36px 22px 60px;border-top:1px solid var(--ph-line);margin-top:40px;line-height:1.9}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--ph-line),transparent);margin:8px 0}
+@media(max-width:600px){.imap{grid-template-columns:1fr}.hero{padding:60px 18px 40px}.stat{min-width:130px;padding:18px 22px}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="glyph">𓂀</div>
+  <h1>砂に沈んだ王国</h1>
+  <div class="sub">ファラオDAO — 活性の深掘り分析</div>
+  <div class="catch">
+    <b>133,937</b>の投稿が積み上げた王国は、いま月<b>92</b>投稿の砂嵐の中にいる——<br>だが玉座には、まだ<b>8人</b>の王が座っている。
+  </div>
+  <div class="statrow">
+    <div class="stat"><div class="v">133,937</div><div class="l">総投稿（人間）</div></div>
+    <div class="stat"><div class="v">632</div><div class="l">のべ民の数</div></div>
+    <div class="stat"><div class="v">3.5<span style="font-size:20px">年</span></div><div class="l">2023.02 – 2026.07</div></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- 序章 -->
+<section class="chap">
+  <div class="chap-head"><div class="kick">𓋹 序章</div><h2>王国の全景 —— 数字で刻まれた三年半</h2></div>
+  <p class="lead">かつてナイルのほとりに、奇妙な国があった。「世界一王様が多い意味不明な国」。ファウンダーSHOWGOが掲げた旗のもと、「いつか何かの王様になろう」を合言葉に、<b>632人</b>の民がそれぞれの玉座を求めて集った。国是は「無駄を楽しむ」。生産性という現代の神に背を向け、絵を描き、AIと戯れ、ファミコンを作り、ピラミッドを語った。</p>
+  <p>2023年1月31日の建国から2026年7月までの三年半。この王国に刻まれた人間の言葉は、総計 <span class="num">133,937</span>投稿。それは笑いであり、お題への回答であり、深夜の雑談であり、朝9時の挨拶だった。</p>
+  <p>この記録は、その王国の一生を実測データだけで辿る碑文である。憶測は書かない。粘土板に刻まれた数字だけが語る。</p>
+  <div class="record"><span class="tag">王国からの記録</span><div class="q">「いつか何かの王様になろう」——この一言に、最初の月だけで <span class="num">211</span>人が集まった。</div></div>
+</section>
+
+<!-- 第一章 -->
+<section class="chap">
+  <div class="chap-head"><div class="kick">𓅃 第一章</div><h2>興隆と絶頂 —— 8,038の月</h2></div>
+  <p>物語は勢いよく始まる。建国の月、2023年2月にはすでに <span class="num">4,642</span>投稿・<span class="num">211</span>人が言葉を交わしていた。以後、月4,000〜6,000投稿の高原が続く。2023年12月には <span class="num">6,028</span>投稿。王国は膨張し続けた。</p>
+  <p>そして絶頂が来る。<b>2024年2月、月間<span class="num">8,038</span>投稿</b>。113人の王たちが、一日平均277の言葉をこの砂漠に落とした。談話室では毎日お題が出され、MVPが讃えられ、「ふぁらちゅー」という名物挨拶が飛び交った——この年だけで100回。お題は年間<span class="num">665</span>回、MVPは<span class="num">512</span>回唱えられた。無駄を楽しむ国の、無駄の生産量が最大化した瞬間である。</p>
+  <p>だが碑文をよく読むと、絶頂の裏側に影がある。2024年8月には3,342投稿と早くも息切れの兆しが見え、後半は月3,000台へ。そして何より——<b>新規の民が、もう門をくぐらなくなっていた。</b></p>
+  <div class="card">
+    <h3>王国の月次投稿 — 一生の心電図</h3>
+    <div class="cap">人間の月次投稿数（棒）とアクティブ人数（線）。2024-02 の 8,038 が絶頂、2025-06 の 296 が最深の谷。</div>
+    <div class="svg-scroll"><div id="chart-monthly"></div></div>
+    <div class="foot">投稿は2023年から高原を保ち2024-02に噴火。だがアクティブ人数（金線）は建国期の211から100前後へ先に沈んでいる=「投稿は増えても、民は増えていない」。</div>
+  </div>
+</section>
+
+<!-- 第二章 -->
+<section class="chap">
+  <div class="chap-head"><div class="kick">🏺 第二章</div><h2>崩落 —— 2025年春、エンジンが止まった日</h2></div>
+  <p>王国の死因を、人は「みんなが飽きた」と一言で片づけたがる。だが碑文は違う物語を刻んでいる。2025年の春、王国の心臓部で<b>二つのエンジンがほぼ同時に止まった</b>のだ。</p>
+  <p>一人目は <b>minmin_4410</b>。王の談話室で「3/11のお題はコチラ⤵」「3/10のMVPは…さんです‼」と、<b>毎日お題を出しMVPを発表する司会</b>を回し続けた人物である。生涯458投稿。その手が止まったのは、記録上 <b>2025年3月11日</b>前後。以後、談話室の日次エンジンは二度と回らなかった。「お題」という言葉は2024年の665回から2025年325回へ半減し、2026年にはわずか<span class="num">3</span>回になる。</p>
+  <p>二人目は <b>tagosaku858</b>。生涯686以上の投稿を残し、<b>2025年5月10日（土）「ファミコンお披露目会 in 渋谷」リアルオフ会の主催者</b>を務めた。4月29日には告知画像を大量生成して王国を沸かせ、当日は「会場入口」「今ドンキにいて荷物持ちくらい手伝えます」と走り回った。そしてイベントの終幕とともに、ぱたりと姿を消す。最後の言葉は2026年元日の「ファけおめ🐪」——それは幽霊のような一言で、実質の停止は5月10日である。</p>
+  <p>離脱の理由を断定はできない。だがデータが<b>示唆</b>するのは、これが「不満による退出」ではなく、司会という日課を燃やし尽くした者と、リアルイベントという大火を焚き上げた者の、<b>燃え尽きの形をした沈黙</b>だということだ。二人は不平を残さず、ただ静かに筆を置いた。</p>
+  <p>結果は数字に出る。<b>2025年6月、月間<span class="num">296</span>投稿</b>。2週間の完全な空白を含む、王国史上最深の谷。ピークの8,038からわずか16ヶ月で <b>96%の減少</b>である。sisin.（103投稿→2025-08停止）、ema_1009（90→2025-04-30）、pondechinanago（85→2025-03-17）——同じ春、他の担い手たちの筆も次々に止まっている。</p>
+  <div class="card">
+    <h3>「お題」文化の栄枯 — エンジンの寿命</h3>
+    <div class="cap">年ごとの「お題」「MVP」出現回数。司会が回した2024年が全盛、停止した2025年に半減、2026年に消滅。</div>
+    <div class="svg-scroll"><div id="chart-odai"></div></div>
+    <div class="foot">お題ゲームの言語量は、月次投稿の崩落と同期している。装置は人だった=司会の停止が文化の死と一致する。</div>
+  </div>
+  <div class="record"><span class="tag">王国からの記録</span><div class="q">「3/11のお題はコチラ⤵」——この定型文が、王国最大の会話生成装置だった。装置は、人だった。</div></div>
+</section>
+
+<!-- 第三章 -->
+<section class="chap">
+  <div class="chap-head"><div class="kick">𓂀 第三章</div><h2>涸れた泉 —— 新規流入という、もう一つの死因</h2></div>
+  <p>エンジンの消失だけなら、王国は立ち直れたかもしれない。新しい司会が現れ、新しい祭りが企画されたかもしれない。だがそのためには<b>新しい民</b>が要る。そしてこの泉は、崩落よりずっと前に涸れ始めていた。</p>
+  <p>建国の2023年2月、初投稿者は <span class="num">211</span>人。翌3月に103人、5月に69人。ここまでが奔流である。2023年11月に42人、12月に24人と細り、2024年は月2〜30人（最大は4月の30人）の細流に。そして2025年——<b>月0〜8人</b>。3月に1人、5月に1人、6月に1人、7月に2人、10月に1人。ほぼ、誰も来なくなった。</p>
+  <p>つまり2025年春の崩落が起きたとき、王国にはすでに「補充」という選択肢がなかった。エンジンを回す新しい手も、観客席を埋める新しい目もない。<b>イベントエンジンの消失（内側の死）と新規流入の枯渇（外側の死）</b>——この二重苦こそが、碑文が示す死因である。どちらか一方なら、王国は生き延びたかもしれない。</p>
+  <div class="card">
+    <h3>新規参加者（初投稿月）— 崖</h3>
+    <div class="cap">その月に初めて投稿した人数。建国期の211から、2025年のほぼゼロへ。</div>
+    <div class="svg-scroll"><div id="chart-new"></div></div>
+    <div class="foot">流入は崩落（2025春）より前に死んでいた。外側の死が先行し、内側の死が後を追った。</div>
+  </div>
+</section>
+
+<!-- 第四章 -->
+<section class="chap">
+  <div class="chap-head"><div class="kick">🐫 第四章</div><h2>三本の柱 —— 王国の間取り</h2></div>
+  <p>王国の言葉は、どこで交わされていたのか。碑文は明快に三本柱を指す。</p>
+  <p>第一の柱、<b>雑談の間：<span class="num">37,781</span>投稿・402人</b>。全投稿の28%がここに落ちた、王国の広場である。第二の柱、<b>aiクリエイター省：<span class="num">26,757</span>投稿</b>。参加者は117人と絞られるが投稿密度が異様に高い——「AI」は2023年に1,011回、2024年に1,213回唱えられており、この国のクリエイター気質の心臓部だった。第三の柱、<b>王の談話室：<span class="num">25,620</span>投稿・186人</b>。ここが、お題ゲームとMVP発表の舞台である。</p>
+  <p>三本柱の合計は90,158投稿、全体の <b>67%</b>。そして興味深いのが<b>王の自己紹介：3,235投稿・450人</b>。ユーザー数では全チャンネル最大。門をくぐった民のほとんどが自己紹介まではした——そこから三本柱へ歩を進めた者と、門前で消えた者がいたことを、この数字は静かに示している。</p>
+  <div class="card">
+    <h3>チャンネル別 投稿数（上位10）</h3>
+    <div class="cap">棒＝投稿数／右の数字＝のべ参加人数。広場（雑談・402人）と密室（ai省・117人）の性格差に注目。</div>
+    <div class="svg-scroll"><div id="chart-chan"></div></div>
+    <div class="foot">雑談の間＝広く浅く／aiクリエイター省＝狭く深く／王の談話室＝ゲームの舞台。自己紹介ch(450人)と三本柱の人数差が「離脱の漏斗」を示唆する。</div>
+  </div>
+</section>
+
+<!-- 第五章 -->
+<section class="chap">
+  <div class="chap-head"><div class="kick">𓋹 第五章</div><h2>王国の体内時計 —— 金土の夜、そして朝9時</h2></div>
+  <p>三年半、133,937の投稿には明確な鼓動があった。</p>
+  <p>時刻で見れば、頂点は <b>22時の<span class="num">13,261</span>投稿</b>。23時に11,154、21時に10,074——<b>夜21〜23時が王国の黄金帯</b>である。そして意外な第二の山が <b>朝9時の<span class="num">10,007</span>投稿</b>。通勤の車内か、始業前の一服か、朝の王国は夜に匹敵する熱を持っていた。深夜2〜4時は谷。王たちは意外と健全に眠る。</p>
+  <p>曜日で見れば、<b>土曜<span class="num">23,213</span>・金曜<span class="num">21,395</span></b>が双璧。月曜は15,639で底。仕事という現世の務めを終えた金土の夜に、王たちは玉座に戻ってきた。「無駄を楽しむ」国の活動が週末夜に集中するのは、無駄こそが余暇の贅沢だったことの証左である。</p>
+  <p>この体内時計は重要だ。なぜなら——王国が眠りに落ちた今も、<b>この時計が最後に時を刻んでいた場所</b>こそ、再点火の火口だからである。</p>
+  <div class="card">
+    <h3>時間帯分布（JST・24時間）</h3>
+    <div class="cap">22時をピークに、朝9時の第二峰。深夜2〜4時が谷。</div>
+    <div class="svg-scroll"><div id="chart-hour"></div></div>
+  </div>
+  <div class="card">
+    <h3>曜日分布（JST）</h3>
+    <div class="cap">週末（金土）が双璧、月曜が底。</div>
+    <div class="svg-scroll"><div id="chart-dow"></div></div>
+  </div>
+</section>
+
+<!-- 第六章 -->
+<section class="chap">
+  <div class="chap-head"><div class="kick">𓅃 第六章</div><h2>沈黙する八人の王 —— 離脱ではなく、残存</h2></div>
+  <p>崩落の物語には、しかし奇妙な後日談がある。<b>コアの8人は、いなくなっていない</b>のだ。</p>
+  <p>全期間の投稿数トップ8——ippo039（16,547）、yamachas0（9,114）、ファウンダーshowgo_pharaoh（8,892）、motok_ip（5,415）、.ladybrown（4,792）、mizugame_22（4,741）、jumpei221166（3,785）、mahinagraph（3,515）。この8人だけで <b>56,801投稿、王国の42%</b>を担った。</p>
+  <p>彼らの月次合計は、2023年に約2,000〜2,800、2024年も約1,500〜2,900を維持。2025年4月に742、5月に811と減速し、崩落の6月には <b><span class="num">115</span></b>まで落ちる。だがゼロにはならなかった。7〜10月は約500〜650へ微かに回復し、2026年は約150〜220で緩やかな失血が続く。そして2026年7月現在——<b>8人中6〜8人が、まだこの国にいる</b>。</p>
+  <p>これは離脱ではない。<b>沈黙的残存</b>である。彼らは去らなかった。ただ、話す理由——毎日のお題、讃えるべきMVP、企画すべき祭り——を失っただけだ。玉座は空ではない。王たちは黙って座っている。火種は、消えていない。</p>
+  <div class="card">
+    <h3>コア8人の月次投稿 — 沈んでも、消えない</h3>
+    <div class="cap">投稿数トップ8合計の月次推移。2025-06に115まで落ちたが、以後も残存し続ける。</div>
+    <div class="svg-scroll"><div id="chart-core"></div></div>
+    <div class="foot">8人で王国の42%を担い、崩落後も自力で500〜650へ微回復。この残存こそ、介入の受け皿がまだ生きている証拠。</div>
+  </div>
+  <div class="record"><span class="tag">王国からの記録</span><div class="q">王は8人とも、まだ国境の内側にいる。</div></div>
+</section>
+
+<!-- 第七章 -->
+<section class="chap">
+  <div class="chap-head"><div class="kick">🏺 第七章</div><h2>言葉の栄枯 —— お題、MVP、そして消えた合言葉</h2></div>
+  <p>王国で何が語られ、何が語られなくなったか。キーワードの年輪は、この国の文化史そのものだ。</p>
+  <p><b>「お題」387→665→325→3。「MVP」161→512→205→1</b>（2023→2024→2025→2026）——お題ゲームとMVP文化の全盛が2024年、失速が2025年、消滅が2026年。この曲線は月次投稿の曲線と完全に一致する。<b>このゲームこそが王国の生命線だった。</b></p>
+  <p><b>「NFT」383→153→48→2。</b>王国はNFTブームの中で生まれた。だがその起源の言葉は年々薄れ、国はNFTの国からAIクリエイターの国へと脱皮した。<b>「ふぁらちゅー」は2024年に100回</b>唱えられた名物挨拶だったが、2026年には1回。初期の合言葉<b>「ファ活」は2023年の46回から2025年にはわずか2回</b>へ。<b>「万博」は2025年にだけ66回</b>浮上した——大阪万博の年、外の世界の祭りが一瞬だけ王国に映り込んだ痕跡である。</p>
+  <p>そして一つだけ、枯れなかった言葉がある。<b>「ピラミッド」——2023年170回、2024年168回。</b>流行が移ろい、ゲームが死に、挨拶が消えても、この国の世界観の核だけは一貫して語られ続けた。文化は死んだが、神話は生きている。</p>
+  <div class="card">
+    <h3>キーワード出現回数の年次推移</h3>
+    <div class="cap">お題／MVP＝山（2024全盛）、NFT＝単調減衰（起源の希薄化）、ピラミッド＝水平線（神話の不滅）。</div>
+    <div class="svg-scroll"><div id="chart-kw"></div></div>
+  </div>
+</section>
+
+<!-- 終章 -->
+<section class="chap">
+  <div class="chap-head"><div class="kick">𓂀 終章</div><h2>再点火の設計図 —— この王国は、もう一度燃えるか</h2></div>
+  <p>ここまでの碑文が示す死因は明快である。<b>①イベントエンジンの消失</b>（毎日お題ゲームの司会と、リアルオフ会の主催という二つの人力エンジンが2025年春に相次いで停止）、<b>②新規流入の完全枯渇</b>（2024年後半以降ほぼゼロ）。そしてもう一つ、明快な生存条件がある。<b>コア8人は沈黙したまま残存しており、受け皿はまだ生きている。</b></p>
+  <p>ならば、問いはこうなる——<b>人が担っていたエンジンを、BOTが代替したとき、この下降曲線は反転するか。</b>これが本研究の核心である。データは介入の設計図をすでに描いている。</p>
+  <div class="card">
+    <h3>𓋹 介入マップ — どこで・何を・いつ・誰に</h3>
+    <div class="cap">実測が指し示す、反転を狙うべき4つの座標。</div>
+    <div class="imap">
+      <div class="iq"><div class="t">WHERE — どこで</div><div class="b"><b>王の談話室</b>（<span class="m">25,620</span>投稿の実績＝お題ゲーム本来の舞台）。補助線に<b>雑談の間</b>（<span class="m">402</span>人が触れた最大の広場）。</div></div>
+      <div class="iq"><div class="t">WHAT — 何を</div><div class="b"><b>日次お題＋前日MVP発表の再点火</b>。2024年に年<span class="m">665</span>回のお題・<span class="m">512</span>回のMVPを生んだ実証済みフォーマット。発明は要らない、復元でいい。</div></div>
+      <div class="iq"><div class="t">WHEN — いつ</div><div class="b"><b>金・土の夜21〜23時</b>（22時＝<span class="m">13,261</span>の最深部）に本命を投下、<b>朝9時</b>（<span class="m">10,007</span>の第二峰）にリマインドを重ねる。</div></div>
+      <div class="iq"><div class="t">WHO — 誰に</div><div class="b"><b>沈黙する8人の王</b>。全投稿の<span class="m">42</span>%を担い、今も6〜8人が国内に。彼らの沈黙が最初に破れるかが、反転の先行指標。</div></div>
+    </div>
+  </div>
+  <p>月92投稿（2026-07）の砂嵐の底から、8,038（2024-02）の絶頂へ戻れとは言わない。だが<span class="num">296</span>まで落ちた2025年6月からでも、王国は500〜650へ自力で微回復した実績がある。脈は打っている。</p>
+</section>
+
+<div class="close">
+  <div class="divider"></div>
+  <div class="big" style="margin-top:34px">これは終わりの記録ではない。<br><b>133,937の投稿</b>が教えてくれた、<b>再点火の設計図</b>である。</div>
+  <div class="big" style="font-size:19px;color:var(--ph-ink2)">王たちよ、いつか何かの——いや、もう一度この国の王様になろう。</div>
+  <div class="g">𓅃</div>
+</div>
+
+</div>
+
+<footer>
+  ファラオDAO 活性 深掘り分析 ｜ データ源：Discord投稿ログ（人間投稿 is_bot=0・読み取り専用・2023-02〜2026-07）<br>
+  全数値は実測（総投稿133,937／632ユーザー）。個人の離脱理由は断定せず「示唆」として記述。<br>
+  ベースライン週次時系列 → <a href="https://yamachas0.github.io/dev-review/pharaohdao-activity.html" style="color:var(--ph-gold)">pharaohdao-activity.html</a>
+</footer>
+
+<script>
+// ===== data =====
+const MONTHS=["2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07"];
+const MSG=[4642,4202,2924,4937,3990,5163,5289,4538,3960,5656,6028,5253,8038,5170,5026,5188,4845,5432,3342,4427,3838,3057,3738,4667,3349,2874,2046,1496,296,1624,1159,1384,1144,889,926,668,485,585,607,419,544,92];
+const USR=[211,211,81,154,86,100,92,103,77,129,115,99,113,103,114,103,82,82,80,71,80,68,66,79,73,63,62,56,41,51,50,50,52,41,43,49,36,32,37,30,36,16];
+const NEW=[211,103,4,69,1,15,14,15,2,42,24,12,16,21,30,10,7,2,5,3,2,2,4,8,2,1,2,1,1,2,0,0,1,0,0,0,0,0,0,0,0,0];
+const CORE=[798,1121,1240,1960,1863,2106,2622,1958,2230,2821,2838,2707,2861,2133,2262,2371,1870,2239,1323,2214,1976,1510,1482,1940,1675,1205,742,811,115,643,509,554,502,303,248,222,172,198,156,119,160,22];
+const CHAN=[["雑談の間",37781,402],["aiクリエイター省",26757,117],["王の談話室",25620,186],["voicy感想の間",4686,161],["談話室(予備室)",4131,50],["ai_ルーキー道場",3414,64],["軽率にｸﾘｴｲﾃｨﾌﾞ",3364,107],["王の自己紹介",3235,450],["総務省",2344,57],["ガヤガヤのガヤ省",2281,103]];
+const HOUR=[7208,2934,1089,694,973,4348,8448,8913,7106,10007,4846,3989,5076,3644,3145,3261,3475,3808,4648,5107,6729,10074,13261,11154];
+const DOW=[["日",18373],["月",15639],["火",16565],["水",21171],["木",17581],["金",21395],["土",23213]];
+const KW=[["お題",[387,665,325,3],"#d97757"],["MVP",[161,512,205,1],"#e0a95c"],["NFT",[383,153,48,2],"#7fbfa1"],["ふぁらちゅー",[0,100,69,1],"#c9a86a"],["万博",[1,1,66,0],"#a39c8f"],["AI",[1011,1213,450,36],"#d0b98a"],["ピラミッド",[170,168,78,4],"#b98c6a"]];
+const YRS=["2023","2024","2025","2026"];
+const C={ink:"#ece7de",ink2:"#a39c8f",line:"#3a372f",coral:"#d97757",gold:"#c9a86a",goldB:"#e0a95c",mint:"#7fbfa1",card:"#262624"};
+const NS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,o){o=o||{};const t=el("text",{x:x,y:y,fill:o.fill||C.ink2,"font-size":o.fs||11,"text-anchor":o.a||"middle","font-family":o.ff||"Zen Kaku Gothic New",transform:o.tr||""});if(o.w)t.setAttribute("font-weight",o.w);t.textContent=s;return t;}
+function svg(w,h){const s=el("svg",{viewBox:"0 0 "+w+" "+h,width:w,height:h,preserveAspectRatio:"xMidYMid meet"});return s;}
+
+// combo: monthly bars + users line
+function drawMonthly(){
+  const w=900,h=380,pl=48,pr=48,pt=30,pb=64;const iw=w-pl-pr,ih=h-pt-pb;
+  const s=svg(w,h);const maxM=8038,maxU=220;
+  [0,2000,4000,6000,8000].forEach(v=>{const y=pt+ih-ih*v/maxM;s.appendChild(el("line",{x1:pl,y1:y,x2:pl+iw,y2:y,stroke:C.line,"stroke-width":1}));s.appendChild(txt(pl-8,y+4,v.toLocaleString(),{a:"end",fs:10,fill:C.ink2,ff:"Fraunces"}));});
+  const bw=iw/MONTHS.length;
+  MSG.forEach((v,i)=>{const bh=ih*v/maxM;const x=pl+i*bw+bw*0.15;const y=pt+ih-bh;const peak=(i===12),bot=(i===28);
+    s.appendChild(el("rect",{x:x,y:y,width:bw*0.7,height:bh,rx:2,fill:peak?C.goldB:(bot?C.coral:"#6b5a48")}));});
+  // users line (right axis)
+  let d="";USR.forEach((v,i)=>{const x=pl+i*bw+bw/2;const y=pt+ih-ih*v/maxU;d+=(i?"L":"M")+x+" "+y+" ";});
+  s.appendChild(el("path",{d:d,fill:"none",stroke:C.gold,"stroke-width":2,"stroke-linejoin":"round","opacity":0.9}));
+  // annotations
+  const ax=pl+12*bw+bw/2, ay=pt+ih-ih*8038/maxM;
+  s.appendChild(el("circle",{cx:ax,cy:ay,r:4,fill:C.goldB}));
+  s.appendChild(txt(ax,ay-10,"絶頂 8,038",{fill:C.goldB,fs:12,w:700,ff:"Fraunces"}));
+  const bx=pl+28*bw+bw/2, by=pt+ih-ih*296/maxM;
+  s.appendChild(el("circle",{cx:bx,cy:by,r:4,fill:C.coral}));
+  s.appendChild(txt(bx,by-10,"崩落 296",{fill:C.coral,fs:12,w:700,ff:"Fraunces"}));
+  // x labels (year ticks)
+  [["2023",0],["2024",11],["2025",23],["2026",35]].forEach(([lb,i])=>{const x=pl+i*bw+bw/2;s.appendChild(txt(x,h-30,lb,{fs:12,fill:C.ink,w:700}));});
+  s.appendChild(txt(pl,h-10,"■ 月次投稿",{a:"start",fs:11,fill:"#6b5a48"}));
+  s.appendChild(txt(pl+140,h-10,"― アクティブ人数",{a:"start",fs:11,fill:C.gold}));
+  document.getElementById("chart-monthly").appendChild(s);
+}
+// simple vertical bars
+function drawBars(id,data,labels,color,maxV,fmt){
+  const w=900,h=300,pl=48,pr=20,pt=24,pb=52;const iw=w-pl-pr,ih=h-pt-pb;
+  const s=svg(w,h);const mx=maxV||Math.max(...data);
+  const gl=4;for(let g=0;g<=gl;g++){const v=mx*g/gl;const y=pt+ih-ih*g/gl;s.appendChild(el("line",{x1:pl,y1:y,x2:pl+iw,y2:y,stroke:C.line}));s.appendChild(txt(pl-8,y+4,Math.round(v).toLocaleString(),{a:"end",fs:10,ff:"Fraunces"}));}
+  const bw=iw/data.length;
+  data.forEach((v,i)=>{const bh=ih*v/mx;const x=pl+i*bw+bw*0.12;const y=pt+ih-bh;
+    s.appendChild(el("rect",{x:x,y:y,width:bw*0.76,height:Math.max(bh,0),rx:2,fill:(typeof color==="function")?color(v,i):color}));});
+  labels.forEach((lb,i)=>{if(lb!==null){const x=pl+i*bw+bw/2;s.appendChild(txt(x,h-30,lb,{fs:11,fill:C.ink}));}});
+  document.getElementById(id).appendChild(s);
+}
+// monthly new users (year-labeled)
+function drawNew(){
+  const labels=MONTHS.map((m,i)=>[0,11,23,35].includes(i)?m.slice(0,4):null);
+  drawBars("chart-new",NEW,labels,(v,i)=>i<11?C.gold:(i<23?"#8a7256":"#5a4a3a"),211);
+}
+function drawCore(){
+  const w=900,h=300,pl=48,pr=20,pt=24,pb=52;const iw=w-pl-pr,ih=h-pt-pb;
+  const s=svg(w,h);const mx=3000;
+  [0,1000,2000,3000].forEach(v=>{const y=pt+ih-ih*v/mx;s.appendChild(el("line",{x1:pl,y1:y,x2:pl+iw,y2:y,stroke:C.line}));s.appendChild(txt(pl-8,y+4,v.toLocaleString(),{a:"end",fs:10,ff:"Fraunces"}));});
+  const bw=iw/CORE.length;let d="";
+  CORE.forEach((v,i)=>{const x=pl+i*bw+bw/2;const y=pt+ih-ih*v/mx;d+=(i?"L":"M")+x+" "+y+" ";});
+  // area
+  s.appendChild(el("path",{d:d+"L"+(pl+(CORE.length-1)*bw+bw/2)+" "+(pt+ih)+" L"+(pl+bw/2)+" "+(pt+ih)+" Z",fill:"rgba(217,119,87,.12)"}));
+  s.appendChild(el("path",{d:d,fill:"none",stroke:C.coral,"stroke-width":2.5,"stroke-linejoin":"round"}));
+  const bi=28,bx=pl+bi*bw+bw/2,by=pt+ih-ih*115/mx;
+  s.appendChild(el("circle",{cx:bx,cy:by,r:4,fill:C.coral}));
+  s.appendChild(txt(bx,by-9,"115",{fill:C.coral,fs:12,w:700,ff:"Fraunces"}));
+  [["2023",0],["2024",11],["2025",23],["2026",35]].forEach(([lb,i])=>{s.appendChild(txt(pl+i*bw+bw/2,h-30,lb,{fs:12,fill:C.ink,w:700}));});
+  document.getElementById("chart-core").appendChild(s);
+}
+function drawHour(){
+  const labels=HOUR.map((v,i)=>(i%2===0)?String(i):null);
+  drawBars("chart-hour",HOUR,labels,(v,i)=>(i>=21||i<=0)?C.coral:(i===9?C.goldB:"#6b5a48"),14000);
+  document.getElementById("chart-hour").querySelector("svg").appendChild(txt(880,290,"時",{a:"end",fs:10,fill:C.ink2}));
+}
+function drawDow(){
+  drawBars("chart-dow",DOW.map(d=>d[1]),DOW.map(d=>d[0]),(v,i)=>(i===5||i===6)?C.coral:(i===1?"#5a4a3a":"#6b5a48"),24000);
+}
+// horizontal channel bars
+function drawChan(){
+  const w=900,rowH=34,pt=10,pb=10,pl=150,pr=70;const h=pt+pb+CHAN.length*rowH;
+  const s=svg(w,h);const mx=CHAN[0][1];const iw=w-pl-pr;
+  CHAN.forEach((c,i)=>{const y=pt+i*rowH;const bw=iw*c[1]/mx;const top3=i<3;
+    s.appendChild(txt(pl-10,y+rowH/2+4,c[0],{a:"end",fs:12.5,fill:top3?C.ink:C.ink2,w:top3?700:400}));
+    s.appendChild(el("rect",{x:pl,y:y+6,width:bw,height:rowH-14,rx:4,fill:top3?C.coral:"#6b5a48"}));
+    s.appendChild(txt(pl+bw+8,y+rowH/2+4,c[1].toLocaleString(),{a:"start",fs:12,fill:C.gold,ff:"Fraunces",w:700}));
+    s.appendChild(txt(pl+bw+8,y+rowH/2+4,"",{}));
+    s.appendChild(txt(w-6,y+rowH/2+4,c[2]+"人",{a:"end",fs:11,fill:C.ink2}));
+  });
+  document.getElementById("chart-chan").appendChild(s);
+}
+// keyword small multiples
+function drawKw(){
+  const cols=KW.length,cw=118,ch=150,gap=8,pt=20,pbb=42;
+  const w=cols*cw,h=pt+ch+pbb;
+  const s=svg(w,h);
+  KW.forEach((k,ci)=>{const x0=ci*cw+14;const vals=k[1];const mx=Math.max(...vals);const iw=cw-28,ih=ch;
+    const bw=iw/4;
+    vals.forEach((v,i)=>{const bh=ih*v/mx;const x=x0+i*bw+bw*0.15;const y=pt+ih-bh;
+      s.appendChild(el("rect",{x:x,y:y,width:bw*0.7,height:Math.max(bh,1),rx:1.5,fill:k[2],opacity:0.55+0.15*(3-Math.abs(i-1))}));});
+    // max label
+    const mi=vals.indexOf(mx);s.appendChild(txt(x0+mi*bw+bw/2,pt+ih-ih*mx/mx-6,mx,{fs:10,fill:k[2],ff:"Fraunces",w:700}));
+    s.appendChild(txt(x0+iw/2,h-24,k[0],{fs:12,fill:C.ink,w:700}));
+    s.appendChild(txt(x0+iw/2,h-9,"23→26",{fs:9,fill:C.ink2,ff:"Fraunces"}));
+  });
+  document.getElementById("chart-kw").appendChild(s);
+}
+drawMonthly();drawNew();drawCore();drawHour();drawDow();drawChan();drawKw();
+</script>
+</body>
+</html>
