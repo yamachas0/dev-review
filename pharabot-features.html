@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ファラBOT 全機能チェックリスト（軽量化用）</title>
+<style>
+:root{color-scheme:light dark}
+body{font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.7;margin:0;padding:18px 14px 70px;max-width:760px;margin-inline:auto;background:#faf9f7;color:#1c1a17}
+@media(prefers-color-scheme:dark){body{background:#14140f;color:#e9e6df}.item{background:#1d1c16;border-color:#33312a}.meta{background:#23211a;color:#b8b3a8}h2{border-color:#3a3730}}
+h1{font-size:20px;margin:6px 0}
+.meta{font-size:13px;background:#efece6;padding:10px 13px;border-radius:8px;margin-bottom:18px}
+h2{font-size:16px;margin-top:26px;border-top:1px solid #e0dccf;padding-top:12px}
+.item{display:flex;gap:9px;align-items:flex-start;background:#fff;border:1px solid #eae5d8;border-radius:9px;padding:8px 11px;margin:7px 0}
+.item input{margin-top:4px;width:17px;height:17px;flex:none}
+.n{font-weight:800;color:#9a6b1a;font-size:13px;flex:none;min-width:24px}
+.body{flex:1;min-width:0}
+.name{font-weight:700}
+.desc{font-size:13px;opacity:.85}
+.b{display:inline-block;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:10px;margin-left:5px;vertical-align:middle}
+.live{background:#2d7a4a;color:#fff}
+.stop{background:#6b6558;color:#fff}
+.noop{background:#b7791f;color:#fff}
+.base{background:#c0392b;color:#fff}
+.pp{color:#c0392b;font-size:12px;font-weight:700}
+a{color:#9a6b1a}
+</style></head><body>
+<h1>🏺 ファラBOT 全機能チェックリスト</h1>
+<div class="meta"><b>全部チェック済み＝いま入ってる状態</b>。<b>消したい機能の番号</b>を教えて（例：「12, 18, 34 消して」）。外したものを削除する実装をします。<br>
+🟩稼働中 ／ ⬜停止中(コメントアウト・削除候補) ／ 🟧配線済だがwebhook未設定でログのみ ／ 🟥土台(消すとPP/統計が全滅・削除非推奨)<br>
+※react.jsは「上から順・1メッセージ1反応(先勝ち)」。</div>
+
+<h2>① 挨拶・PP付与 <span class="pp">（PP/レベルに影響）</span></h2>
+<div class="item"><input type="checkbox" checked><span class="n">1</span><div class="body"><span class="name">おファラオ挨拶（テキスト）</span><span class="b live">稼働</span><span class="pp">PP</span><div class="desc">「おファラオ/おファ/おはよう」検知(雑談＋テスト2ch)→リアクション＋10PP＋5行返信(挨拶/PP進呈/前回差分AIコメント/連続日数称賛/謎コメント)</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">2</span><div class="body"><span class="name">おファラオ挨拶（スタンプ）</span><span class="b live">稼働</span><span class="pp">PP</span><div class="desc">指定スタンプ→リアクション＋5PP＋同上返信</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">3</span><div class="body"><span class="name">ウェルカムメッセージ</span><span class="b live">稼働</span><div class="desc">自己紹介系4chで「はじめまして/申します」等→WELCOME画像付き挨拶</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">4</span><div class="body"><span class="name">3周年祝電への塩対応</span><span class="b live">稼働</span><div class="desc">祝電ch投稿→AI感謝(塩)返信。※2/1企画の残骸、日常は該当chに投稿なければ発火しない＝削除候補</div></div></div>
+
+<h2>② AI応答（Gemini課金が走る系）</h2>
+<div class="item"><input type="checkbox" checked><span class="n">5</span><div class="body"><span class="name">BOTへのリプライ会話</span><span class="b live">稼働</span><div class="desc">ファラBOTの発言へ返信→最大10件遡ってGemini文脈返信</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">6</span><div class="body"><span class="name">「ファラBOT」呼びかけ反応</span><span class="b live">稼働</span><div class="desc">本文に「ファラBOT」→Geminiキャラ返信</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">7</span><div class="body"><span class="name">教えてファラBOT（ナレッジQA）</span><span class="b live">稼働</span><div class="desc">専用2ch or「教えてファラBOT〜」→ナレッジ検索＋Gemini要約回答</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">8</span><div class="body"><span class="name">AIクリエイター省の作品講評</span><span class="b live">稼働</span><div class="desc">対象3chの添付付き投稿→リアクション＋AI講評(画像はマルチモーダル)</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">9</span><div class="body"><span class="name">ムダ活奉納神殿の反応</span><span class="b live">稼働</span><div class="desc">奉納ch全投稿→内容で3分岐(天然のファ/わざとらしいファ/その他)AI返信</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">10</span><div class="body"><span class="name">週報テスト（運用者向け）</span><span class="b live">稼働</span><div class="desc">テストchで「週報テスト」→週報を即時生成投稿</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">11</span><div class="body"><span class="name">ファラオみくじ</span><span class="b live">稼働</span><div class="desc">「あけおめ/ファけおめ」等(正月限定トリガー)→AIおみくじEmbed＋運勢別画像</div></div></div>
+
+<h2>③ 固定ワード反応（画像・定型文・AIなし）</h2>
+<div class="item"><input type="checkbox" checked><span class="n">12</span><div class="body"><span class="name">ファ含み語→「天然のファ！！！」</span><span class="b live">稼働</span><div class="desc">ファミチキ等30語超＋ふぁらちゅー→💋／クラファン→無駄遣い税ネタ</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">13</span><div class="body"><span class="name">「ファラオDAO」→紹介画像</span><span class="b live">稼働</span><div class="desc">ランダム1枚＋キャッチコピー</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">14</span><div class="body"><span class="name">「ファラオ」→ファラオ画像</span><span class="b live">稼働</span><div class="desc">ランダム1枚(挨拶系は除外)</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">15</span><div class="body"><span class="name">「ツタンカーメン」→画像</span><span class="b live">稼働</span></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">16</span><div class="body"><span class="name">「つまちゃそ」→画像17種＋「呼んだ？」</span><span class="b live">稼働</span></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">17</span><div class="body"><span class="name">「SHOWGO/しょうご」→画像4種＋高笑い</span><span class="b live">稼働</span></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">18</span><div class="body"><span class="name">「無駄/ムダ/muda」→「無駄を検知」＋LEGO画像</span><span class="b live">稼働</span><div class="desc">※発火頻度高そう</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">19</span><div class="body"><span class="name">「どうかしてる」→画像</span><span class="b live">稼働</span></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">20</span><div class="body"><span class="name">「ファまき」→キャンディさん召喚画像</span><span class="b live">稼働</span></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">21</span><div class="body"><span class="name">汎用ワード反応（約25パターン）</span><span class="b live">稼働</span><div class="desc">来る/知らんけど/凡人/なるほど/密入国/ナイル/エモい/やばい/くそ/💩/BAN/SASUKE等→定型文。※中の個別ワードも間引ける</div></div></div>
+
+<h2>④ メンバー名反応</h2>
+<div class="item"><input type="checkbox" checked><span class="n">22</span><div class="body"><span class="name">メンバー名反応（約20パターン）</span><span class="b live">稼働</span><div class="desc">ミズゲーム/れでぃぶら/キャンディ/まひな/Ark/キクさん/ラクダ/PLAUD/Voicy等→絵文字や定型文。※中の個別も間引ける／プリンセスナイル・愚痴反応は停止中</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">23</span><div class="body"><span class="name">ガヤカウント</span><span class="b live">稼働</span><div class="desc">ガヤch＋テストchで「ガヤ」→🤟＋「N ガヤ」</div></div></div>
+
+<h2>⑤ リアクション起点</h2>
+<div class="item"><input type="checkbox" checked><span class="n">24</span><div class="body"><span class="name">リアクションPP加算</span><span class="b live">稼働</span><span class="pp">PP</span><div class="desc">誰かがリアクション→投稿者に増分PP付与</div></div></div>
+<div class="item"><input type="checkbox"><span class="n">25</span><div class="body"><span class="name">👑/🧩リアクションでDrive保存</span><span class="b stop">停止中</span><div class="desc">MVP/作品の自動アーカイブ。今コメントアウト＝復活or完全削除どちらか</div></div></div>
+
+<h2>⑥ メッセージ保存・PPエンジン <span class="pp">（土台・削るとPP/統計が全滅）</span></h2>
+<div class="item"><input type="checkbox" checked><span class="n">26</span><div class="body"><span class="name">全メッセージSQLite保存</span><span class="b base">土台</span><div class="desc">Bot以外の全投稿をDB保存(除外ch有)。削除非推奨</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">27</span><div class="body"><span class="name">投稿PP付与エンジン</span><span class="b base">土台</span><span class="pp">PP</span><div class="desc">保存と同時にPP計算→ユーザーPP/レベル更新。削除非推奨</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">28</span><div class="body"><span class="name">レベルアップ通知</span><span class="b live">稼働</span><div class="desc">レベル上昇→段数ピラミッドEmbedをWebhook投稿(今日有効化済)</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">29</span><div class="body"><span class="name">100投稿記念DNA解析</span><span class="b live">稼働</span><div class="desc">投稿数100の倍数→直近100投稿の癖分析＋予測をWebhook投稿。OpenAI課金あり</div></div></div>
+
+<h2>⑦ 定期処理（自動・cron）</h2>
+<div class="item"><input type="checkbox" checked><span class="n">30</span><div class="body"><span class="name">週次継続ボーナス</span><span class="b live">稼働</span><span class="pp">PP</span><div class="desc">毎週月6:00→直近7日毎日投稿した人に888PP</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">31</span><div class="body"><span class="name">月次継続ボーナス</span><span class="b live">稼働</span><span class="pp">PP</span><div class="desc">毎月1日6:00→30日連続で8888PP</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">32</span><div class="body"><span class="name">年次継続ボーナス</span><span class="b live">稼働</span><span class="pp">PP</span><div class="desc">毎年2/1 6:00→365日連続で88888PP</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">33</span><div class="body"><span class="name">週報</span><span class="b live">稼働</span><div class="desc">毎週月9:00→週間統計＋グラフをWebhook投稿(今日復活)</div></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">34</span><div class="body"><span class="name">月報</span><span class="b live">稼働</span><div class="desc">毎月1日9:00→月間統計をWebhook投稿(今日復活)</div></div></div>
+
+<h2>⑧ 定期処理（schedule.js・大半は停止中＝削除候補）</h2>
+<div class="item"><input type="checkbox" checked><span class="n">35</span><div class="body"><span class="name">2026サプライズ投稿</span><span class="b live">稼働</span><div class="desc">2026/10/19 23:49に雑談chへ「覚えてる？」1回。単発時限</div></div></div>
+<div class="item"><input type="checkbox"><span class="n">36</span><div class="body"><span class="name">3周年アナウンス＋祝電例</span><span class="b noop">消化済/バグ源</span><div class="desc">2/1限定＝実質消化済。1分毎にcron多重登録するバグ構造あり＝<b>丸ごと削除推奨</b></div></div></div>
+<div class="item"><input type="checkbox"><span class="n">37</span><div class="body"><span class="name">創立記念日メッセージ</span><span class="b stop">停止中</span></div></div>
+<div class="item"><input type="checkbox"><span class="n">38</span><div class="body"><span class="name">誕生日メッセージ（28人・毎朝6:00）</span><span class="b stop">停止中</span></div></div>
+<div class="item"><input type="checkbox"><span class="n">39</span><div class="body"><span class="name">時報（9/15/21時）</span><span class="b stop">停止中</span></div></div>
+<div class="item"><input type="checkbox"><span class="n">40</span><div class="body"><span class="name">ムダ活奉納TIME 1〜3（曜日別お題）</span><span class="b stop">停止中</span></div></div>
+
+<h2>⑨ その他・インフラ</h2>
+<div class="item"><input type="checkbox" checked><span class="n">41</span><div class="body"><span class="name">ステータス表示「王たちのムダ活を監視中」</span><span class="b live">稼働</span></div></div>
+<div class="item"><input type="checkbox" checked><span class="n">42</span><div class="body"><span class="name">接続ヘルスモニター/自動再接続</span><span class="b base">インフラ</span><div class="desc">機能でなく土台。削除非推奨</div></div></div>
+<div class="item"><input type="checkbox"><span class="n">43</span><div class="body"><span class="name">未使用のgenerate関数群</span><span class="b stop">未使用</span><div class="desc">generateMorning/NewYear/Search/Reply/NaturalMediaReaction＝発火点なし。掃除で消してOK(挙動不変)</div></div></div>
+
+<div class="meta" style="margin-top:24px">💡 <b>PP付与ルール（設定値・機能じゃなく数値調整）</b>：通常投稿=10PP／文字数+1(上限50)／リアクション×2／人メンション5・BOTメンション15／対象4ch+10／「ファ」1文字+8／日次上限1000／レベル式=初期100・成長率1.2／継続ボーナス888/8888/88888。<b>これらは「消す」でなく「数値変更」で調整可能</b>。変えたい値があれば別途言って。</div>
+
+<div class="meta">👉 消したい番号を教えて（停止中の35〜40・未使用43は掃除ついでに消せる。土台26/27/42は残す前提）。決まったら削除実装します🏺</div>
+</body></html>
