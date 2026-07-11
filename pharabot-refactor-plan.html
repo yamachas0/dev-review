@@ -1,0 +1,59 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ファラBOT 大規模リファクタ 段取り</title>
+<style>
+:root{color-scheme:light dark}
+body{font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;line-height:1.85;margin:0;padding:20px 16px 60px;max-width:760px;margin-inline:auto;background:#faf9f7;color:#1c1a17}
+@media(prefers-color-scheme:dark){body{background:#14140f;color:#e9e6df}code{background:#2a2820;color:#e0c58a}h2{border-color:#3a3730}.tag{background:#23211a;color:#b8b3a8}}
+h1{font-size:21px;line-height:1.4}h2{font-size:18px;margin-top:30px;border-top:1px solid #e0dccf;padding-top:16px}h3{font-size:15px;margin-top:20px;color:#8a6a2a}
+code{background:#efe9dd;padding:1px 6px;border-radius:5px;font-size:13.5px;font-family:ui-monospace,Menlo,monospace}
+ul{padding-left:22px}li{margin:5px 0}p{margin:12px 0}hr{border:none;border-top:2px dashed #cfc8b8;margin:24px 0}
+.tag{display:inline-block;font-size:12px;letter-spacing:.06em;background:#efece6;padding:3px 12px;border-radius:12px;margin-bottom:10px}
+strong{color:inherit}a{color:#9a6b1a}
+</style></head><body>
+<span class="tag">レビュー用 ・ 実装前の設計書 ・ リファクタ段取り（合意用）</span>
+<h1>ファラBOT 大規模リファクタ 段取り設計書（実装前・合意用）</h1>
+<h2>結論（推奨）</h2>
+<p>やるのは <strong>「掃除（フェーズ1・低リスク）」＋「分割は comment.js と react.js の2本のみ（フェーズ2・中リスク）」</strong>。<strong>DB周り（db.js・スキーマ）と botEntry.js（接続の心臓部）は今回触らない</strong>。本番反映は最後に systemd restart 一発、失敗したら旧に戻すだけ。</p>
+<hr>
+<h2>1. 棚卸し</h2>
+<p><strong>現在botがロードしてるもの（慎重に扱う）</strong>：index.js→botEntry.js→{react.js(1033行), comment.js(1545行), schedule/weeklyReport/monthlyReport, jobs/scheduled.js, db/db.js, functions/firestoreService/weeklyStats/monthlyStats}</p>
+<p><strong>ロードされてない＝掃除候補（確認済み）</strong>：</p>
+<ul>
+<li><strong>functions/revel.js(1143行)</strong>：旧Cloud Functions本体。現botは一切ロードしない→<strong>分割不要・archive行き</strong>（7/9計画の「revel.js分割」はもう不要）</li>
+<li>backup_pre_rebase/・archive/BOT/（移行バックアップ、git履歴あり）</li>
+<li>ルート直下のゴミ：dry_run_output.txt〜v5.txt, temp_script.js, h, public/script_broken.js等, scripts/*_log.txt</li>
+<li><strong>functions/node_modules/（1.5万ファイル超）</strong>：旧Functions依存、botは不使用→削除でリポ激軽</li>
+<li>判断保留：deploy.sh/cloudbuild.yaml/Dockerfile（Cloud Run時代の遺物）</li>
+</ul>
+<hr>
+<h2>2. 分割方針（フェーズ2）</h2>
+<p><strong>原則：ファイルを移すだけ・1行もロジックを書き換えない（機械的切り出し）</strong>。</p>
+<p><strong>comment.js(1545行)→4分割</strong>：discordSend.js(送信ヘルパー)／greeting.js(挨拶ロジック約500行)／aiPrompts.js(Geminiプロンプト＋生成約500行)／comment.js(残す＝re-export窓口、呼び出し側は無修正)</p>
+<p><strong>react.js(1033行)→3分割</strong>：900行の一枚岩botReactions()をトリガー種別(挨拶検出/ファ検出emoji/コマンド)ごとにハンドラ切り出し、react.jsは振り分けだけ残す。exportsは不変。</p>
+<p><strong>やらない</strong>：botEntry.js(接続ヘルスの要)／db・jobs・schedule(既に小さい)／firestoreServiceのリネームは余裕があればフェーズ2最後に。</p>
+<hr>
+<h2>3. 「挙動を1ミリも変えない」担保（3ゲート、全部パスで本番へ）</h2>
+<ul>
+<li><strong>オフライン検証</strong>：tests/を分割前後で実行→同一結果。gateway off起動でハンドラ配線ログが分割前後で同一。全require解決確認。</li>
+<li><strong>差分検証</strong>：各コミットは切り出しのみ、移動関数の中身が旧と文字単位一致をdiff確認。</li>
+<li><strong>ステージング実接続受け入れ</strong>：スモーク表(挨拶+PP/emoji/ファ検出/メンション返信/週月報手動発火/ボーナスcron)全OK＋24h安定。</li>
+</ul>
+<hr>
+<h2>4. 段取り</h2>
+<ul>
+<li><strong>M0準備</strong>：本番コード＆SQLiteバックアップ、git tag <code>pre-refactor</code>（ロールバック保険）</li>
+<li><strong>M1掃除(フェーズ1)</strong>：ゴミ削除・archive統合・node_modules削除→ステージング様子見→本番反映①</li>
+<li><strong>M2分割(フェーズ2)</strong>：comment→reactの順、1ファイルずつコミット＋各コミット後オフライン検証</li>
+<li><strong>M3ステージング受け入れ</strong>：スモーク全項目＋24h安定</li>
+<li><strong>M4本番反映②</strong>：git pull→systemctl restart(数秒)→挨拶1回テスト</li>
+<li><strong>ロールバック(3分)</strong>：git checkout pre-refactor→restart。<strong>DBスキーマ不変＝データロールバック不要＝安全設計の肝</strong></li>
+</ul>
+<hr>
+<h2>5. 施主に決めてもらう3つ</h2>
+<ul>
+<li><strong>フェーズ1(掃除)だけで止めるか、フェーズ2(分割)まで行くか</strong>。掃除だけでも価値大（リポ軽量化・迷いファイル消滅）</li>
+<li><strong>revel.js/旧Cloud Functions一式</strong>を「削除」か「archive退避」か（推奨：退避＝CLAUDE.mdのファイル削除禁止原則と整合）</li>
+<li><strong>firestoreService.jsのリネーム(dbService.js)</strong>やるか（推奨：フェーズ2に余裕あれば。なくても害なし）</li>
+</ul>
+</body></html>
