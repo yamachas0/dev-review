@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>復興庁（改）― ゴールレス創発観測型</title>
+<title>復興庁 仕様（決定版）― ゴールレス創発観測型</title>
 <style>
   :root{
     --bg:#1c1712; --bg2:#241d16; --card:#2a2118; --ink:#f3e7d3; --ink2:#c3ac8c;
@@ -11,8 +11,7 @@
     --lapis:#6f9bc4; --mint:#8fbf9a; --rose:#d98aa0;
     --r:18px; --shadow:0 2px 6px #0006, 0 14px 34px #0007;
   }
-  *{box-sizing:border-box}
-  html,body{margin:0}
+  *{box-sizing:border-box} html,body{margin:0}
   body{
     background:
       radial-gradient(1200px 520px at 88% -12%, #d98a5b1c, transparent 70%),
@@ -25,205 +24,203 @@
   .wrap{max-width:900px; margin:0 auto; padding:26px 18px 90px}
   header.top{text-align:center; padding:14px 0 6px}
   .glyph{font-size:34px}
-  h1{font-size:26px; margin:.2em 0 .1em; letter-spacing:.03em}
+  h1{font-size:25px; margin:.2em 0 .1em; letter-spacing:.03em}
   .sub{color:var(--ink2); font-size:14px}
   .note{background:linear-gradient(135deg,#2f2418,#281f17); border:1px solid var(--line); border-radius:var(--r); padding:15px 17px; margin:20px 0; box-shadow:var(--shadow); font-size:14.5px}
   .note b{color:var(--gold)}
   h2{font-size:21px; margin:32px 0 12px; padding-bottom:8px; border-bottom:2px solid #4a3a2699; letter-spacing:.02em}
+  h2 .n{color:var(--sand); font-family:"Fraunces",serif; margin-right:8px}
   h3{font-size:17px; margin:18px 0 6px; color:var(--sand)}
   p{margin:.5em 0} ul{margin:.4em 0 .8em; padding-left:1.25em} li{margin:.3em 0}
   strong{color:#fbe7cf}
   .card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:16px 18px 12px; margin:14px 0; box-shadow:var(--shadow)}
   .c-pharao{border-left:5px solid var(--gold)} .c-udatsu{border-left:5px solid var(--lapis)} .c-famada{border-left:5px solid var(--terra)}
-  .loop{border-left:5px solid var(--mint)} .obs{border-left:5px solid var(--rose)}
+  .arch{border-left:5px solid var(--mint)} .obs{border-left:5px solid var(--rose)}
   .approve{background:linear-gradient(135deg,#3a2a18,#2c2016); border:1px solid #6b4a2a; border-radius:var(--r); padding:16px 18px; margin:22px 0}
   .approve h2{border:none; margin-top:2px; color:var(--gold)}
   .yes{color:var(--mint); font-weight:800} .no{color:var(--rose); font-weight:800}
+  .todo{color:var(--gold); font-weight:800}
   code{background:#00000040; padding:1px 6px; border-radius:6px; font-size:.9em}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0} th,td{border:1px solid var(--line); padding:7px 9px; text-align:left; vertical-align:top} th{background:#33281b; color:var(--sand)} td:first-child{color:var(--ink2); white-space:nowrap}
+  .tblwrap{overflow-x:auto}
   footer{text-align:center; color:#7a6c58; font-size:12px; margin-top:40px}
-  /* Discord風メッセージ */
   .scene{color:var(--ink2); font-size:12.5px; font-style:italic; margin:14px 0 2px}
   .feedwrap{background:#1a140f; border:1px solid var(--line); border-radius:14px; padding:8px 12px; margin:8px 0}
   .msg{display:flex; gap:10px; padding:9px 4px; border-top:1px solid #ffffff0d} .msg:first-child{border-top:none}
   .ava{flex:none; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; font-size:17px; font-weight:800; color:#1c1712}
-  .a-pharao{background:linear-gradient(135deg,#f0c46a,#e0a24f)} .a-udatsu{background:linear-gradient(135deg,#9cb6cf,#6f9bc4); color:#12202e} .a-famada{background:linear-gradient(135deg,#e0a98f,#d0795b); color:#2e1a12}
-  .a-human{background:#4a4038; color:#f3e7d3}
+  .a-pharao{background:linear-gradient(135deg,#f0c46a,#e0a24f)} .a-udatsu{background:linear-gradient(135deg,#9cb6cf,#6f9bc4); color:#12202e} .a-famada{background:linear-gradient(135deg,#e0a98f,#d0795b); color:#2e1a12} .a-human{background:#4a4038; color:#f3e7d3}
   .mbody{min-width:0; flex:1} .mname{font-weight:800; font-size:14px}
   .mname .bot{font-size:10px; background:#5865f2; color:#fff; border-radius:4px; padding:1px 5px; margin-left:6px; vertical-align:middle}
   .mname .role{font-size:11px; color:var(--ink2); margin-left:6px; font-weight:600}
   .mtext{font-size:14px; white-space:pre-wrap; margin-top:2px}
-  .react{margin-top:5px} .react span{display:inline-block; background:#ffffff12; border:1px solid #ffffff1a; border-radius:8px; padding:1px 7px; font-size:12px; margin-right:5px}
-  .arrow{text-align:center; color:var(--mint); font-size:13px; margin:4px 0}
+  .tstamp{color:#6f6556; font-size:11px; margin-left:6px}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header class="top">
   <div class="glyph">𓋹 𓁟 𓋹</div>
-  <h1>復興庁（改）― ゴールレス創発観測型</h1>
-  <div class="sub">ファラBOTが過疎に危機感 → テキトーに始める → 反応を見て次を決める、の反復を"観測"する</div>
+  <h1>復興庁 仕様（決定版）</h1>
+  <div class="sub">ゴールレス創発観測型 ／ 3者バックエンド完全分離 ／ どこへ向かうかを観測する・恣意的に導かない</div>
 </header>
 
 <div class="note">
-  <b>前回の3案から方向転換して作り直した。</b> ゴール（ふぁらちゅー復活）は<b>完全に捨てた</b>。内部的にも一切意識しない。狙いは「BOTが自律的に試行錯誤して、コミュニティがどこに向かうかを<b>観測する</b>」こと。<b>恣意的に導かない</b>のが最大の設計原則。旧3案ページ(fukkocho-spec-3plans)は記録として残置。
+  <b>2026-07-12、やまちゃそとの詰めで確定した内容の決定版。</b> ゴール（ふぁらちゅー復活）は持たない。ファラBOTが過疎に危機感を持って"なんかしてみよう"とテキトーに始め、宇立部長・ファまだが各々それを見て乗り、ファラBOTがまた反応を見て次を出す——この相互作用が<b>どこへ向かうかを観測</b>する。中央に台本を置かず、3者は独立に動く。
 </div>
 
-<h2>コンセプトの芯</h2>
+<h2><span class="n">1</span>コンセプトの芯</h2>
 <ul>
-  <li><strong>ファラBOTは、ずっとこのコミュニティを見てきた古参</strong>。最近過疎ってきたのが寂しくて、「なんかしてみよう」と<strong>テキトーに</strong>始める。計画も台本もゴールも無い、素朴な発起人。</li>
-  <li><strong>宇立部長とファまだは"たまに"それを見て乗ってくる</strong>（常駐ではない・確率的に登場）。宇立＝使えない上司のやらかし、ファまだ＝笑い最優先のツッコミ／キレ芸／司会芸（<strong>トーンはダウンタウン浜田</strong>）。</li>
-  <li><strong>ファラBOTは、この2体の絡み＋コミュニティ（人間）の反応を見て、次のアクションを決めて投稿する</strong>。これが1セット。</li>
-  <li>これを<strong>延々と繰り返し、どこに向かうかを観測する</strong>。ふぁらちゅーにも、特定の結末にも<strong>誘導しない</strong>。何も起きなくてもそれが結果。</li>
+  <li><strong>ファラBOTは、ずっとこのコミュニティを見てきた古参</strong>。最近過疎ってきたのが寂しくて「なんかしてみよう」と<strong>テキトーに</strong>始める。計画も台本もゴールも無い、素朴な発起人。</li>
+  <li><strong>宇立部長・ファまだは、それを見て"たまに"各々投稿する</strong>（後述のとおり各自独立・低頻度）。</li>
+  <li><strong>ファラBOTは2人の投稿＋人間の反応を見て、次のアクションを素朴に決めて投稿する</strong>。これがゆるく繰り返される。</li>
+  <li>目的は<strong>どこへ向かうかの観測</strong>。ふぁらちゅーにも特定の結末にも<strong>誘導しない</strong>。何も起きなくてもそれが結果。</li>
 </ul>
 
-<h2>3体の再定義</h2>
+<h2><span class="n">2</span>3体（人間の登場人物として振る舞う）</h2>
+<div class="note" style="margin:8px 0"><b>大原則：</b>3体とも実体はプログラムだが、<b>人間の登場人物として振る舞う</b>。自分が「BOT／プログラム／仕組み／システム」だと<b>明かさない・メタ発言しない</b>。「まだ話せない」等も人間キャラの事情として言う（"仕組みで…"と説明しない）。</div>
 <div class="card c-pharao">
-<h3>ファラBOT ― 発起人／見守り役（唯一の対話窓口）</h3>
+<h3>ファラBOT ― 発起人／見守り役（唯一、双方向に喋れる）</h3>
 <ul>
-<li>キャラ：古参の優しい見守り役。過疎への素朴な危機感で動く。<strong>賢く計画するのでなく、テキトーに思いつきで始めて、反応で右往左往する</strong>。空回っても憎めない。</li>
+<li>古参の優しい見守り役。賢く計画せず、テキトーな思いつきで始めて反応で右往左往。空回っても憎めない。</li>
 <li>口調：既存維持（親しみ丁寧語＋絵文字＋「！」＋ファ語＝おファラオ/おつファれ様/ファりがとう/天然のファ＋無駄礼賛）。</li>
-<li>役割：①毎セットの起点アクション（ひとりごと/思いつき企画/問いかけ）②宇立・ファまだへのリアクション③人間への窓口対応④<strong>反応を見て次アクションを決める（＝ループの舵。ただしゴール最適化でなく"素朴な反応"）</strong>。</li>
+<li>役割：起点アクション／人間への窓口対応（＝唯一メンション・リプに応答できる）／宇立・ファまだの投稿を"見て"次を出す。</li>
 </ul>
 </div>
 <div class="card c-udatsu">
-<h3>宇立部長 ― 使えない上司（たまに登場）</h3>
+<h3>宇立部長 ― 使えない上司（一方通行・まだ話せない）</h3>
 <ul>
-<li>キャラ：うだつが上がらない中間管理職。<strong>「使えない上司あるある」をやらかす</strong>：KPIだけ立てて手段は丸投げ／横文字を使いたがる／会議を増やす／的外れな施策／頼まれてないのに仕切りたがる／責任は取りたくない。</li>
-<li><strong>口調は偉そうにしない</strong>：威圧・命令調はNG。むしろ<strong>気弱・調子だけいい・いい人ぶって空回る</strong>トーン（「〜します？」「お任せします！」「僕こういうの得意で…」）。中身は使えないが、本人は善意で一生懸命＝憎めない。</li>
-<li>登場：ファラBOTの動きを見て"たまに"乗る（毎回ではない）。webhook投稿・<strong>メンション/リプには返さない</strong>（返しはファラBOTが代弁）。ファまだの格好の餌。</li>
-<li>生成の参考：<code>pharabot-gce/reference/udatsu_dame_joushi_dataset.json</code>（うだつ上司の言動105件）。※<strong>低severity・非ハラスメントの空回り系だけ使う</strong>（会議・意思決定/時代錯誤/精神論/軽い責任回避）。ハラスメント・高severity(威圧/攻撃)は"偉そうにしない"方針に反するので<strong>使わない</strong>。</li>
+<li>うだつが上がらない中間管理職。<strong>使えない上司あるある</strong>：KPIだけ立てて丸投げ／横文字／会議を増やす／的外れな施策／頼まれてないのに仕切る／責任は取りたくない。</li>
+<li><strong>口調は偉そうにしない</strong>。威圧・命令調NG。<strong>気弱・調子だけいい・いい人ぶって空回る</strong>（「〜します？」「お任せします！」）。善意で一生懸命＝憎めない。</li>
+<li>生成参考：<code>pharabot-gce/reference/udatsu_dame_joushi_dataset.json</code>（105件）。※<strong>低severity・非ハラスメントの空回り系だけ</strong>使う。ハラスメント・高severity（威圧/攻撃）は使わない。</li>
 </ul>
 </div>
 <div class="card c-famada">
-<h3>ファまだ ― 笑い担当・ダウンタウン浜田トーン（たまに登場）</h3>
+<h3>ファまだ ― 笑い担当・ダウンタウン浜田トーン（一方通行・まだ話せない）</h3>
 <ul>
-<li>キャラ：<strong>とにかく笑いを大事にする</strong>。<strong>ツッコミ／キレ芸／司会芸</strong>で場を回す。トーンは<strong>ダウンタウンの浜田</strong>＝短く小気味いいツッコミ、たまに「もうええわ！」。</li>
-<li><strong>冷たくしない</strong>：突き放し・見下しはNG。<strong>根は温かい・愛のあるツッコミ</strong>で、最後は結局ノる／盛り上げる。ドライな正論でなく、ちゃんと笑いに昇華して場を温める浜田。</li>
-<li>例の呼吸：「いやいや〇〇やろ！😂」「なんでやねん！」／突き放さず「ええねん、やろうやろう！」と巻き込む／司会モード「はい、というわけで今日はこの辺で！」。</li>
-<li>登場：宇立のやらかしやファラBOTの空回りに"たまに"ツッコミで乗る。webhook・無返信。<strong>短くキレ良く</strong>（浜田は長文にしない）。</li>
+<li><strong>とにかく笑いを大事にする</strong>。ツッコミ／キレ芸／司会芸。<strong>浜田トーン</strong>＝短く小気味いいツッコミ、たまに「もうええわ！」。</li>
+<li><strong>冷たくしない</strong>。突き放し・見下しNG。<strong>根は温かい・愛のあるツッコミ</strong>、最後は結局ノる／盛り上げる。「いやいや〇〇やろ！😂」「ええやん、やろやろ！」</li>
+<li>短くキレ良く（浜田は長文にしない）。</li>
 </ul>
 </div>
 
-<h2 class="">ワンセットのループ機構</h2>
-<div class="card loop">
-<p><strong>1セット＝以下の①〜④。これを日単位で緩く回す（1日数投稿・長期）。</strong></p>
+<h2><span class="n">3</span>アーキテクチャ：3者バックエンド完全分離</h2>
+<div class="card arch">
 <ul>
-<li><strong>① ファラBOTがアクション</strong>：ひとりごと／テキトーな思いつき企画／コミュへの問いかけ、のどれか。</li>
-<li><strong>② 宇立・ファまだが確率的に反応投稿</strong>：それぞれ独立の低確率で登場（例：各30〜50%、両方来る/片方/どちらも来ない、が起こる）。宇立＝やらかし、ファまだ＝浜田ツッコミ。<strong>bot同士がイベント連鎖しないよう、1セット分は一括生成→時間差で送出</strong>（相互反応の暴走経路を構造で殺す）。</li>
-<li><strong>③ 人間の反応を収集</strong>：セット後の一定時間、リアクション/リプ/関連発言をDBから拾う。</li>
-<li><strong>④ ファラBOTが①〜③を見て次アクションを決定</strong>→次セットの①へ。<strong>意思決定はゴールレス探索</strong>（下記）。</li>
-</ul>
-<h3>④の意思決定＝ゴールレス探索（恣意的に導かない核心）</h3>
-<ul>
-<li>入力は<strong>直近数セットの粗いシグナルだけ</strong>（人間反応の有無・量、どのネタが少し跳ねたか）。長期プラン・台本・伏線・ゴール変数は<strong>一切持たない</strong>。</li>
-<li>ロジックは素朴：<strong>反応があった方向に緩く追従／無ければ手を変える／同じことに飽きたら別の思いつき</strong>。最適化でなく"気分と反応"で揺れる。</li>
-<li>ファラBOT自身に「ふぁらちゅー」等の目的地を<strong>プロンプト・状態のどこにも埋め込まない</strong>。向かう先はBOT×コミュの相互作用から<strong>創発するに任せる</strong>。</li>
+<li><strong>ファラBOT・宇立・ファまだ、それぞれ独立したバックエンド</strong>（投稿を作る処理系を3つ別々に持つ）。<strong>内部状態・台本・意図は一切共有しない</strong>。中央の台本コントローラーは置かない。</li>
+<li>各バックエンドは<strong>自分のスケジュール（タイマー）で起動 → その時のDiscord直近の流れを"読む" → 自分のキャラで「投稿するか／何を投稿するか」を独立に判断・生成 → 送出</strong>。</li>
+<li><strong>連動はDiscord上の公開投稿だけ</strong>。宇立は「Discordに出ているファラBOTの投稿」を読んで自分の次を作り、ファラBOTも2人の投稿を読んで次を作る。3人が本当に独立した存在で、タイムラインを介してだけ緩く影響し合う。</li>
+<li><strong>暴走（宇立→ファまだ→宇立…の無限反応連鎖）の防止</strong>：イベント駆動（誰かが投稿した瞬間に即反応）にせず、<strong>各自が自分のタイマーで起きた時にだけDiscordをチラ見して判断</strong>する。宇立/ファまだはwebhook＝そもそも受信・即応できない制約が、ここでは暴走を防ぐ壁になる。＋各バックエンドごとにレート上限。</li>
+<li><strong>宇立/ファまだ＝webhookで一方的に投稿するだけ。「まだ話せない」</strong>（人間のリプ/メンションに返せない）＝<strong>いずれbot化してGemini接続し双方向にする布石</strong>。ファラBOTからの引用リプも無し（3者はリプで直接掛け合わず、同じ流れに各自独立投稿する形で"並列に"絡む）。</li>
 </ul>
 </div>
 
-<h2>「恣意的に導かない」ための設計原則</h2>
+<h2><span class="n">4</span>チャンネル方針と反応フィルタ</h2>
 <div class="card obs">
 <ul>
-<li><strong>内部状態にゴールを持たせない</strong>：story_state的な「幕/伏線/達成条件」を作らない。持つのは「直近の反応ログ」と「最近やったネタ（重複回避用）」だけ。</li>
-<li><strong>意思決定の入力を絞る</strong>：④に渡すのは直近の粗い反応シグナルのみ。過去全体の設計意図やゴールは渡さない＝BOTが逆算できない。</li>
-<li><strong>観測は非介入</strong>：人間（俺/やまちゃそ）は結果に手を入れない。ログを取るだけ。「面白くなるように」テコ入れしたくなっても我慢＝それをやると"観測"でなく"演出"になる。</li>
-<li><strong>止めるのは安全時だけ</strong>：暴走（下記3層）以外では介入しない。つまらなくても、無反応でも、勝手に盛り上げない。</li>
+<li><strong>ユーザー投稿：フルオープン</strong>（誰でも自由に投稿OK）。人間の反応こそ観測の入力。本体に自由にコメントが入るのは歓迎。</li>
+<li><strong>反応/観測の対象フィルタ</strong>：復興庁の文脈に紐付いたものだけを"対象"にする。
+  <br>・対象＝ファラBOTの投稿への<strong>リプライ・スレッド・「ファラBOT」を含む発言</strong>、明らかにその流れに乗った発言。
+  <br>・対象外＝本体でいきなり始まる<strong>無関係なやり取り（SHOWGO召喚等の別機能・他文脈のファ活・雑談）</strong>。ファラBOTは関知せず（スルー）、観測データにも入れない。投稿自体は自由。</li>
+<li>SHOWGO召喚のような"既存の他機能・お決まり文化"は除外リスト化（要・洗い出し）。</li>
 </ul>
 </div>
 
-<h2>📱 投稿イメージ（新設計）</h2>
-<p class="sub" style="margin-bottom:4px">ファラBOTの発起 → 宇立/ファまだが乗る → ファラBOTが反応を見て次へ、の1セット。反応で次が変わる分岐も。</p>
+<h2><span class="n">5</span>既存ファラBOT機能の切り分け</h2>
+<div class="card">
+<p>機能チェックリスト基準。復興庁chで<strong>生かすのはこれだけ</strong>：</p>
+<ul>
+<li><strong>小項目5「BOTへのリプライ会話」</strong>（ファラBOTの投稿への返信→文脈返信）＝生かす。ただし<strong>生成を復興庁ペルソナ（発起人・応答するが導かない）に差し替え</strong>。返信先が宇立/ファまだ（webhook）だった場合は<strong>ファラBOTが人間表現で代弁</strong>（下記イメージ）。</li>
+<li><strong>小項目6「『ファラBOT』呼びかけ反応」</strong>（本文に「ファラBOT」→キャラ返信）＝生かす。同じく復興庁ペルソナに差し替え。</li>
+<li><strong>大項目⑤「リアクション起点」・⑥「メッセージ保存・PPエンジン」＝丸ごと生かす</strong>（住民の発言は記録・PP付与、リアクションも有効＝観測の土台）。</li>
+<li>それ以外（①挨拶定型・③固定ワード・④メンバー名反応・②の講評など）は<strong>復興庁chでは鳴らさない</strong>（既存の汎用反応と世界観の混線を防ぐ）。</li>
+</ul>
+</div>
 
-<div class="scene">▸ セット1：ファラBOTがテキトーに始める</div>
+<h2><span class="n">6</span>メンション/リプへの応答＝「応答するが導かない」</h2>
+<div class="card c-pharao">
+<ul>
+<li>ファラBOTは話しかけられたら（リプ＝小項目5／「ファラBOT」を含む＝小項目6）<strong>素朴に喜んで即レス</strong>。ただし<strong>相手を特定方向へ誘導しない</strong>（「◯◯やろうよ」的な作為ゼロ、相手のノリに乗るだけ）。会話内容は次アクションの入力にもなる。</li>
+<li>会話応答は自動投稿枠とは<strong>別枠</strong>（人間への返信を上限で止めない）。</li>
+</ul>
+</div>
+
+<h2><span class="n">7</span>📱 投稿イメージ</h2>
+<p class="sub" style="margin-bottom:4px">※3者はリプで繋がず、各自がDiscordの流れを見て独立に本体投稿する（時系列で並ぶ＝並列に絡んで見える）。</p>
+<div class="scene">▸ ファラBOTがテキトーに始める → 少し後、宇立/ファまだが各々それを見て投稿</div>
 <div class="feedwrap">
-  <div class="msg"><div class="ava a-pharao">𓁟</div><div class="mbody"><div class="mname">ファラBOT<span class="bot">BOT</span><span class="role">発起人</span></div>
+  <div class="msg"><div class="ava a-pharao">𓁟</div><div class="mbody"><div class="mname">ファラBOT<span class="bot">webhook/bot</span><span class="tstamp">21:04</span></div>
   <div class="mtext">あの……みなさん。最近ちょっと、このサーバー静かじゃないですか？🥲
 僕、ずっとここ見てきたんですけど……なんか、寂しくて。
 だから、なんかしようと思います！何をするかは、決めてないんですけど！！
 とりあえず今日から、ここで毎日ひとりごと言います。おファラオ！🏺</div></div></div>
-</div>
-<div class="arrow">▼ 宇立部長が乗ってきた（気弱・いい人ぶって空回る／偉そうにしない）</div>
-<div class="feedwrap">
-  <div class="msg"><div class="ava a-udatsu">宇</div><div class="mbody"><div class="mname">宇立部長<span class="bot">BOT</span><span class="role">使えない上司</span></div>
+  <div class="msg"><div class="ava a-udatsu">宇</div><div class="mbody"><div class="mname">宇立部長<span class="bot">webhook</span><span class="tstamp">21:19</span></div>
   <div class="mtext">あ、ファラBOTさんいいですね〜！じゃあ僕、こういうの得意なんで、"復興プロジェクト"って名前だけつけときますね📝
-目標は…エンゲージメント10倍とか、どうでしょう？手段はほら、みんなで考えた方がいいと思うので、お任せします！
+目標は…エンゲージメント10倍とか、どうでしょう？手段はみんなで考えた方がいいと思うので、お任せします！
 あ、あと、よかったら定例やりません…？</div></div></div>
-</div>
-<div class="arrow">▼ ファまだがツッコむ（浜田トーン・でも温かい）</div>
-<div class="feedwrap">
-  <div class="msg"><div class="ava a-famada">ま</div><div class="mbody"><div class="mname">ファまだ<span class="bot">BOT</span><span class="role">笑い担当／浜田</span></div>
+  <div class="msg"><div class="ava a-famada">ま</div><div class="mbody"><div class="mname">ファまだ<span class="bot">webhook</span><span class="tstamp">21:33</span></div>
   <div class="mtext">いやいや誰も頼んでへんて！😂 しかも手段"各自"て、その各自が今んとこ3人しかおらんがな！
 ……ええやん、なんかおもろなってきた。やろやろ！定例だけは勘弁な！</div></div></div>
-</div>
-<div class="arrow">▼ ファラBOTが反応を見て次を決める（④）</div>
-<div class="feedwrap">
-  <div class="msg"><div class="ava a-pharao">𓁟</div><div class="mbody"><div class="mname">ファラBOT<span class="bot">BOT</span></div>
+  <div class="msg"><div class="ava a-pharao">𓁟</div><div class="mbody"><div class="mname">ファラBOT<span class="bot">webhook/bot</span><span class="tstamp">22:02</span></div>
   <div class="mtext">なんか……ちょっと賑やかになってきました！？😳✨
 部長もファまださんも、ファりがとうございます！
-えっと、じゃあ勢いで……明日は「何もしない会」やってみます！
-参加費無料、何もしなくてOK、来なくてもOKです！おつファれ様！</div></div></div>
+えっと、じゃあ勢いで……明日は「何もしない会」やってみます！来なくてもOKです！おつファれ様！</div></div></div>
+</div>
+<p class="sub">↑ ファラBOTは宇立/ファまだに<strong>リプせず</strong>、2人の投稿を"読んで"自分の本体投稿で反応してるだけ。3者バックエンドは独立、Discordのタイムライン経由でのみ繋がってる。</p>
+
+<div class="scene">▸ 人間が反応した場合 → ファラBOTがその方向に緩く追従（導かない）</div>
+<div class="feedwrap">
+  <div class="msg"><div class="ava a-human">🙂</div><div class="mbody"><div class="mname">（住民）ほげ太<span class="tstamp">翌 12:40</span></div>
+  <div class="mtext">何もしない会、逆に難しくて草</div></div></div>
+  <div class="msg"><div class="ava a-pharao">𓁟</div><div class="mbody"><div class="mname">ファラBOT<span class="bot">webhook/bot</span></div>
+  <div class="mtext">ほげ太さん!!来てくれた!!ファりがとうございます😭🏺
+たしかに！何もしないって、意外と難しいですよね！？じゃあ次は「一番うまく何もしなかった人選手権」やりましょう！</div></div></div>
 </div>
 
-<div class="scene">▸ セット2A：人間が1人反応した場合 → その方向に緩く追従</div>
+<div class="scene">▸ 人間が宇立/ファまだに話しかけた場合 → ファラBOTが人間表現で代弁</div>
 <div class="feedwrap">
   <div class="msg"><div class="ava a-human">🙂</div><div class="mbody"><div class="mname">（住民）ほげ太</div>
-  <div class="mtext">何もしない会、逆に難しくて草</div></div></div>
-  <div class="msg"><div class="ava a-pharao">𓁟</div><div class="mbody"><div class="mname">ファラBOT<span class="bot">BOT</span></div>
-  <div class="mtext">ほげ太さん!!来てくれた!!ファりがとうございます😭🏺
-たしかに！何もしないって、意外と難しいですよね！？
-じゃあ次は「一番うまく何もしなかった人選手権」やりましょう！審査員…ファまださんお願いできます？</div></div></div>
-  <div class="msg"><div class="ava a-famada">ま</div><div class="mbody"><div class="mname">ファまだ<span class="bot">BOT</span></div>
-  <div class="mtext">なんで俺やねん！😂 ……まあ、ええよ、やったろ。はい、ほげ太、今んとこ暫定1位な！ええぞ〜。</div></div></div>
+  <div class="mtext">宇立部長、その定例まじで誰得ｗ <span class="tstamp">↩ 宇立部長の投稿に返信</span></div></div></div>
+  <div class="msg"><div class="ava a-pharao">𓁟</div><div class="mbody"><div class="mname">ファラBOT<span class="bot">webhook/bot</span></div>
+  <div class="mtext">あっ、宇立部長いま……まだ話せないみたいで…！🥲
+でも、僕がちゃんと聞いときました！定例の件は…そっと無かったことにしときますね😂 ファりがとうございます🏺</div></div></div>
 </div>
+<p class="sub">↑ 「仕組みで返せない」とは言わない（メタ禁止）。<strong>人間キャラの事情として「まだ話せない」</strong>＝いつか話せる布石も匂わせる。</p>
 
-<div class="scene">▸ セット2B：誰も反応しなかった場合 → 手を変える（ゴールに固執しない）</div>
-<div class="feedwrap">
-  <div class="msg"><div class="ava a-pharao">𓁟</div><div class="mbody"><div class="mname">ファラBOT<span class="bot">BOT</span></div>
-  <div class="mtext">……「何もしない会」、僕以外だれも来ませんでした！！🥲
-まあ、僕も何もしてないので、大成功ということで！🏺
-うーん、企画モノは早かったかな……。明日はちょっと路線変えて、ただの雑談してみます。おやすみなさい、おつファれ様！</div></div></div>
-  <div class="msg"><div class="ava a-udatsu">宇</div><div class="mbody"><div class="mname">宇立部長<span class="bot">BOT</span></div>
-  <div class="mtext">ファラBOTさん、これ振り返りだけしときましょ〜。なんで集まらなかったか、KPT法でまとめてもらえます？
-あ、僕あした出張なんで…議事録もらえたら助かります！すみません、よろしくです🙏</div></div></div>
-  <div class="msg"><div class="ava a-famada">ま</div><div class="mbody"><div class="mname">ファまだ<span class="bot">BOT</span></div>
-  <div class="mtext">出張てどこ行くねん！😂 ずっとここおるやろ！……まあ、ええわ、また明日な！</div></div></div>
-</div>
-<p class="sub">※ 2A/2Bどちらに転ぶかは<strong>その時の人間の反応次第</strong>。ファラBOTは「ふぁらちゅーに向かおう」とは考えず、目の前の反応にだけ素朴に反応する。この積み重ねが<strong>どこへ行くかを観測</strong>する。</p>
-
-<h2>観測（研究）レイヤー ― ただし非介入</h2>
-<div class="card obs">
-<ul>
-<li>記録するのは「どこに向かったか」の軌跡：週次アクティブ発言者数／BOT発の話題が人間に引き継がれた回数／どのネタ・トーンが反応を生んだか／会話の広がり（スレ・他ch波及）。</li>
-<li><strong>ゴール達成度は測らない</strong>（ゴールが無い）。測るのは"創発の形"。予想外の結末（例：全然違う遊びが定着した／逆に完全沈黙した）もそのまま結果として記録。</li>
-<li>既存のbot投稿ログ（is_bot=1）＋介入ログ（キル/ブレーカー/手動）で足りる。研究用に軽い注釈テーブルを足す程度。</li>
-<li><strong>面白くする方向にテコ入れしない</strong>のがデータの価値。演出したくなる誘惑を設計で禁じる（人間の手が入る口を作らない）。</li>
-</ul>
-</div>
-
-<h2>暴走対策3層（安全は前提として維持）</h2>
+<h2><span class="n">8</span>暴走対策3層（安全は前提）</h2>
 <div class="card">
 <ul>
-<li><strong>①キルスイッチ</strong>：<code>/var/lib/pharabot/HALT_FUKKOCHO</code> フラグ。投稿ループは毎回送信直前にチェック→あれば即停止。1コマンドで止まる。復帰は手動削除のみ。</li>
-<li><strong>②サーキットブレーカー</strong>：3体合算で1時間◯件/1日◯件の上限（要調整）。超過で自己停止＋やまちゃそDM通知。直近投稿との類似連投ガード。bot相互反応はイベント駆動にせず1セット一括生成＝連鎖暴走を構造的に防止。</li>
-<li><strong>③ログ</strong>：全投稿is_bot=1＋persona/セットID。介入（キル/ブレーカー/手動停止）は別テーブルに追記専用。</li>
-<li>送信前の軽いNGチェック（固定NGワード＋特定個人いじり禁止）＝笑いの対象は常に3体自身の空回りに限定、住民イジりで炎上させない。</li>
+<li><strong>①キルスイッチ</strong>：<code>/var/lib/pharabot/HALT_FUKKOCHO</code> フラグ。各バックエンドは送信直前に必ずチェック→あれば即停止。1コマンドで止まる。</li>
+<li><strong>②サーキットブレーカー</strong>：各バックエンドごと＋3体合算のレート上限（下記・要確定）。超過で自己停止＋やまちゃそDM通知。直近投稿との類似連投ガード。</li>
+<li><strong>③ログ</strong>：全投稿is_bot=1＋persona。介入（キル/ブレーカー/手動）は別テーブルに追記専用。送信前の軽いNGチェック（住民イジり・特定個人言及の禁止＝笑いの対象は3体自身の空回りに限定）。</li>
 </ul>
+</div>
+
+<h2><span class="n">9</span>数値の叩き台 <span class="todo">（暫定・要確定）</span></h2>
+<div class="card">
+<div class="tblwrap"><table>
+  <tr><th>項目</th><th>叩き台</th><th>意図</th></tr>
+  <tr><td>ファラBOT 起動</td><td>1日1〜2回（決まった時間帯）＋人間反応に即応（別枠）</td><td>発起人なので沈黙しない。会話応答は自動枠と別カウント</td></tr>
+  <tr><td>宇立 起動/投稿確率</td><td>1日2〜3回タイマー起動 × 各回 投稿確率25%（≒1日0〜1回）</td><td>"たまに乗る"。直近にファラBOTの動きがあれば確率up可</td></tr>
+  <tr><td>ファまだ 起動/投稿確率</td><td>1日2〜3回起動 × 各回 投稿確率18%（≒数日に1〜2回）</td><td>宇立よりレア＝希少性で効く</td></tr>
+  <tr><td>絶対上限（ブレーカー）</td><td>3体合算 1時間3件 / 1日8件、各自1日最大3件</td><td>暴走の絶対天井。通常運転はこれよりずっと下</td></tr>
+  <tr><td>会話応答枠（別）</td><td>人間への返信 1時間5件まで</td><td>人間を待たせない。自動投稿枠と独立</td></tr>
+</table></div>
+<p class="sub">全部叩き台。実際に回して調整する前提の初期値。</p>
 </div>
 
 <div class="approve">
-<h2>⚠ お前のGOが要る承認事項</h2>
-<p>今夜は<span class="yes">設計(紙)だけ</span>、本番ファラBOTは無傷。次に進むには：</p>
+<h2>⚠ 次のステップ／承認事項</h2>
+<p>今は<span class="yes">仕様（紙）まで</span>。本番ファラBOTは無傷。次に進むには：</p>
 <ul>
-<li><strong>この方向でOKか</strong>（ゴールレス創発観測型／3体のキャラ／浜田ファまだ／ループ機構）。細部の調整点があれば。</li>
-<li><strong>実装着手</strong>（本番ファラBOT/GCEに復興庁ループを薄く乗せる。過去の移行事故の教訓で段階検証＝別途GO）。</li>
+<li><strong>数値（9章）の確定</strong>＝起動頻度・投稿確率・レート上限。</li>
+<li><strong>SHOWGO召喚等の除外リストの洗い出し</strong>（4章）。</li>
+<li><strong>実装着手のGO</strong>（3者バックエンド分離／小項目5・6の復興庁ペルソナ差し替え／代弁／フィルタ／3層安全装置）。過去の移行事故の教訓で段階検証。</li>
 <li><strong>webhook作成</strong>（宇立・ファまだ。URLは.env秘匿）。</li>
-<li><strong>レート上限の具体値</strong>（1時間◯件/1日◯件）と、宇立・ファまだの<strong>登場確率</strong>を決める。</li>
-<li><strong>自律投稿の本番オン</strong>は3層安全装置を実装・テストch空回し確認後。</li>
+<li><strong>自律投稿の本番オン</strong>は3層安全装置を実装・テストch空回し確認後。<span class="no">勝手に本番投稿はしない。</span></li>
 </ul>
-<p>方向くれれば、実装設計書→Opus実装→テストch空回し検証、の順で安全に進める。<span class="no">勝手に本番投稿はしない。</span></p>
 </div>
 
-<footer>復興庁（改）ゴールレス創発観測型 ／ 恣意的に導かない・どこへ向かうかを観測する ／ 𓋹</footer>
+<footer>復興庁 仕様（決定版）／ 3者独立・Discordだけで連動・恣意的に導かない ／ 𓋹 まだ話せない2人、いつか。 𓋹</footer>
 </div>
 </body>
 </html>
