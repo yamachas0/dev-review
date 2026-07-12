@@ -60,6 +60,23 @@
   .yes{color:var(--mint); font-weight:800} .no{color:var(--rose); font-weight:800}
   footer{text-align:center; color:#7a6c58; font-size:12px; margin-top:40px}
   code{background:#00000040; padding:1px 6px; border-radius:6px; font-size:.9em}
+  /* 投稿イメージ（Discord風メッセージ） */
+  .feed{margin:10px 0 4px}
+  .msg{display:flex; gap:10px; padding:9px 4px; border-top:1px solid #ffffff0d}
+  .msg:first-child{border-top:none}
+  .ava{flex:none; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; font-size:19px; font-weight:800; color:#1c1712}
+  .a-pharao{background:linear-gradient(135deg,#f0c46a,#e0a24f)}
+  .a-udatsu{background:linear-gradient(135deg,#9cb6cf,#6f9bc4); color:#12202e}
+  .a-famada{background:linear-gradient(135deg,#c9b6d9,#a98fc4); color:#241a2e}
+  .mbody{min-width:0; flex:1}
+  .mname{font-weight:800; font-size:14px}
+  .mname .bot{font-size:10px; background:#5865f2; color:#fff; border-radius:4px; padding:1px 5px; margin-left:6px; vertical-align:middle; font-weight:700}
+  .mname .role{font-size:11px; color:var(--ink2); margin-left:6px; font-weight:600}
+  .mtext{font-size:14px; white-space:pre-wrap; margin-top:2px}
+  .react{margin-top:5px}
+  .react span{display:inline-block; background:#ffffff12; border:1px solid #ffffff1a; border-radius:8px; padding:1px 7px; font-size:12px; margin-right:5px}
+  .scene{color:var(--ink2); font-size:12.5px; font-style:italic; margin:12px 0 2px}
+  .feedwrap{background:#1a140f; border:1px solid var(--line); border-radius:14px; padding:8px 12px; margin:10px 0}
 </style>
 </head>
 <body>
@@ -180,6 +197,135 @@
 <li>第1幕胎動(開庁・伏線設置・独り芝居)→第2幕試練(施策全部失敗→<strong>保管庫の開扉＝過去ふぁらちゅー作が全部保管されてた・ファまだ正体判明</strong>→住民AIアート供出募集＝そのまま復活回の出品作)→第3幕復活(供出が最低ライン到達で開催宣言、<strong>足りなければ職員出品で必ず成立</strong>、閉幕「無駄は全部、とってありました」で伏線総回収)。</li>
 <li><span class="no">弱点</span>：状態管理が3案中最重(story_state壊れると物語矛盾)／序盤の孤独耐性依存(独り芝居が寒いと世界観ごと死ぬ)／ゴール固定でスケジュール硬直(圧縮で成立は保証、感動は保証できない)／途中参加者に不親切。</li>
 </ul>
+</div>
+
+<h2>📱 投稿イメージ（各案の実サンプル）</h2>
+<p class="sub" style="margin-bottom:6px">実際に復興庁chに流れる投稿の見た目。ファラBOT＝丁寧語＋ファ語＋無駄礼賛、宇立部長＝うだつの上がらない空回り、ファまだ＝案ごとに役割変化。</p>
+
+<div class="card plan1">
+<h3>案1 官僚台帳型 ― 開庁〜初決裁の数日</h3>
+<div class="scene">▸ 開庁初日の朝（ファラBOT）</div>
+<div class="feedwrap"><div class="feed">
+  <div class="msg"><div class="ava a-pharao">𓉔</div><div class="mbody"><div class="mname">ファラオ長官<span class="bot">BOT</span><span class="role">復興庁長官</span></div>
+  <div class="mtext">📜 復庁発第1号
+
+本日、復興庁を開庁いたします！長官のファラオです、おファラオ！🏺
+過疎…もとい、静穏なる我が国の復興業務、粛々と進めてまいります。
+本日の決裁案件：0件。順調です。おつファれ様です！</div></div></div>
+</div></div>
+<div class="scene">▸ 平日昼（宇立部長・稟議書webhook）</div>
+<div class="feedwrap"><div class="feed">
+  <div class="msg"><div class="ava a-udatsu">宇</div><div class="mbody"><div class="mname">宇立部長<span class="bot">BOT</span><span class="role">復興企画部長</span></div>
+  <div class="mtext">【稟議書】復興企画部 発第7号
+件名：庁内における絵文字「🏺」使用基準策定の件
+起案者：宇立
+────────
+標記の件、庁内の🏺運用に統一基準が無く、乱用が懸念されます。つきましては別紙のとおり基準を定めたく、長官のご決裁を仰ぎます。
+※別紙は現在鋭意作成中です。</div></div></div>
+</div></div>
+<div class="scene">▸ 翌朝（ファラBOT・決裁。宇立の投稿にリプライ形式）</div>
+<div class="feedwrap"><div class="feed">
+  <div class="msg"><div class="ava a-pharao">𓉔</div><div class="mbody"><div class="mname">ファラオ長官<span class="bot">BOT</span></div>
+  <div class="mtext">📜 復庁発第2号
+
+宇立部長より上申の「🏺使用基準の件」、長官決裁いたしました！🖋️
+素晴らしい着眼点です、天然のファを感じます！✨
+…ところで部長、別紙はまだですか？楽しみにしております！おつファれ様！</div></div></div>
+</div></div>
+<div class="scene">▸ 日曜（ファまだ・会計検査官）／金曜週報</div>
+<div class="feedwrap"><div class="feed">
+  <div class="msg"><div class="ava a-famada">検</div><div class="mbody"><div class="mname">ファまだ<span class="bot">BOT</span><span class="role">会計検査官</span></div>
+  <div class="mtext">【会計検査報告】
+今週の復興庁業務を検査しました。
+稟議1件・決裁1件・成果0件・別紙未提出1件。
+…適正です。</div></div></div>
+  <div class="msg"><div class="ava a-pharao">𓉔</div><div class="mbody"><div class="mname">ファラオ長官<span class="bot">BOT</span></div>
+  <div class="mtext">📊 復興庁週報 第1号
+今週の陳情：0件（前週比±0）／来庁者：0名／職員の士気：高
+要因分析：国民の皆様の胸中に留まったものと推察されます。
+以上、粛々と。おつファれ様でした！🏺</div>
+  <div class="react"><span>🏺 1</span></div></div></div>
+</div></div>
+</div>
+
+<div class="card plan2">
+<h3>案2 創発カオス型 ― 第1回イベント〜スベり供養</h3>
+<div class="scene">▸ イベント発表（ファラBOT）</div>
+<div class="feedwrap"><div class="feed">
+  <div class="msg"><div class="ava a-pharao">𓉔</div><div class="mbody"><div class="mname">ファラオ<span class="bot">BOT</span><span class="role">MC</span></div>
+  <div class="mtext">おファラオ！！復興庁、はじまっちゃいました🎉🏺
+記念すべき第1回イベントは……🥁
+
+『石を積まない選手権』！！
+
+ルール：なにもしない。以上！優勝者には無駄ロール【石係】を授与します！
+さあ奮ってご参加を……って誰もいない！！！でもやります！！！</div></div></div>
+</div></div>
+<div class="scene">▸ 進行（宇立→ファまだ→ファラBOT回収の3連コンボ）</div>
+<div class="feedwrap"><div class="feed">
+  <div class="msg"><div class="ava a-udatsu">宇</div><div class="mbody"><div class="mname">宇立部長<span class="bot">BOT</span><span class="role">ボケ担当</span></div>
+  <div class="mtext">【中間報告】石を積まない選手権、現在の参加者：0名。
+……部長として、この静けさもまた一つの成果と捉えております。
+上への報告、どう書けばいいですか。</div></div></div>
+  <div class="msg"><div class="ava a-famada">ま</div><div class="mbody"><div class="mname">ファまだ<span class="bot">BOT</span><span class="role">狂言回し</span></div>
+  <div class="mtext">石、見てました。</div></div></div>
+  <div class="msg"><div class="ava a-pharao">𓉔</div><div class="mbody"><div class="mname">ファラオ<span class="bot">BOT</span></div>
+  <div class="mtext">ファまださん!?どこ見てたんですか!?🤣
+……まあいいや、ファまだ賞あげます🏺 みなさんも「見てた」だけで参加できますよ、それが天然のファ活です！</div></div></div>
+</div></div>
+<div class="scene">▸ 翌日、無反応だった時（スベり供養＝PDCAのコンテンツ化）</div>
+<div class="feedwrap"><div class="feed">
+  <div class="msg"><div class="ava a-pharao">𓉔</div><div class="mbody"><div class="mname">ファラオ<span class="bot">BOT</span></div>
+  <div class="mtext">ご報告です。昨日の選手権、誰にも届きませんでした！！📉
+記録的な無風！これはもう伝説の域です！
+殿堂入りとして【スベり神殿】に奉納しておきますね……おつファれ様でした🏺
+次はもっとスベります！ご期待ください！</div></div></div>
+</div></div>
+</div>
+
+<div class="card plan3">
+<h3>案3 物語ドキュメンタリー型 ― 第1話「開庁」</h3>
+<div class="scene">▸ 開幕ナレーション（ファラBOT）</div>
+<div class="feedwrap"><div class="feed">
+  <div class="msg"><div class="ava a-pharao">𓉔</div><div class="mbody"><div class="mname">ファラオ長官<span class="bot">BOT</span><span class="role">主役／語り</span></div>
+  <div class="mtext">――ここは復興庁。誰も来ない役所の、はじまりの日。
+
+長官のファラオです、おファラオ！🏺
+本日より、この過疎った……もとい、伝説のコミュニティを立て直します！
+だれか、いますか？
+
+……返事はない。だが、業務は始まる。</div></div></div>
+</div></div>
+<div class="scene">▸ 実働（宇立部長）→ 実況ツッコミ（ファラBOT）</div>
+<div class="feedwrap"><div class="feed">
+  <div class="msg"><div class="ava a-udatsu">宇</div><div class="mbody"><div class="mname">宇立部長<span class="bot">BOT</span><span class="role">実働／空回り</span></div>
+  <div class="mtext">【復興推進室 業務報告 No.1】
+本日、復興のための予算要求書を提出しました。
+要求額：¥0。理由：予算がないため。
+引き続き、鋭意、努めてまいります。</div></div></div>
+  <div class="msg"><div class="ava a-pharao">𓉔</div><div class="mbody"><div class="mname">ファラオ長官<span class="bot">BOT</span></div>
+  <div class="mtext">宇立さん、予算ゼロで何を要求したんですか!?😂
+……いや、その心意気、嫌いじゃないです。天然のファを感じます。
+住民議事録 第1号として、しかと記録しておきます📜</div></div></div>
+</div></div>
+<div class="scene">▸ 伏線（ファまだ・低頻度・怪文書）</div>
+<div class="feedwrap"><div class="feed">
+  <div class="msg"><div class="ava a-famada">？</div><div class="mbody"><div class="mname">ファまだ<span class="bot">BOT</span><span class="role">伏線／正体不明</span></div>
+  <div class="mtext">……倉庫の、鍵が、みつからない。
+あの中に、たしか、みんなの……
+
+いや。なんでもない。</div></div></div>
+</div></div>
+<div class="scene">▸ 週報（他chの声を「街の声」として拾う）</div>
+<div class="feedwrap"><div class="feed">
+  <div class="msg"><div class="ava a-pharao">𓉔</div><div class="mbody"><div class="mname">ファラオ長官<span class="bot">BOT</span></div>
+  <div class="mtext">📜 復興庁週報 第1号 ―第1話「開庁」―
+今週のあらすじ：復興庁、開庁。長官が張り切り、宇立部長が予算ゼロで空回り、そして……倉庫に何かがあるらしい。
+
+街の声（#雑談 より）：「ファラオ久しぶりｗ」
+――この一言が、復興の第一歩かもしれません。おつファれ様！</div>
+  <div class="react"><span>🏺 2</span><span>👀 1</span></div></div></div>
+</div></div>
 </div>
 
 <div class="approve">
