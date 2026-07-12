@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>復興庁 実装設計書 v1.0</title>
+<style>
+  :root{--bg:#1c1712;--card:#2a2118;--ink:#f3e7d3;--ink2:#c3ac8c;--line:#42352655;--sand:#e0b877;--gold:#f0c46a;--terra:#d98a5b;--lapis:#6f9bc4;--mint:#8fbf9a;--rose:#d98aa0;--r:16px;--shadow:0 2px 6px #0006,0 14px 34px #0007;}
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:radial-gradient(1200px 520px at 88% -12%,#d98a5b1c,transparent 70%),var(--bg);color:var(--ink);font-family:"Hiragino Maru Gothic ProN","Zen Maru Gothic","Yu Gothic UI","Meiryo",sans-serif;line-height:1.7;-webkit-text-size-adjust:100%}
+  .wrap{max-width:900px;margin:0 auto;padding:26px 18px 90px}
+  header.top{text-align:center;padding:14px 0 6px}
+  h1{font-size:24px;margin:.2em 0 .1em}
+  .sub{color:var(--ink2);font-size:14px}
+  .note{background:linear-gradient(135deg,#2f2418,#281f17);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin:18px 0;box-shadow:var(--shadow);font-size:14px}
+  .note b{color:var(--gold)}
+  h2{font-size:20px;margin:30px 0 10px;padding-bottom:7px;border-bottom:2px solid #4a3a2699}
+  h2 .n{color:var(--sand);margin-right:8px;font-family:"Fraunces",serif}
+  h3{font-size:16px;margin:16px 0 5px;color:var(--sand)}
+  p{margin:.5em 0} ul{margin:.3em 0 .7em;padding-left:1.2em} li{margin:.28em 0}
+  strong{color:#fbe7cf}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px 10px;margin:12px 0;box-shadow:var(--shadow)}
+  .princ{border-left:5px solid var(--rose)} .arch{border-left:5px solid var(--mint)} .safe{border-left:5px solid var(--terra)} .risk{border-left:5px solid var(--gold)}
+  code{background:#00000045;padding:1px 6px;border-radius:6px;font-size:.88em;word-break:break-all}
+  pre{background:#120e0a;border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow-x:auto;font-size:12.5px;line-height:1.5}
+  pre code{background:none;padding:0}
+  .ms{display:flex;gap:10px;align-items:baseline;padding:5px 0;border-top:1px solid #ffffff0d}
+  .ms:first-child{border-top:none} .ms .tag{flex:none;font-weight:800;color:var(--mint)}
+  .confirm{background:linear-gradient(135deg,#3a2a18,#2c2016);border:1px solid #6b4a2a;border-radius:var(--r);padding:14px 16px;margin:20px 0}
+  .confirm h2{border:none;color:var(--gold);margin-top:2px}
+  .q{color:var(--gold);font-weight:800}
+  footer{text-align:center;color:#7a6c58;font-size:12px;margin-top:36px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div style="font-size:30px">𓍯 𓁟 𓍯</div>
+  <h1>復興庁 実装設計書 v1.0</h1>
+  <div class="sub">CTO(Fable)設計 → 統括レビュー ／ 実装＝Opus ／ 本番接触は全緑＋GOまで無し</div>
+</header>
+
+<div class="note"><b>統括メモ：</b>Fableの設計。過去のファラBOT移行事故（古い土台で会話機能落として炎上）を踏まえ、<b>最小差分・T0回帰テスト・本番実物との突合ゲート・テストch全緑まで本番切替禁止</b>を全工程の原則に。やまちゃその「機能一覧5・6以外は反応させない」は、<b>react.jsの復興庁chゲート（該当chなら即専用ハンドラへreturn）で、他の既存分岐に構造的に到達しない</b>＝コード位置で自動的に実現（追加の除外ワードリスト不要）。末尾に<b>やまちゃそ確認事項6件</b>あり。</div>
+
+<div class="card princ">
+<h3>設計原則（全工程に優先）</h3>
+<ul>
+<li><strong>P1</strong>：土台＝本番 <code>/home/user/pharabot-staging</code> の実稼働コード。丸ごと作り直し禁止・<strong>最小差分のみ</strong>。</li>
+<li><strong>P2</strong>：ローカル写し（worktree）は構造把握用。<strong>着手前に本番実物と必ず突合</strong>（写しはFirestore呼びが残る＝本番SQLite化後と乖離確実。差分を全部リスト化してから書く）。</li>
+<li><strong>P3</strong>：<strong>テストchで全挙動E2E全緑まで本番ch切替禁止</strong>。切替はch ID定数1箇所の変更のみで行える設計に。</li>
+</ul>
+</div>
+
+<h2><span class="n">1</span>全体アーキ</h2>
+<div class="card arch">
+<pre><code>[pharabot.service / node index.js]  ←既存プロセスに同居
+ ├ botEntry.js（既存・無変更）
+ ├ react.js messageCreate（既存＋復興庁分岐を最小挿入）
+ │    └ 復興庁ch判定 → fukkocho/persona で生成
+ ├ fukkocho/（新規・3バックエンド）
+ │    ├ safety.js       … キル/レート/ログ/NG（3体共通の"関所"。安全装置だけ共有OK、台本・意図は非共有）
+ │    ├ backend_phara.js … ファラBOT発起タイマー（本体clientで投稿）
+ │    ├ backend_udatsu.js… 宇立部長（webhook送出）
+ │    └ backend_famada.js… ファまだ（webhook送出）
+ └ SQLite bot.db（既存＋テーブル2枚追加）</code></pre>
+<ul>
+<li>3バックエンドは<strong>各自独立のタイマー（ジッター付き）</strong>。各tick＝「復興庁ch直近N件をREST取得→自分だけの判断ロジック＆プロンプトで投稿する/しないを決定→safety通過なら送出」。生成物を相互参照しない。連動はDiscord公開投稿のみ。</li>
+<li>宇立/ファまだは<strong>Webhook URL宛POSTのみ</strong>（受信なし＝一方通行が仕様通りの壁）。</li>
+<li><strong>別プロセス化はしない</strong>（systemd/デプロイ/監視を増やさない最小差分）。プロセス内モジュール分離で「状態非共有」要件は満たす。将来bot化を見据え各backendはclient直依存でなく「読取fetch＋送出関数」を注入する形。</li>
+</ul>
+</div>
+
+<h2><span class="n">2</span>既存コードへの最小差分（他ch挙動は不変）</h2>
+<div class="card">
+<h3>新規 <code>fukkocho/config.js</code></h3>
+<p><code>FUKKOCHO_CHANNEL_ID</code>（.envから。テスト時=テストch／本番切替=env書換+restartのみ）、レート閾値、webhook名。</p>
+<h3>react.js への差分（3点だけ）</h3>
+<ul>
+<li><strong>①復興庁ゲート</strong>：messageCreate冒頭（保存の後）に <code>if(channel==FUKKOCHO_CHANNEL_ID){ return handleFukkochoMessage(...) }</code>。→ 以降の おファラオ/講評/教えて/ファ検知/画像ネタ 等 既存分岐に<strong>復興庁chは到達しない</strong>＝「①②③④・講評を鳴らさない」を分岐の物理位置で保証。保存(⑥)とロックはゲート前なので生きる。</li>
+<li><strong>②handleFukkochoMessage（新規 fukkocho/handler.js）</strong>：
+  <br>・リプ先＝ファラBOT本人 → fetchReplyChain → <strong>generateFukkochoReply</strong>（復興庁ペルソナ版）→ 返信。
+  <br>・リプ先＝<strong>webhook投稿（宇立/ファまだ）</strong> → ファラBOTが<strong>人間表現で代弁</strong>（「まだお話しできないみたいで…！」。BOT/webhook/仕組み等はメタNGワード）。
+  <br>・本文に「ファラBOT」→ 復興庁ペルソナ版で返信。
+  <br>・<strong>いずれにも該当しない投稿は完全スルー（保存のみ）</strong>＝観測フィルタ。SHOWGO等 全サーバー共通ネタもゲートで到達しないので自動的に発火しない。
+  <br>・応答は必ず <code>safety.guard('phara_reply')</code> 経由（会話枠 1h5件）。</li>
+<li><strong>③messageReactionAdd（⑤）＝無変更</strong>。復興庁chでもそのまま動く。</li>
+</ul>
+<h3>プロンプト／起動</h3>
+<ul>
+<li>既存プロンプト関数は触らず、復興庁用3種（reply/呼びかけ/代弁）を <code>fukkocho/persona.js</code> に新設、既存Geminiユーティリティだけ再利用。核＝既存口調維持＋「過疎に危機感を持ってなんとなく始めた素朴な発起人。応答はするが誘導・目標提示・メタ発言をしない」。</li>
+<li>index.js ready後に <code>require('./fukkocho').start(client)</code>。<strong><code>FUKKOCHO_ENABLED=1</code> のときだけ起動</strong>＝本番で無効のままデプロイ可＝安全な段階リリース。</li>
+</ul>
+</div>
+
+<h2><span class="n">3</span>宇立/ファまだ webhookバックエンド</h2>
+<div class="card">
+<ul>
+<li>共通骨格（コードは共有OKだが<strong>インスタンス・状態・プロンプトは別</strong>）。タイマー：基準間隔＋ランダムジッター（叩き台：宇立 3〜8h／ファまだ 2〜6h で1回チラ見）。</li>
+<li>tick：復興庁ch直近20件をREST取得（bot tokenで読むだけ。webhookは読めないので本体tokenのREST読取を注入）→ 各自の判断プロンプトで「今投稿する価値があるか(yes/no＋本文)」を1回のGeminiで判定生成 → <strong>noなら黙る（黙るのがデフォルト）</strong> → yesなら safety通過後 webhook POST。</li>
+<li><strong>一方通行の演出</strong>：リプ機能を実装しない。自分宛リプが来ても本人は反応しない（代弁はファラBOT側）。</li>
+<li>宇立データ：<code>reference/udatsu_dame_joushi_dataset.json</code> から<strong>severity低・非ハラスメント項目のみ</strong>を実装時にホワイトリスト抽出して固定（実行時に全体を読ませない・<strong>抽出結果はやまちゃそレビュー必須</strong>）。ファまだ：浜田トーンの短いツッコミ/司会・容姿/能力イジり禁止をプロンプト＋NG両方に。</li>
+<li>.env追加：<code>FUKKOCHO_WEBHOOK_UDATSU/FAMADA</code>, <code>FUKKOCHO_CHANNEL_ID</code>, <code>FUKKOCHO_ENABLED</code>（リポにコミットしない）。</li>
+</ul>
+</div>
+
+<h2><span class="n">4</span>ファラBOT発起バックエンド</h2>
+<div class="card">
+<ul>
+<li>タイマー：叩き台 4〜10hジッター。</li>
+<li>入力＝<strong>直近のDiscord公開シグナルのみ</strong>（直近48hの投稿数・自分の直近投稿への反応有無・リアクション数）。<strong>長期記憶・目標・KPIを持たせない（状態ファイル無し・毎tickでch読み直すステートレス＝ゴールレスの実装的保証）</strong>。</li>
+<li>判断プロンプト：「過疎を寂しく思ってなんとなく見守りを始めた発起人。直近を見て言いたいことが自然に湧いたら短く1つ。無ければ黙る。目標・企画・呼びかけ連発・誘導はしない」。送出は safety.guard('phara_initiate')（各自1日3枠）。</li>
+</ul>
+</div>
+
+<h2><span class="n">5</span>3層安全装置（fukkocho/safety.js）</h2>
+<div class="card safe">
+<ul>
+<li><strong>①キルスイッチ</strong>：<code>/var/lib/pharabot/HALT_FUKKOCHO</code> を<strong>全送出直前に同期チェック</strong>→あれば黙ってログのみ。権限次第で <code>./HALT_FUKKOCHO</code> にフォールバック（どちらを正にしたか実装時明記）。</li>
+<li><strong>②サーキットブレーカー</strong>：SQLite送信ログをCOUNTで判定（メモリカウンタにしない＝再起動で消えない）。閾値(初期・env上書き可)＝発起系合算 1h3/24h8・各persona 24h3／会話応答 別枠1h5／類似連投ガード(直近5件と先頭50字一致で棄却)。超過＝該当バック自己停止＋DM通知1通(クールダウン付)。</li>
+<li><strong>③ログ＆NGチェック</strong>：全送出を <code>fukkocho_posts</code> に記録。送信前に本文をNG判定（特定住民名言及/イジり／メタ語彙「BOT/AI/webhook/プログラム/仕組み」等の正規表現＋必要ならGemini軽量判定）→NGなら棄却+reason記録。既存is_bot=1ログと整合（personaは別テーブルで持ち既存スキーマは触らない）。</li>
+</ul>
+</div>
+
+<h2><span class="n">6</span>スキーマ追加（既存テーブル変更ゼロ）</h2>
+<div class="card">
+<pre><code>CREATE TABLE fukkocho_posts (   -- 送信/棄却の全記録＝レート計数の唯一の真実
+  id INTEGER PRIMARY KEY, ts INTEGER, persona TEXT, kind TEXT,
+  status TEXT,   -- sent/blocked_halt/blocked_rate/blocked_ng/blocked_similar
+  content TEXT, discord_message_id TEXT, block_reason TEXT );
+CREATE TABLE fukkocho_observations ( -- 軽い観測注釈(研究・任意)
+  id INTEGER PRIMARY KEY, ts INTEGER, message_id TEXT, note TEXT, tag TEXT );
+-- 除外住民: fukkocho/config.js の EXCLUDED_USER_IDS（初期空）</code></pre>
+</div>
+
+<h2><span class="n">7</span>テスト計画（全緑まで本番切替禁止）</h2>
+<div class="card">
+<p>環境＝<code>FUKKOCHO_CHANNEL_ID</code>=テストch、テスト用webhook2本を別途作成（本番webhookはこの段階で使わない）。</p>
+<ul>
+<li><strong>T0 回帰（最重要）</strong>：復興庁ON状態で<strong>他chの既存挙動が不変</strong>を実メッセージ確認（おファラオ+PP／リプ会話／「ファラBOT」反応／画像ネタ／リアクション⑤／保存⑥）。1つ欠けたら差分を疑う。</li>
+<li><strong>T1 会話</strong>：BOT投稿にリプ→復興庁ペルソナで返る（誘導・メタ無し）。「ファラBOT」含む→返る。PP/保存も付く。</li>
+<li><strong>T2 代弁</strong>：宇立webhook投稿に人間リプ→ファラBOT人間表現で代弁。メタ語ゼロ。</li>
+<li><strong>T3 フィルタ誤爆なし</strong>：テストchで「SHOWGO」「無駄」等→<strong>一切反応しない</strong>（保存のみ）。</li>
+<li><strong>T4 発起/一方通行</strong>：タイマー短縮で24h空回し→3体が各自投稿・掛け合いリプしない・沈黙判断が効く（毎tick投稿にならない）。</li>
+<li><strong>T5 安全装置</strong>：HALT作成→全停止／レート閾値1で超過→自己停止+DM／NGワード故意生成→blocked_ng記録。</li>
+<li><strong>本番切替チェックリスト</strong>：T0〜T5全緑／本番と写しの突合済／本番webhook2本作成・env設定／タイマー・レートを本番値に／HALT動作を本番でも1回確認／切替=env書換+restart／切替後24h監視・異常即HALT。</li>
+</ul>
+</div>
+
+<h2><span class="n">8</span>マイルストーン（各M＝全緑ゲート）</h2>
+<div class="card">
+<div class="ms"><span class="tag">M1</span><span>突合＆足場：本番と写しのdiffレポート、fukkocho/・config・スキーマ、ENABLED=0でデプロイしても既存不変（T0緑）</span></div>
+<div class="ms"><span class="tag">M2</span><span>会話差し替え：ゲート＋handler＋復興庁ペルソナ3プロンプト。完了＝T1・T2・T3緑＋T0再確認緑</span></div>
+<div class="ms"><span class="tag">M3</span><span>3バックエンド＋webhook送出。完了＝T4緑</span></div>
+<div class="ms"><span class="tag">M4</span><span>安全装置 全結線。完了＝T5緑</span></div>
+<div class="ms"><span class="tag">M5</span><span>本番切替：チェックリスト全✓＋切替後24h監視で異常なし</span></div>
+</div>
+
+<div class="confirm">
+<h2>⚠ やまちゃそ確認事項（6件）</h2>
+<ul>
+<li><span class="q">1.</span> <strong>写しの鮮度</strong>：ローカル写しはFirestore呼びが残る＝本番SQLite化後と乖離確実。M1のdiffレポートを承認ゲートにする（＝実装最初に差分を出して見せる）。</li>
+<li><span class="q">2.</span> <strong>タイマー初期値</strong>（宇立3-8h／ファまだ2-6h／ファラ4-10h）はFableの叩き台。頻度感の好みは？</li>
+<li><span class="q">3.</span> <strong>宇立データセットの抽出結果</strong>（低severity・非ハラのみ）は投稿前にお前の目視レビュー必須（ハラ混入防止）。</li>
+<li><span class="q">4.</span> <strong>復興庁chで「おファラオ」PP付与を殺してよいか</strong>：現設計はゲートで既存ネタ全停止＝おファラオ挨拶の+10PPボーナスもこのchでは付かない（投稿の基本保存・PP＝⑥は付く）。①扱いで切る、で合ってる？付けたければゲート前に例外1行。</li>
+<li><span class="q">5.</span> <strong>サーキットブレーカー発報のDM宛先</strong>＝お前のDMでいい？</li>
+<li><span class="q">6.</span> Gemini呼び出し増によるAPIコスト微増（3体×チラ見。判断+生成を1呼びに纏めて抑制済）。量産前に単価確認推奨。</li>
+</ul>
+</div>
+
+<footer>復興庁 実装設計書 v1.0 ／ 最小差分・全緑ゲート・本番接触はGOまで無し ／ 𓋹</footer>
+</div>
+</body>
+</html>
