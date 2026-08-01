@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>都市開発シミュレーター｜帰属と協業モデル 案出し</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1720; --ink-sub:#3D4A57; --line:#D8DEE4; --bg:#FFFFFF; --bg-soft:#F5F7F9;
+    --em:#0E9F6E; --em-soft:#E7F6F0; --warn:#B45309; --warn-soft:#FEF3C7; --ng:#B91C1C; --ng-soft:#FEF2F2;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP",system-ui,sans-serif;line-height:1.85;-webkit-text-size-adjust:100%}
+  .wrap{max-width:980px;margin:0 auto;padding:26px 16px 90px}
+  header{border-bottom:3px solid var(--ink);padding-bottom:18px}
+  .eyebrow{font-size:12px;letter-spacing:.14em;color:var(--em);font-weight:700}
+  h1{font-size:25px;font-weight:900;margin:8px 0 6px;line-height:1.45}
+  .meta{font-size:12.5px;color:var(--ink-sub)}
+  h2{font-size:19px;font-weight:900;margin:46px 0 12px;padding-left:12px;border-left:6px solid var(--em)}
+  h3{font-size:16px;font-weight:700;margin:26px 0 8px}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0;padding-left:1.3em}
+  li{margin:6px 0}
+  .lead{font-size:15px;background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:18px 0}
+  .em{background:var(--em-soft);border:1px solid #B6E3D1;border-radius:10px;padding:14px 16px;margin:14px 0}
+  .warn{background:var(--warn-soft);border:1px solid #FBBF24;border-radius:10px;padding:14px 16px;margin:14px 0}
+  .ng{background:var(--ng-soft);border:1px solid #FBC5C5;border-radius:10px;padding:14px 16px;margin:14px 0}
+  .tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;border:1px solid var(--line);background:#fff;margin-right:6px}
+  .tag.best{background:var(--em);color:#fff;border-color:var(--em)}
+  .tag.no{background:#fff;color:var(--ng);border-color:#F1BDBD}
+  .tag.cdx{background:#111827;color:#fff;border-color:#111827}
+  .grid{display:grid;gap:14px;grid-template-columns:1fr}
+  @media(min-width:780px){.grid.two{grid-template-columns:1fr 1fr}}
+  .card{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff}
+  .card h4{margin:0 0 8px;font-size:15.5px;font-weight:900;line-height:1.5}
+  .card .sub{font-size:12.5px;color:var(--ink-sub);margin:0 0 10px}
+  .kv{font-size:13.5px;margin:6px 0}
+  .kv b{display:inline-block;min-width:5.4em;color:var(--ink-sub);font-weight:700}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:14px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:600px}
+  th,td{border:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg-soft);font-weight:700;white-space:nowrap}
+  td.r{text-align:right;white-space:nowrap}
+  .flow{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#0F1720;color:#E7EEF3;border-radius:10px;padding:14px 16px;overflow-x:auto;line-height:1.75}
+  .fn{font-size:12.5px;color:var(--ink-sub);border-top:1px solid var(--line);margin-top:44px;padding-top:14px}
+  .step{border-left:3px solid var(--line);padding-left:14px;margin:14px 0}
+  .step b{display:block;font-size:14.5px}
+  strong{font-weight:700}
+  .toc{font-size:13.5px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:18px 0}
+  .toc a{color:var(--ink);text-decoration:none;border-bottom:1px dotted var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">合同会社 MUD-Ai ／ 社内たたき台（対 株式会社スペースデータ）</div>
+  <h1>都市開発諸制度シミュレーターの<br>帰属と協業モデル ─ 案出し</h1>
+  <div class="meta">2026-08-02 作成｜SD提出期限 2026-08-07(金)｜これは<strong>社内用</strong>。SD提出版は別途トーンを整える<br>作成＝Claude（統括）／セカンドオピニオン＝OpenAI Codex（gpt-5.6-sol・high）</div>
+</header>
+
+<div class="lead">
+<strong>この文書の立場。</strong>SDからの宿題は「このプロダクトを入り口に、SDのアセットをどう繋げるか」。
+つまり<strong>SDは既に"繋げる前提"で考えている</strong>。だから帰属の主張から入ると損をする。
+<strong>SDが何を得るかを先に置き、その事業を続けるために誰が何を持つのが合理的か、という順番で結論に持っていく。</strong>
+</div>
+
+<div class="toc">
+<b>目次</b>　<a href="#s0">0.事実の土台</a>／<a href="#s1">1.SDの機会と接続4本</a>／<a href="#s2">2.座組み6案</a>／<a href="#s3">3.収益モデル</a>／<a href="#s4">4.料金配分</a>／<a href="#s5">5.SDの本当の不安への答え</a>／<a href="#s6">6.契約整理</a>／<a href="#s7">7.8/7資料の構成と段取り</a>
+</div>
+
+<h2 id="s0">0. まず押さえる事実（交渉の土台）</h2>
+<div class="scroll">
+<table>
+<tr><th>論点</th><th>事実</th><th>効き方</th></tr>
+<tr><td>契約当事者</td><td>受託者＝<strong>合同会社MUD-Ai</strong>（個人ではなく法人）。委託者＝株式会社スペースデータ</td><td>法人間契約。個人の労務提供の話に流されない</td></tr>
+<tr><td>時系列</td><td>契約<strong>締結6/18</strong>／契約<strong>期間7/1〜</strong>。マニュアル・Phase1/2の中核成果物は<strong>6/21〜25</strong>に存在</td><td>「契約<u>期間</u>開始前」であって「契約<u>締結</u>前」ではない。<strong>ここは強く言い切らない</strong>（後述）</td></tr>
+<tr><td>業務の定義</td><td>別紙の業務は①3D都市データを使った都市開発・防災計画の作成 ②合意形成ニーズの明確化と事業開発の共同推進 ③打合せ・資料作成 ④付随業務。<strong>「ツール開発」の文言は無い</strong></td><td>第8条の射程を狭く読む根拠。ただし「付随業務」「共同推進」は幅がある</td></tr>
+<tr><td>リソース</td><td>SDのコード・データ・計算資源は不使用。オープンデータ＋PLATEAU＋自作コード＋自費環境</td><td>独立開発の証拠。ただし<strong>第8条はSDリソース使用を条件にしていない</strong>＝これ単独では決め手にならない</td></tr>
+<tr><td>対価</td><td>月20万円（税抜）・週1日/月5日の準委任。第3条2項で「委託料に知財対価を含む」</td><td>プロダクト1本の権利が移る対価としては不均衡。<strong>対価の分離協議は国の指針も推奨</strong></td></tr>
+<tr><td>属人性</td><td>SD側も「現行体制が属人ノウハウ依存」を懸念として明示</td><td><strong>SD帰属にしても山川が抜ければ止まる＝帰属では解決しない。</strong>最大の論拠</td></tr>
+</table>
+</div>
+
+<div class="warn">
+<strong>フレーミングの設計。</strong>「権利をよこせ」ではなく「<strong>属人リスクを、帰属ではなく座組みで解く</strong>」と言う。
+SDが恐れているのは権利を失うことではなく<strong>山川が抜けたときに事業が止まること</strong>。そこに効く答え（エスクロー／ステップイン権／SLA）を出せば、帰属は結果として付いてくる。
+</div>
+
+<h2 id="s1">1. SDにとっての機会（ここから話す）</h2>
+<p>SDの本体はデジタルツインと各種シミュレーション。直近も新宿の人流シミュ、大樹町の宇宙港リスク可視化と「<strong>可視化で合意形成する会社</strong>」に寄せている。
+一方このシミュレーターは<strong>その手前の工程</strong>——「そもそも何が建つのか（制度・容積・ボリューム）」——を押さえる。</p>
+
+<div class="em">
+<strong>構図：MUD-Aiは"入口"、SDは"その先"。</strong><br>
+デベの検討フローは〔敷地を探す〕→〔<u>制度と容積を読む</u>〕→〔ボリュームを決める〕→〔<u>環境・景観・人流を検証</u>〕→〔合意形成〕。
+前半がMUD-Ai、後半がSD。<strong>前半を押さえた者が後半を連れてくる。</strong>
+</div>
+
+<p><strong>SDのメリットは「ツールの粗利」ではない。</strong>優先順位はこの順で語る：</p>
+<ol>
+<li><strong>案件の上流で接点を取れる</strong>（計画が固まる前に入れる＝今のSDが入りにくい位置）</li>
+<li><strong>プリセールスとデータ作成の工数が下がる</strong>（scene.jsonで計画案が標準化される）</li>
+<li><strong>ViewSim・人流・景観・日影のアタッチ率が上がる</strong>（＝高単価案件の母数が増える）</li>
+<li>SaaS販売マージンという継続収益</li>
+<li>「規制解釈から合意形成まで」という<strong>対外的なプロダクトストーリー</strong></li>
+</ol>
+
+<h3>接続モデル4本（宿題への直接回答）</h3>
+<div class="grid two">
+  <div class="card">
+    <h4>① ボリューム → デジタルツイン</h4>
+    <p class="sub">実装済み・実測成功：シミュ出力 → scene.json → ViewSim</p>
+    <p>制度で決めたボリュームをSDの3D都市空間に載せ、<strong>景観・日影・眺望・周辺との関係</strong>を検証。デベが役所・地権者に見せる資料そのもの。</p>
+    <div class="kv"><b>SD収益</b>案件単位の可視化受託（高単価）</div>
+  </div>
+  <div class="card">
+    <h4>② 公開空地 → 人流シミュ</h4>
+    <p class="sub">制度と人流が理屈で繋がるポイント</p>
+    <p>諸制度は<strong>公開空地の量と質を評価して容積を積む</strong>仕組み。広場・歩道状空地の<strong>案A/案Bの比較</strong>に人流を当てれば、行政協議・社内合意形成を補助する定量資料になり得る。</p>
+    <div class="ng" style="margin:10px 0;padding:10px 12px;font-size:13px"><strong>言い方の注意</strong>：「人流が制度審査に直結する」とは<u>書かない</u>。SDの人流は統計からの推計であり実測ではなく、行政がどう評価するかも未検証。<strong>「比較検討と合意形成の補助資料になり得る」</strong>まで。</div>
+  </div>
+  <div class="card">
+    <h4>③ 自治体・審査側チャネル</h4>
+    <p class="sub">石狩市・大樹町などSDが持つ自治体接点</p>
+    <p>諸制度シミュは<strong>審査する側にも価値</strong>がある（提案の妥当性検証）。SDの自治体案件に「都市計画の頭脳」を同梱できる。</p>
+    <div class="kv"><b>注意</b>現状は東京都心向け。<strong>「即時の販売先」ではなく「地域制度を追加した将来展開」</strong>と位置づける</div>
+  </div>
+  <div class="card">
+    <h4>④ データの入口</h4>
+    <p class="sub">SDのデジタルツインは"入力"に飢える</p>
+    <p>シミュが生む<strong>敷地・区域・配棟・容積の構造化データ</strong>は、SD都市空間に載る計画データそのもの。使われるほどSD側のデータ資産が増える。</p>
+    <div class="kv"><b>SD収益</b>プロダクト価値の向上（間接）</div>
+  </div>
+</div>
+
+<h2 id="s2">2. 座組みの選択肢（6案）</h2>
+
+<div class="card" style="margin:14px 0;border:2px solid var(--em)">
+  <h4><span class="tag best">本命</span>案⑥　レイヤー分割 ＋ Earn-in（実績で独占を"獲得"させる）</h4>
+  <p class="sub">＝案⑤（レイヤー分割）を骨格に、案①（独占販売）を<strong>いきなり渡さず段階化</strong>したもの。<span class="tag cdx">Codex提案を採用</span></p>
+  <div class="kv"><b>MUD-Ai</b>制度判定・容積計算・法規ノウハウ・配棟エンジン・汎用UI（＝コア）</div>
+  <div class="kv"><b>SD</b>販売・顧客統合・ViewSim・デジタルツイン・人流・SDブランドUI・顧客別実装</div>
+  <div class="kv"><b>接続層</b>scene.json仕様／API／コンバータ。<strong>開発した側の単独帰属＋相手に永続利用許諾</strong></div>
+  <div class="step"><b>第1段階：6ヶ月の共同販売（非独占）</b>
+    ・SDが開拓した顧客は<strong>案件登録から12ヶ月は保護</strong>（MUD-Aiは直接営業しない）<br>
+    ・既存商談・既存接点は別紙で除外<br>
+    ・目標例：有償デザインパートナー3社／年間契約1社／ViewSim接続案件1社
+  </div>
+  <div class="step"><b>第2段階：目標達成なら12ヶ月の限定独占を付与</b>
+    ・対象＝<strong>SDが開拓する国内大手デベの新規顧客</strong>のみ<br>
+    ・除外＝MUD-Ai既存顧客／設計事務所・コンサル／自治体／海外／未対応地域<br>
+    ・2四半期連続で未達なら<strong>自動的に非独占へ戻る</strong><br>
+    ・SDが10営業日以内に動かないインバウンドはMUD-Aiが直接対応可<br>
+    ・独占の対価は固定MGより<strong>最低契約社数 or 最低卸売額</strong>で置く
+  </div>
+  <div class="kv"><b>◎</b>SDは「頑張れば独占が取れる」＝<strong>社内で投資判断ができる</strong>。MUD-Aiは売れない独占に縛られない。<strong>双方のリスクが最小</strong></div>
+</div>
+
+<div class="grid two">
+  <div class="card">
+    <h4><span class="tag">案①</span>MUD-Ai帰属＋SDに独占販売権（最初から）</h4>
+    <div class="kv"><b>◎</b>SDが自社商材として説明できる。営業力を借りられる</div>
+    <div class="kv"><b>△</b>SDが売らないと死ぬ。直販もできない。<strong>本命⑥の第2段階として温存する</strong></div>
+  </div>
+  <div class="card">
+    <h4><span class="tag">案②</span>非独占の相互送客だけ</h4>
+    <div class="kv"><b>◎</b>最も軽い。今すぐ始められる</div>
+    <div class="kv"><b>△</b>SDの取り分が薄く<strong>「なぜSDでやってるのか」への答えにならない</strong>。合意が遅れた場合の暫定形</div>
+  </div>
+  <div class="card">
+    <h4><span class="tag">案③</span>JV・共同出資</h4>
+    <div class="kv"><b>◎</b>本気度最大。資金と人が入る</div>
+    <div class="kv"><b>△</b>重い。<strong>売上ゼロの段階でやる話ではない</strong>。12〜18ヶ月後の再議題として明示的に置く</div>
+  </div>
+  <div class="card">
+    <h4><span class="tag">案⑤'</span>API／従量課金<span class="tag cdx">Codex</span></h4>
+    <div class="kv"><b>形</b>エンジンをAPI化。SDがViewSim等から呼ぶ。初期接続料＋従量（敷地数・計算回数・アカウント数）＋最低年間利用料</div>
+    <div class="kv"><b>◎</b><strong>レベシェアより監査が楽</strong>（案件ごとの売上照合が要らない）。長期はこちらが本命になり得る</div>
+  </div>
+</div>
+
+<div class="card" style="margin:14px 0">
+  <h4><span class="tag no">比較用</span>案④　SD帰属＋MUD-Aiへ開発委託＋レベシェア</h4>
+  <div class="kv"><b>◎</b>SDの社内説明は最も楽</div>
+  <div class="kv"><b>△</b><strong>SDが懸念している属人リスクが1ミリも解決しない。</strong>権利だけ移って開発は止まりうる。<strong>必ず比較表に並べて、自分から落とす</strong></div>
+  <div class="kv"><b>譲る場合の条件</b>①譲渡対象は「国内大手デベ向けSD版」に限定 ②汎用エンジンと既存ノウハウはMUD-Aiに残す ③MUD-Aiは対象外分野で永続利用可 ④SDが12〜18ヶ月で商用化しなければ<strong>権利はMUD-Aiへ復帰</strong> ⑤IP対価は月20万とは別建て ⑥売上ロイヤルティ or 最低年間対価</div>
+</div>
+
+<h2 id="s3">3. 収益モデル（A/B/C）</h2>
+<div class="scroll">
+<table>
+<tr><th>案</th><th>中身</th><th>評価</th></tr>
+<tr><td><strong>(A) 大手向け高額導入</strong></td><td>大手デベへ個別導入・カスタム</td><td><span class="tag">アンカーとして併走</span>初期の売上と実績はこれで作る。ただし<strong>受託化すると1人体制で詰む</strong>。年1〜2件に絞る</td></tr>
+<tr><td><strong>(B) アカウント単位サブスク</strong></td><td>1社に複数アカウント。敷地数・機能で階段</td><td><span class="tag best">本命</span>三井物産都市開発が<strong>estieで同じ型を既に買っている</strong>＝稟議の型が社内にある。本人が「その課金体系なら導入しやすい」と明言</td></tr>
+<tr><td><strong>(C) 売り切り＋アップセル</strong></td><td>買い切り＋追加機能販売</td><td><span class="tag no">不採用</span>法規は改正される＝<strong>売り切りは永久保守債務</strong>。1人体制で最も危険</td></tr>
+</table>
+</div>
+
+<div class="em"><strong>(A)と(B)は矛盾しない。</strong>同じ機能に二重価格を作らず、<strong>料金項目を分ける</strong>：
+<br>・共通＝アカウント／利用量ベースのSaaS
+<br>・Enterprise追加＝初期設定・制度/地域カスタム・データ接続・SSO・セキュリティ審査・SLA・研修
+<br>・SD追加＝ViewSim統合・デジタルツイン作成・人流/景観の個別シミュ
+<br>※<strong>有償PoCの費用を年間契約に充当</strong>する設計も効く。</div>
+
+<div class="flow">
+[入口]  有償トライアル（1敷地・期間限定）　←無料にしない。"いくら払うか"の検証が要る
+          ↓
+[本体]  アカウント単位サブスク（B）
+          ↓ 　敷地数・3D配棟・日影/天空率で階段
+[拡張]  SDアセット連携（ViewSim・人流・合意形成資料）　★SDの高単価領域
+          ↓
+[大型]  大手向け個別導入（A）／自治体版（将来）
+</div>
+
+<h2 id="s4">4. 料金配分（"起点"ではなく"役割"で決める）</h2>
+<p><span class="tag cdx">Codex指摘を採用</span>「どちらが商談を起こしたか」だけで決めると必ず揉める。<strong>誰がリード獲得・提案・契約回収・導入・一次サポート・継続支援まで負ったか</strong>で決める。</p>
+<div class="scroll">
+<table>
+<tr><th>SDの役割</th><th>SDの取り分（交渉の起点）</th><th>備考</th></tr>
+<tr><td>紹介のみ</td><td class="r">初年度入金額の 10%</td><td>単なる送客に30〜40%は厚すぎる</td></tr>
+<tr><td>商談設定・提案支援</td><td class="r">初年度 15%</td><td></td></tr>
+<tr><td>共同営業・提案・クロージング</td><td class="r">初年度 20〜25%／更新 10%</td><td>現実的にはまずここ</td></tr>
+<tr><td>SDが契約主体・請求回収・一次サポート</td><td class="r">30〜40%</td><td>案①の水準はこの場合のみ妥当</td></tr>
+<tr><td>SDブランドOEM</td><td class="r">固定卸価格＋従量</td><td>単純な売上比率にしない</td></tr>
+<tr><td><strong>逆向き：MUD-AiがSDのデジタルツイン案件を送客</strong></td><td class="r"><strong>紹介のみ5〜10%／商談設計・提案まで10〜15%</strong></td><td><strong>ここが提案の肝</strong></td></tr>
+</table>
+</div>
+<div class="em"><strong>MUD-Ai→SDへの紹介料を"こちらから"提案する。</strong>
+取り分をもらうだけの話に見せない。<strong>双方向に金が流れる設計</strong>にした瞬間、この話は「帰属の交渉」から「協業の設計」に変わる。</div>
+
+<h2 id="s5">5. SDの本当の不安への答え（IPを渡さずに解く）</h2>
+<p>SDが「これでは足りない」と言ってくるのは、権利の話ではなく<strong>事業継続性と責任の話</strong>。先回りして全部書く。</p>
+<div class="scroll">
+<table>
+<tr><th>SDの不安</th><th>こちらが出す答え</th></tr>
+<tr><td>山川一人で保守できるのか</td><td>仕様書・テストケース・ルール更新履歴・計算根拠ログの整備を約束（成果物として納品）</td></tr>
+<tr><td>山川が離脱したら顧客対応が止まる</td><td><strong>ソースコード・仕様書のエスクロー（第三者預託）</strong>＋<strong>限定ステップイン利用権</strong>（長期離脱・重大な契約違反・MUD-Ai解散時<u>のみ</u>発動）</td></tr>
+<tr><td>誤判定の責任は誰が負うのか</td><td>「本ツールは設計・行政協議を代替しない／専門家確認を要する」旨を明記＋<strong>責任上限を定める</strong>。出力に法制度の改訂日・出典・計算過程を記録</td></tr>
+<tr><td>SDが営業投資した顧客を直接取られないか</td><td><strong>案件登録制＋12ヶ月の顧客保護</strong>を自分から提案</td></tr>
+<tr><td>30〜40%で営業コストを回収できるか</td><td>役割別レート（上表）で、SDが担う範囲に応じて上げ下げ</td></tr>
+<tr><td>製品として運用に耐えるのか</td><td>セキュリティ・運用監視・マルチテナント・SLAは<strong>まだ未整備と正直に書き</strong>、90日計画に入れる</td></tr>
+<tr><td>有償契約の実績が無い</td><td>「好意的な反応は3社。<strong>次に検証するのは"いくら払うか"</strong>」と自分から言う</td></tr>
+</table>
+</div>
+
+<h2 id="s6">6. 契約の整理（覚書を1本足す）</h2>
+<div class="warn"><span class="tag cdx">Codexの最重要指摘</span><strong>「第8条は適用されない」で押し切ろうとしない。</strong>
+契約締結は6/18で、6/21〜25の成果物は<u>締結後</u>。第8条は「遂行<strong>上</strong>」作成したものまで対象にしており、7/23〜31の大量改修がSDでの提案・デモ・顧客開拓のためだったなら、SDは業務関連性を主張できる。
+<strong>争点にせず、過去分を含めて覚書で相互確認・清算するのが、関係維持と実務確実性の両面で有利。</strong></div>
+
+<h3>覚書に入れる項目</h3>
+<ol>
+<li><strong>別紙A＝MUD-Ai既存IPの証拠化</strong>：ファイル一覧・リポジトリ・コミットハッシュ・マニュアル・画面・作成日。<strong>これを8/2〜3に作る（最優先）</strong></li>
+<li><strong>7月改修のモジュール別整理</strong>（汎用コア／SD専用接続部を分けて棚卸し）</li>
+<li>SDは別紙Aと汎用コアについて権利を主張しない</li>
+<li>MUD-AiはSD固有コード・データ・ブランドについて権利を主張しない</li>
+<li>将来、<strong>書面の個別発注がない汎用コア改善はMUD-Ai帰属</strong></li>
+<li>SDが費用負担したSD専用実装の帰属・利用条件</li>
+<li><strong>6/18〜覚書締結日までの相互請求・帰属問題の清算</strong></li>
+<li>SDへの<strong>非独占・無償の利用許諾</strong>（社内検討・顧客提案で使える）※ここは気前よく出す</li>
+<li>販売・レベシェアは<strong>業務委託契約と分けて別契約</strong>にする</li>
+</ol>
+<p><span class="tag">参考</span>2026年6月公表の公取委・中小企業庁・特許庁の知財取引指針も、<strong>成果物の対価と知財の利用・譲渡対価を分けて協議すること</strong>、イニシャル／ランニングロイヤルティ／マイルストーンの組合せを示している。第3条2項（委託料に知財対価を含む）への対抗軸になる。</p>
+
+<h3>共有帰属は避ける</h3>
+<p><span class="tag cdx">Codex</span>「SD帰属または共有」ではなく<strong>単独帰属＋クロスライセンス</strong>。共有知財は改変・第三者許諾・売却・撤退時の処理が全部揉める。
+コア＝MUD-Ai単独／SD専用UI・SDが全額負担したラッパー＝SD単独／コネクター＝開発主体の単独帰属＋相手に永続利用許諾。</p>
+
+<h3>見落としやすい実務論点</h3>
+<ul>
+<li><strong>権利保有のチェーン</strong>：契約当事者は合同会社MUD-Ai。実際に書いたのは山川個人。職務著作か個人からの譲渡かを整理しておく（対外説明で突かれる）</li>
+<li><strong>OSS・PLATEAU・オープンデータのライセンス一覧</strong>を作る（再配布・商用可否）。※鉄道系はODbLのシェアアライク注意</li>
+<li><strong>estie等の外部データ連携はAPI・データ利用契約が別途必要</strong>（顧客が契約中でも自動では使えない）</li>
+<li>保護は特許より<strong>コード著作権＋秘密管理されたノウハウ＋商標＋テスト体系の複合</strong>で考える</li>
+<li><strong>利益相反の見え方</strong>：契約に競業避止は無いが、「SD経由案件はSD取り分を厚く」「SDの顧客に直接営業しない」等の行動ルールを自分から出すと心証の問題が消える</li>
+</ul>
+
+<h2 id="s7">7. 8/7に出す資料の構成と段取り</h2>
+<p><strong>表紙は「知財帰属に関する提案」にしない。</strong>→「<strong>都市開発諸制度シミュレーターを起点としたSD事業拡張モデル（討議用ドラフト）</strong>」。全体8〜10ページ。<strong>全ページに「Non-binding／協議用」と明記</strong>（料率や独占条件が確定提案と受け取られないように）。</p>
+<div class="scroll">
+<table>
+<tr><th>P</th><th>内容</th><th>ねらい</th></tr>
+<tr><td>1</td><td><strong>結論</strong>：シミュをSD都市開発案件の上流入口にする／scene.json接続は実装済み／6ヶ月共同販売を提案／コアとSD実装を分ける</td><td><strong>帰属問題を1ページ目に出さない</strong></td></tr>
+<tr><td>2</td><td>顧客課題と検証結果（制度・容積・配棟・収支が分断／3社から類似ニーズ／三井物産都市開発の反応／単独敷地・マーケットデータ・アカウント課金の要望）</td><td>次の検証は「いくら払うか」と自分から言う</td></tr>
+<tr><td>3</td><td><strong>SDへの事業価値</strong>：顧客フロー1本＋KPI（有償パートナー数／SaaS転換率／ViewSimアタッチ率／SDパイプライン／データ変換工数／ARR・粗利）</td><td>ここが宿題への回答本体</td></tr>
+<tr><td>4</td><td>商品・料金構造（有償トライアル／SaaS／Enterprise別料金／SDアップセル／売り切りしない）</td><td>定価より<strong>構造</strong>を示す</td></tr>
+<tr><td>5</td><td>推奨座組み（コア／SD／コネクターの分界＋共同営業の役割分担＋エスクロー・ステップイン権）</td><td></td></tr>
+<tr><td>6</td><td>収益配分（役割別レート・<strong>協議用レンジと明記</strong>・双方向）</td><td></td></tr>
+<tr><td>7</td><td>独占性の選択肢（非独占共同販売／6ヶ月後の条件付き限定独占／OEM／全面独占・IP譲渡は比較案）</td><td>本命Earn-inに印</td></tr>
+<tr><td>8</td><td>90日〜6ヶ月の実行計画（対象デベ3社／有償PoC／単独敷地対応／ViewSim連携の製品化／課金検証／責任範囲・保守・セキュリティ整備）</td><td></td></tr>
+<tr><td>9</td><td><strong>今回合意したい3点</strong>：①6ヶ月共同販売をやるか ②コア／SD実装を分ける原則に合意できるか ③営業責任者・技術責任者・対象3社は誰か</td><td>判断を3つに絞る</td></tr>
+<tr><td>10<br>別紙</td><td>ここで<strong>初めて</strong>契約整理（既存IP一覧・開発時系列・7月改修の分類・覚書で整理したい事項・最終契約は双方法務確認）</td><td>最後に短く</td></tr>
+</table>
+</div>
+
+<h3>8/7までの段取り</h3>
+<div class="scroll">
+<table>
+<tr><th>日</th><th>やること</th></tr>
+<tr><td>8/2〜3</td><td><strong>別紙A（既存IPの証拠化）</strong>：6/21以降のコミット・ファイル・マニュアル・スクショを保存し、モジュール別の時系列表を作る ← <strong>最優先。これだけは何があってもやる</strong></td></tr>
+<tr><td>8/3</td><td>権利保有名義の確認（職務著作／譲渡のチェーン）、OSS・オープンデータのライセンス一覧</td></tr>
+<tr><td>8/4</td><td><strong>知財・IT契約に強い弁護士へ60〜90分のスポット相談</strong>（契約全文＋時系列を渡す）</td></tr>
+<tr><td>8/4〜5</td><td>上記10ページ構成でドラフト化</td></tr>
+<tr><td>8/6</td><td>SDの懸念への回答（エスクロー・SLA・案件登録）を追記</td></tr>
+<tr><td>8/7</td><td>討議用ドラフトとして提出</td></tr>
+</table>
+</div>
+
+<div class="ng"><strong>いちばん大事なこと。</strong>8/7で「MUD-Ai帰属の法的正しさ」を決着させようとしない。
+<strong>SDに先に事業機会を見せ、その事業を続けるためにコアIPの保有者と顧客向け実装を分ける</strong>——この順番が、関係を壊さず、かつ交渉上いちばん強い。</div>
+
+<div class="fn">
+作成＝Claude（統括）。セカンドオピニオン＝OpenAI Codex（gpt-5.6-sol／reasoning high）。
+数字はすべて交渉の初期値であり確定値ではない。契約書ドラフト段階で弁護士レビューを必ず入れること。<br>
+Codexが指摘し、当初案から<strong>変えた</strong>点：①第8条を「契約期間前だから安全」と構成するのをやめた（締結は6/18）②独占/非独占の二択→Earn-in（条件付き独占）③配分を"起点別"→"役割別"④「共有帰属」→単独帰属＋クロスライセンス⑤人流と制度審査の直結を言い切らない⑥API従量課金モデルの追加⑦エスクロー・ステップイン権・案件登録の明文化。
+</div>
+
+</div>
+</body>
+</html>
