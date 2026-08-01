@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MUD-Ai｜直営業リリース計画 と SD接続モデル</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1720; --ink-sub:#3D4A57; --line:#D8DEE4; --bg:#FFFFFF; --bg-soft:#F5F7F9;
+    --em:#0E9F6E; --em-soft:#E7F6F0; --warn:#B45309; --warn-soft:#FEF3C7; --ng:#B91C1C; --ng-soft:#FEF2F2;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP",system-ui,sans-serif;line-height:1.85;-webkit-text-size-adjust:100%}
+  .wrap{max-width:980px;margin:0 auto;padding:26px 16px 90px}
+  header{border-bottom:3px solid var(--ink);padding-bottom:18px}
+  .eyebrow{font-size:12px;letter-spacing:.14em;color:var(--em);font-weight:700}
+  h1{font-size:25px;font-weight:900;margin:8px 0 6px;line-height:1.45}
+  .meta{font-size:12.5px;color:var(--ink-sub)}
+  h2{font-size:19px;font-weight:900;margin:46px 0 12px;padding-left:12px;border-left:6px solid var(--em)}
+  h3{font-size:16px;font-weight:700;margin:26px 0 8px}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0;padding-left:1.3em}
+  li{margin:6px 0}
+  .lead{font-size:15px;background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:18px 0}
+  .em{background:var(--em-soft);border:1px solid #B6E3D1;border-radius:10px;padding:14px 16px;margin:14px 0}
+  .warn{background:var(--warn-soft);border:1px solid #FBBF24;border-radius:10px;padding:14px 16px;margin:14px 0}
+  .ng{background:var(--ng-soft);border:1px solid #FBC5C5;border-radius:10px;padding:14px 16px;margin:14px 0}
+  .tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;border:1px solid var(--line);background:#fff;margin-right:6px}
+  .tag.best{background:var(--em);color:#fff;border-color:var(--em)}
+  .tag.no{background:#fff;color:var(--ng);border-color:#F1BDBD}
+  .grid{display:grid;gap:14px;grid-template-columns:1fr}
+  @media(min-width:780px){.grid.two{grid-template-columns:1fr 1fr}}
+  .card{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff}
+  .card h4{margin:0 0 8px;font-size:15.5px;font-weight:900;line-height:1.5}
+  .card .sub{font-size:12.5px;color:var(--ink-sub);margin:0 0 10px}
+  .kv{font-size:13.5px;margin:6px 0}
+  .kv b{display:inline-block;min-width:5.4em;color:var(--ink-sub);font-weight:700}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:14px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:600px}
+  th,td{border:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg-soft);font-weight:700;white-space:nowrap}
+  td.r{text-align:right;white-space:nowrap}
+  .flow{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#0F1720;color:#E7EEF3;border-radius:10px;padding:14px 16px;overflow-x:auto;line-height:1.75}
+  .quote{border-left:5px solid var(--em);background:#fff;padding:12px 16px;margin:14px 0;font-size:15px;font-weight:500}
+  .fn{font-size:12.5px;color:var(--ink-sub);border-top:1px solid var(--line);margin-top:44px;padding-top:14px}
+  .big{font-size:17px;font-weight:900}
+  strong{font-weight:700}
+  .chk{list-style:none;padding-left:0}
+  .chk li{padding-left:1.6em;position:relative}
+  .chk li:before{content:"☐";position:absolute;left:0;color:var(--em);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">合同会社 MUD-Ai ／ 実行計画</div>
+  <h1>ツールを自社商品として出し、直営業で売る<br>＋ スペースデータへの繋ぎ方</h1>
+  <div class="meta">2026-08-02｜SD提出 8/7(金)｜作成＝Claude（統括）＋OpenAI Codex（gpt-5.6-sol／high）<br>※価格はすべて税別の仮置き。相場ではなく「支払意思を測るための仮説」</div>
+</header>
+
+<div class="lead">
+<span class="big">結論を3行で。</span><br>
+<strong>①「リリース」＝SaaSを作ることじゃない。今日ある物のまま"商品名と値段を付けて売る"のが最速。</strong><br>
+<strong>②最初の商品は『都市開発制度クイックスタディ』＝5営業日・50万円/敷地。今週から売れる。</strong><br>
+<strong>③SDとの繋ぎは「MUD-Ai＝何がどこまで建つか／SD＝建てたら周りで何が起きるか」。これ1行が座組みの全部。</strong>
+</div>
+
+<h2>0. 「ビジネスモデル」は3つの問いに分解できる</h2>
+<p>苦手意識を持つ必要はない。<strong>この3つだけ</strong>や。SDに出す資料も、この3つに答えていれば通る。</p>
+<div class="scroll">
+<table>
+<tr><th>問い</th><th>MUD-Ai単独の答え</th><th>SDと組んだときの答え</th></tr>
+<tr><td><strong>誰が誰に何を売るか</strong></td><td>MUD-Aiがデベの開発／用地部門に、制度比較＋ボリュームの初期検討を売る</td><td>MUD-Aiが上流（何が建つか）、SDが下流（建てたら何が起きるか）を、同じ顧客に段階で売る</td></tr>
+<tr><td><strong>金がどっちに流れるか</strong></td><td>顧客 → MUD-Ai（1敷地50万円〜）</td><td>案件ごとに元請を決め、元請が請求。紹介だけなら成約額の5〜10%を相手へ</td></tr>
+<tr><td><strong>どっちが何をやるか</strong></td><td>全部MUD-Ai（1人）</td><td>MUD-Ai＝制度判定・容積・空地・配棟／SD＝周辺3D・人流・説明環境・合意形成</td></tr>
+</table>
+</div>
+
+<h2>1. まず「リリース」の定義を変える</h2>
+<div class="ng">
+<strong>やってはいけないこと：ログイン・課金・マルチテナントを作ってから売る。</strong>
+今の状態（ローカル起動・認証なし）からSaaSにするには3〜6ヶ月かかる。<strong>その間、売上ゼロ。</strong>
+しかも「売れる機能」ではなく「購買担当が要求しそうな機能」を想像で作る期間になる。<span class="tag">Codexも同意見</span>
+</div>
+<div class="em">
+<strong>正解：今のツールを「山川が高速で高品質な初期検討を出せる生産設備」と捉える。</strong><br>
+顧客に操作させるのではなく、<strong>山川が回して成果物を納品する</strong>。これなら<strong>今週から売れる</strong>。
+受託コンサルとの違いは、<strong>入力・納品物・納期・修正回数を固定する</strong>こと＝「プロダクト化されたサービス」。
+</div>
+
+<h2>2. 商品①『都市開発制度クイックスタディ』</h2>
+<div class="scroll">
+<table>
+<tr><th>項目</th><th>標準設定</th></tr>
+<tr><td>対象</td><td>東京都心／大規模・複数街区の初期検討（＝今できることに正直に絞る）</td></tr>
+<tr><td>もらうもの</td><td>敷地区域、用途・現況、顧客が持っている前提条件</td></tr>
+<tr><td>納品物</td><td>①5制度の比較表と適用可能性 ②容積緩和の考え方（制度ごと1枚）③必要な公開空地・広場の量 ④3Dボリューム2案 ⑤前提・留意事項の一覧</td></tr>
+<tr><td>納期</td><td><strong>資料受領後 5営業日</strong></td></tr>
+<tr><td>説明</td><td>60分オンライン説明 1回</td></tr>
+<tr><td>修正</td><td>前提誤認の修正1回まで無償。新条件・新案は追加料金</td></tr>
+<tr><td>価格</td><td><strong>標準 50万円／敷地</strong>（最初の5件は<strong>β 33万円</strong>）／追加シナリオ 15万円／特急+30%</td></tr>
+</table>
+</div>
+
+<h3>1件あたりの中身（1人で何件回るか）</h3>
+<div class="scroll">
+<table>
+<tr><th>作業</th><th>時間</th></tr>
+<tr><td>受付・敷地条件の確認</td><td class="r">1.0h</td></tr>
+<tr><td>シミュ実行・再実行</td><td class="r">0.5〜1.0h</td></tr>
+<tr><td><strong>制度・数値の品質確認</strong>（ここが商品の価値）</td><td class="r">2.0〜3.0h</td></tr>
+<tr><td>納品資料の調整</td><td class="r">1.5〜2.0h</td></tr>
+<tr><td>顧客説明</td><td class="r">1.0h</td></tr>
+<tr><td>連絡・請求・記録</td><td class="r">0.5〜1.0h</td></tr>
+<tr><td><strong>合計</strong></td><td class="r"><strong>6.5〜9.0h／件</strong></td></tr>
+</table>
+</div>
+<div class="warn"><strong>SD業務が月5日ある前提で、安定運用は月4〜6件・瞬間最大8件。</strong>
+月5件×50万＝<strong>月250万</strong>。ただし最初の90日は案件が均等に来ないので、<strong>現実目標は月2〜3件</strong>。
+<strong>納品が月6件を超えたら開発を止めて、納期を延ばすか値上げする。</strong>これは先に決めておく。</div>
+
+<h2>3. 価格表（仮説）</h2>
+<div class="scroll">
+<table>
+<tr><th>商品</th><th>価格</th><th>用途</th></tr>
+<tr><td>βクイックスタディ</td><td class="r">33万円／敷地</td><td>最初の5件。事例づくりと価格検証</td></tr>
+<tr><td><strong>標準クイックスタディ</strong></td><td class="r"><strong>50万円／敷地</strong></td><td>通常案件</td></tr>
+<tr><td>複雑案件・複数条件</td><td class="r">80〜120万円</td><td>街区条件の整理、追加案、説明会対応</td></tr>
+<tr><td>SDビューア付き</td><td class="r">＋100〜300万円</td><td>周辺都市を含む3D説明・共有（SDと共同）</td></tr>
+<tr><td>追加シナリオ</td><td class="r">15万円／案</td><td>配置・制度・条件の変更</td></tr>
+<tr><td><strong>有償PoC</strong></td><td class="r"><strong>3敷地・4週間・90万円</strong></td><td>最初の2社は66万可。30日以内に年契約したらPoC額の50%を初年度から控除</td></tr>
+</table>
+</div>
+<div class="em"><strong>値付けの考え方＝処理時間から積み上げない。</strong>
+①外部専門家への調査依頼を置き換える価値 ②取得・事業判断を数週間早める価値 ③制度の見落としリスクを減らす価値 ④社内説明資料を作る工数の削減——から逆算する。<br>
+<strong>そして33万／50万／80万の見積を別々の案件で出して、"値引き要求"ではなく"失注理由"を記録する。</strong>これが唯一の価格検証や。</div>
+<div class="ng"><strong>無料PoCはやらない。</strong>無償で分かるのは「面白かった」まで。有償で初めて「業務に必要」かが分かる。
+無料にするのは<strong>公開情報・ダミー敷地の45分デモまで</strong>。</div>
+
+<h3>SaaSはいつ作るか</h3>
+<p>「売れたらSaaS」ではなく<strong>「同じ使われ方が繰り返され、顧客が"自分で何案も回したい"と言い出したらSaaS」</strong>。判断ゲート＝以下のうち<strong>4つ以上</strong>：</p>
+<ul class="chk">
+<li>有償顧客が3社以上</li>
+<li>累計10敷地以上を有償で処理</li>
+<li>2社以上が60日以内にリピート</li>
+<li>案件の70%以上が追加開発なしで処理できる</li>
+<li>「自分で何案も回したい」が複数回出る</li>
+<li>年200万円以上の契約意向・内示・前払いが2社分</li>
+<li>手作業納品の待ち時間で失注／納期が2週間超</li>
+<li>セキュリティ質問票に答えられる体制ができた</li>
+</ul>
+<p>SaaSの価格イメージ（将来）：Solo 96〜120万／年、<strong>Team（5ID・年150案件）240〜360万／年</strong>、Enterprise（SSO・監査ログ・SLA）600〜1,200万／年。
+<strong>サービス5〜7件分でTeam年額に届く</strong>＝顧客側にも経済合理性が立つ。</p>
+
+<h2>4. 90日計画</h2>
+
+<h3>8/2〜8/7（今週）— 開発はしない。売り方を作る</h3>
+<ul>
+<li>クイックスタディの<strong>商品概要1枚</strong>（何を・いつまでに・いくらで）</li>
+<li><strong>MUD-Ai→SD 接続モデル1枚</strong>（次章そのまま）</li>
+<li><strong>共同案件の価格・役割・案件フロー1枚</strong></li>
+<li><strong>サンプル成果物</strong>（公開情報だけで作った架空敷地の納品物一式）← これが一番効く営業資料</li>
+<li>scene.json の受け渡し項目表</li>
+</ul>
+<div class="ng"><strong>8/7にSDへ出すのは2〜3ページで十分。</strong>10ページの大作は要らん。</div>
+
+<h3>1〜30日 — 目標は「有償PoCを1〜2件受注」</h3>
+<ul>
+<li>三井物産都市開発の2名へ<strong>有償PoCを提案</strong>（既に「みんな使う」と言うてる＝最有力）</li>
+<li>単独敷地を要望した残り2社にも同じ提案</li>
+<li>日建設計AIラボへ補完関係の意見交換</li>
+<li>温かい人脈10名へ連絡。<strong>デモ6件・見積3件・有償受注1〜2件</strong>が目標</li>
+<li><strong>営業台帳1枚</strong>を作る（見積回答／失注理由／希望価格／利用頻度）</li>
+<li>案件ごとのQAチェックリスト、成果物にルール・データ・ツールのバージョン記載</li>
+</ul>
+<div class="em"><strong>単独敷地機能ができるのを待って営業しない。</strong>今できる範囲（大規模・複数街区）で売れる相手が既におる。<br>
+営業の言い方は「AIツール」ではなく——
+<div class="quote">土地取得や初期企画の段階で、東京都の主要5制度を比較し、容積・公開空地・3Dボリュームまで<strong>5営業日で整理</strong>します。</div></div>
+
+<h3>31〜60日 — 単独敷地対応を作る（3社が言ってる＝最優先）</h3>
+<ul>
+<li>有償PoCを合計3社・6〜9敷地まで拡大</li>
+<li><strong>単独敷地MVP</strong>を実装</li>
+<li>既知案件10〜20件の<strong>回帰テスト</strong>を作る（制度改定・改修で壊れたことに気づける体制）</li>
+<li>判定を<strong>「可／要個別確認／対象外」の三値</strong>にする</li>
+<li>SDと共同提案する候補案件を<strong>1件選ぶ</strong>＋共同デモ（2〜3シナリオをSDビューアへ）</li>
+</ul>
+<p><span class="tag">注意</span>estieは全国8万棟・40万フロアの募集/賃料/テナント情報を持ち相性は良いが、<strong>顧客が契約していてもMUD-Aiが取得・再表示できるとは限らない</strong>。最初は顧客提供CSVかリンクアウト、正式なAPI・再配布条件を確認してから組み込む。</p>
+
+<h3>61〜90日 — SaaS化のGo/No-Goを実績で決める</h3>
+<p>目標＝<strong>3社・累計10敷地・受注300〜500万円</strong>。<br>
+<strong>Go</strong>→請求書払いのクローズドβを2社限定（課金画面は作らない・年額請求書）＋ログイン/顧客分離/履歴/監査ログ、5ID年240万で提案。<br>
+<strong>No-Go</strong>→SaaS開発を止め、売れた顧客・用途にサービスを絞る。単発を続けてリピート発生を待つ。</p>
+<div class="warn"><strong>週の配分を先に決める：SD 1日／営業 1日／納品 2日／開発・保守 1日。</strong>
+これを守らんと、営業が開発に負けて売上が立たん。<strong>毎週：連絡5件・商談2件・提案1件</strong>を固定。4週連続で売上に繋がらん開発は一度止める。</div>
+
+<h2>5. 売る前に必ず要るもの（初回受注の前に）</h2>
+<p>2週間で揃う。ただし<strong>「根拠・前提・再現性」と顧客データの扱いだけは初回受注前に必須</strong>。</p>
+<div class="scroll">
+<table>
+<tr><th>項目</th><th>最低要件</th></tr>
+<tr><td>適用範囲</td><td>対応地域・制度・敷地条件・<strong>未対応項目</strong>を明示</td></tr>
+<tr><td>判定表現</td><td>断定だけでなく「要個別協議」「情報不足」を用意（制度は行政協議に依存する）</td></tr>
+<tr><td>出典</td><td>条文・要綱・運用基準・URL・参照日</td></tr>
+<tr><td>計算根拠</td><td>入力値・式・係数・手動補正・結果を案件ごとに保存</td></tr>
+<tr><td>バージョン</td><td>ルール／コード／地図・データ／実行日時を成果物に記載</td></tr>
+<tr><td>QA</td><td>チェックリスト＋既知案件との回帰テスト</td></tr>
+<tr><td>成果物の性格</td><td><strong>初期検討資料であり、行政協議・設計確定を代替しない</strong>旨を明記</td></tr>
+<tr><td>修正方針</td><td>入力・計算ミスは無償修正／新条件は追加料金</td></tr>
+<tr><td><strong>データ管理</strong></td><td>保存場所・アクセス者・保存期間・削除時期。<strong>顧客の検討敷地は最高機密</strong>（どこを狙ってるかが漏れたら致命傷）</td></tr>
+<tr><td>サポート</td><td>受付時間・回答目安・説明回数</td></tr>
+<tr><td>契約</td><td>2ページ程度の注文書＋共通条件、NDA、検収条件。<strong>発注時50%／納品時50%</strong></td></tr>
+<tr><td>継続性</td><td>バックアップ、山川が動けない時の顧客連絡方法</td></tr>
+</table>
+</div>
+<div class="ng"><strong>認証なしのCloudflare Tunnel（sim.mud-ai.com）は本番の顧客データに使わない。</strong>営業デモ専用にして、実案件はローカル実行＋安全なファイル受け渡しに限定する。</div>
+
+<h2>6. SDへの繋ぎ方（8/7に出すのはここ）</h2>
+
+<div class="em">
+<span class="big">冒頭に置く一文（これがすべて）</span>
+<div class="quote">
+MUD-Aiが「<strong>制度上、何をどこまで建てられるか</strong>」を短期間で構造化し、SpaceDataが「<strong>その計画を都市空間に置いたとき何が起きるか</strong>」を可視化・シミュレーションする。<br>
+土地・事業の初期検討を入り口として、デジタルツインによる影響検証と合意形成の案件へ接続する。
+</div>
+共同商品として名前を付けるなら <strong>「都市開発 意思決定ツイン」</strong>。
+</div>
+
+<h3>接続モデル4つ（時期つき）</h3>
+<div class="scroll">
+<table>
+<tr><th>#</th><th>モデル</th><th>金の流れ</th><th>MUD-Ai</th><th>SD</th><th>時期</th></tr>
+<tr><td>1</td><td><strong>相互送客</strong></td><td>顧客→各社に別契約。紹介のみなら<strong>成約入金額の5〜10%</strong></td><td>上流でニーズを見つけて紹介</td><td>直接提案・受注</td><td><strong>すぐ</strong></td></tr>
+<tr><td>2</td><td><strong>共同診断パック</strong><span class="tag best">最優先</span></td><td>紹介元が元請。<strong>150〜300万円</strong>を両社で配分</td><td>制度判定・ボリューム・説明</td><td>周辺3D・ビューア・シナリオ比較</td><td><strong>最優先</strong></td></tr>
+<tr><td>3</td><td>高度シミュレーション</td><td>原則SD元請。MUD-Aiは固定100〜300万 or 15〜25%</td><td>上流条件・都市計画/建築側の意味付け</td><td>人流・交通・防災・合意形成</td><td>共同案件が出てから</td></tr>
+<tr><td>4</td><td>OEM／API</td><td>SD→MUD-Aiへ年300〜600万＋顧客数連動、またはモジュール売上の20〜30%</td><td>制度エンジン・更新・QA</td><td>ホスティング・販売・運用</td><td>有償実績が出てから</td></tr>
+</table>
+</div>
+<p><strong>最初から大きなプロダクト統合を目指さない。</strong>1と2から始めれば、契約も軽くて今月動ける。</p>
+
+<h3>「いつSDに繋ぐか」を明文化する（これがあると営業が動く）</h3>
+<div class="scroll">
+<table>
+<tr><th>MUD-Ai案件で顧客が言ったこと</th><th>→ 繋ぐSDの商品</th></tr>
+<tr><td>周辺建物と並べて説明したい</td><td>3D都市ビューア</td></tr>
+<tr><td>複数案を役員・地権者に見せたい</td><td>シナリオ比較・説明環境</td></tr>
+<tr><td>人流や滞留を検証したい</td><td>人流シミュレーション</td></tr>
+<tr><td>災害・避難・インフラ影響を見たい</td><td>リスク／レジリエンス系</td></tr>
+<tr><td>自治体・住民との合意形成が要る</td><td>デジタルツイン＋ワークショップ</td></tr>
+</table>
+</div>
+
+<h3>SDに刺さる価値の順番（この順で話す）</h3>
+<ol>
+<li><strong>案件の上流接点</strong>— 土地取得・企画初期に入れる。今のSDが入りにくい位置。<strong>ここが最重要</strong></li>
+<li><strong>高単価案件のアタッチ率</strong>— 50万円の診断から、数百〜数千万円のデジタルツイン案件へ進める</li>
+<li><strong>プリセールス工数の削減</strong>— 敷地・ボリューム・シナリオがscene.jsonで構造化され、SDがゼロから要件整理しなくてよい</li>
+<li><strong>対外的なストーリー</strong>— 「3Dを見せる」から「制度選択→案作成→影響予測→合意形成」へ物語が伸びる</li>
+<li>紹介料・販売マージン — 分かりやすいが、SDにとっての金額インパクトは上の4つより小さい</li>
+</ol>
+<div class="warn"><strong>だからSDへの説明は「マージンが入ります」ではなく「MUD-AiがSDのリード生成装置になります」と言う。</strong></div>
+
+<h3>共同提案の実務（1枚・フェーズ見積・台帳1枚）</h3>
+<p><strong>提案書の型</strong>：①顧客が今決めるべきことと期限 ②不足情報・判断リスク ③MUD-Aiの担当範囲 ④SDの担当範囲 ⑤納品物 ⑥4〜6週間の工程 ⑦フェーズ別価格 ⑧次フェーズへ進む判断条件</p>
+<div class="scroll">
+<table>
+<tr><th>フェーズ</th><th>内容</th><th>価格</th></tr>
+<tr><td>Phase 1</td><td>制度・事業可能性の診断（MUD-Ai）</td><td class="r">50〜100万円</td></tr>
+<tr><td>Phase 2</td><td>3D都市統合・案比較（MUD-Ai＋SD）</td><td class="r">100〜300万円</td></tr>
+<tr><td>Phase 3</td><td>個別シミュレーション（SD）</td><td class="r">SD個別見積</td></tr>
+<tr><td>Phase 4</td><td>合意形成支援</td><td class="r">会議回数・参加者数で見積</td></tr>
+</table>
+</div>
+<p><strong>元請ルール</strong>：300万円以下で制度診断中心＝MUD-Ai元請／SDの既存顧客・自治体・高度シミュ＝SD元請。元請が請求・進行・一次窓口。<strong>各社の納品責任を見積書の行で分ける。</strong><br>
+<strong>顧客保護</strong>：案件登録から90日、商談が継続していれば更新。<strong>紹介料は"紹介だけ"の時。MUD-Aiが実作業する案件は固定業務費を優先。</strong><br>
+<strong>scene.jsonに含める項目</strong>：座標系・単位・シナリオID・建物高さ・延べ面積・制度名・ルールバージョン・生成日・前提条件。これを両社間の技術的な納品仕様にすると手戻りが消える。</p>
+
+<h2>7. 一人でやるときの地雷</h2>
+<ul>
+<li><strong>単独敷地以外へ今すぐ広げない</strong>。日影・天空率・地方制度・マーケット連携は有償顧客の順番待ちにする</li>
+<li><strong>制度判定を断定しすぎない</strong>。公共貢献・行政協議に依存する＝「幅と確度」を出すのが実務家の商品</li>
+<li><strong>本当の運用コストはコード保守でなくルール更新</strong>（要綱・運用の変更検知→影響確認→再テスト）。<strong>月1回の更新確認日を固定する</strong></li>
+<li><strong>顧客ごとのカスタマイズを商品に混ぜない</strong>。標準外は別見積。<strong>同じ要望が3社から出て初めて標準機能化</strong>（単独敷地はもう3社＝合格）</li>
+<li><strong>「AI」を主語にしない</strong>。顧客が買うのは、制度比較の速さ・抜け漏れの低減・社内説明のしやすさ</li>
+<li><strong>現金回収条件を先に決める</strong>（発注時50%／納品時50%、発注書を受けてから着手）</li>
+<li><strong>止まったときの説明を用意する</strong>（バックアップ、障害時の連絡文、返金・再納品方針）</li>
+</ul>
+
+<div class="em">
+<span class="big">最初の90日で作るべきものは、完成したSaaSじゃない。</span><br>
+<strong>「50万円で誰が何を買うか」「何回使えば年契約になるか」「どの瞬間にSD案件へ進むか」——この"売れ方の再現性"。</strong>
+これが確認できたら、SaaS化もSD連携も"投資判断"になる。今はまだ賭けや。
+</div>
+
+<div class="fn">
+作成＝Claude（統括）。セカンドオピニオン＝OpenAI Codex（gpt-5.6-sol／reasoning high）。
+価格・工数はすべて仮置き。実案件の失注理由と受注価格で必ず更新すること。<br>
+※帰属・契約整理の検討は別ページ：<a href="./sd-attribution-models.html">sd-attribution-models.html</a>（今回は前提が「お互い理解あり」に変わったため、こちらは背景資料扱い）
+</div>
+
+</div>
+</body>
+</html>
