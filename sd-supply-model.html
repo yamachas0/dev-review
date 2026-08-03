@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SD打合せ後｜提供モデルの提案（討議用ドラフト）</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0A0A0A; --white:#fff;
+  --acc:#10B981; --acc-d:#059669; --acc-bg:#ECFDF5;
+  --g50:#F9FAFB; --g200:#E5E7EB; --g400:#9CA3AF; --g500:#6B7280; --g700:#374151; --g900:#111827;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--white);color:var(--g900);
+  font-family:"Noto Sans JP","Yu Gothic","Hiragino Sans",Meiryo,sans-serif;
+  font-size:15px;line-height:1.85;-webkit-text-size-adjust:100%}
+.wrap{max-width:820px;margin:0 auto;padding:0 20px 80px}
+header.cover{background:var(--black);color:#fff;padding:40px 20px 34px;margin-bottom:34px}
+header.cover .inner{max-width:820px;margin:0 auto}
+.eyebrow{font-size:11px;letter-spacing:.18em;color:var(--acc);margin:0 0 10px}
+h1{font-size:24px;line-height:1.45;margin:0 0 14px;font-weight:700;letter-spacing:.01em}
+.cover p{margin:0;font-size:13px;color:#D1D5DB;line-height:1.8}
+.cover .rule{width:44px;height:2px;background:var(--acc);margin:16px 0}
+h2{font-size:18px;margin:44px 0 14px;padding-left:12px;border-left:3px solid var(--acc);font-weight:700;line-height:1.5}
+h3{font-size:15px;margin:26px 0 8px;font-weight:700}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px;padding-left:1.3em}
+li{margin:0 0 7px}
+strong{font-weight:700}
+em{font-style:normal;background:linear-gradient(transparent 62%,var(--acc-bg) 62%);font-weight:700}
+.lead{font-size:16px;font-weight:500;border-bottom:2px solid var(--g200);padding-bottom:16px;margin-bottom:8px}
+.box{border:1px solid var(--g200);padding:18px 20px;margin:18px 0;background:var(--white)}
+.box.acc{background:var(--acc-bg);border-color:var(--acc)}
+.box.dark{background:var(--black);color:#fff;border-color:var(--black)}
+.box.dark strong{color:var(--acc)}
+.box h3{margin-top:0}
+.box.dark h3{color:#fff}
+.tag{display:inline-block;font-size:11px;letter-spacing:.08em;border:1px solid var(--g400);
+  color:var(--g700);padding:2px 8px;margin:0 6px 6px 0;border-radius:2px}
+.tag.on{border-color:var(--acc-d);color:var(--acc-d);background:var(--acc-bg)}
+pre{background:var(--g50);border:1px solid var(--g200);padding:14px 16px;overflow-x:auto;
+  font-size:12.5px;line-height:1.75;font-family:ui-monospace,"SFMono-Regular",Consolas,monospace;
+  color:var(--g900);margin:14px 0}
+.scroll{overflow-x:auto;margin:16px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:520px}
+th,td{border:1px solid var(--g200);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--black);color:#fff;font-weight:500;font-size:12.5px;white-space:nowrap}
+th.sub{background:var(--g50);color:var(--g900);white-space:normal}
+tbody tr:nth-child(even){background:var(--g50)}
+td.num{white-space:nowrap;font-variant-numeric:tabular-nums}
+.rec{border-left:3px solid var(--acc);padding-left:14px;margin:16px 0}
+.warn{border:1px solid var(--g900);padding:18px 20px;margin:18px 0}
+.warn h3{margin-top:0}
+.step{display:flex;gap:12px;margin:0 0 12px;align-items:flex-start}
+.step .n{flex:0 0 26px;height:26px;background:var(--black);color:#fff;font-size:12px;
+  display:flex;align-items:center;justify-content:center;margin-top:3px}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--g200);font-size:12px;color:var(--g500)}
+@media(max-width:600px){
+  h1{font-size:20px} h2{font-size:16.5px} body{font-size:14.5px}
+  .wrap{padding:0 16px 60px} header.cover{padding:32px 16px 28px}
+}
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <div class="inner">
+    <p class="eyebrow">討議用ドラフト / NON-BINDING</p>
+    <h1>ViewSim × 大規模開発シミュレーター<br>オプション供給モデルの設計</h1>
+    <div class="rule"></div>
+    <p>合同会社MUD-Ai ｜ 2026-08-03 作成 ｜ 8/7 協議用<br>
+    前提：2026-08-03 SpaceData 打合せ／2026-07-30 三井物産都市開発サウンディング</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<p class="lead">打合せで固まった座組み――<em>SpaceDataが一般敷地のボリュームスタディを主商品として売り、大規模開発シミュレーションをMUD-Aiがオプションとして供給する</em>――を前提に、金の流れ・アタッチ率の設計・握っておくべき条件を1本にまとめた。</p>
+
+<h2>1. 前提となる座組み</h2>
+
+<pre>【主商品】SpaceData ── ViewSim（parseai）
+          一般敷地（小規模）のボリュームスタディ〜ビジュアライズ
+                    │
+                    │  発注者が「付けるか」を選ぶ
+                    ▼
+【オプション】大規模開発シミュレーション（都市開発諸制度）
+          ＝ MUD-Ai が SpaceData に供給
+</pre>
+
+<div class="box">
+<ul style="margin-bottom:0">
+  <li><strong>顧客から見える売り手はSpaceData</strong>。契約・請求・一次サポートはSD。</li>
+  <li><strong>MUD-Aiはオプション機能の供給元</strong>。諸制度5本（総合設計・特定街区・高度利用地区・都市再生特別地区・再開発等促進区）の適用可否と容積の比較検討を担う。</li>
+  <li><strong>オプション課金の判断は発注者</strong>。＝MUD-Aiの売上は「何%の顧客がオプションを付けたか」で決まる。</li>
+</ul>
+</div>
+
+<h2>2. この座組みが良い理由（3つ）</h2>
+
+<div class="box acc">
+<h3>① 両社が「今すでに出来ること」だけで組める</h3>
+<p style="margin-bottom:0">SDは小規模敷地のボリューム＋ビジュアライズ、MUD-Aiは大規模・複数街区の諸制度検討。<em>どちらも新規開発なしで、明日から売れる構成</em>になっている。この手の提携が流れる原因はたいてい「両社とも先に作らなきゃいけない物がある」ことなので、これは大きい。</p>
+</div>
+
+<div class="rec">
+<strong>② MUD-Aiは単独敷地対応を作らなくてよくなった。</strong> 3社から要望が来ていて保留中だった機能だが、<em>小規模敷地はViewSimが担当する</em>ので、この座組みでは開発不要になる。浮いた工数は大規模側（諸制度の精度・天空率・日影など）の深掘りに回せる。※MUD-Ai単独で直販も続けるなら別途必要になるので、そこは方針次第。
+</div>
+
+<div class="rec">
+<strong>③ 買う側の心理的ハードルが低い。</strong> 「大規模開発の検討ツールを買う」は稟議が重いが、<em>「使っているツールにオプションを足す」なら追加承認で済む</em>。三井物産都市開発がestieで同型のアカウント課金を既に買っており、本人も「その課金体系なら導入しやすい」と言っている。この型に素直に乗る。
+</div>
+
+<h2>3. 金の流れ：3案（推奨はC）</h2>
+
+<p>オプション課金を発注者が選ぶ構造なので、<strong>MUD-Aiの収入はアタッチ率に直結する</strong>。ここをどう分担するかが設計の肝になる。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>案</th><th>形</th><th>MUD-Aiの取り分（たたき台）</th><th>効く点／危ない点</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>A</strong></td>
+  <td>卸値方式<br>（オプション1件ごと）</td>
+  <td class="num">1案件 20〜40万円<br>（SDが上乗せして販売）</td>
+  <td>SDが値付けを自由にできて売りやすい／売れない月は収入ゼロ</td>
+</tr>
+<tr>
+  <td><strong>B</strong></td>
+  <td>レベニューシェア</td>
+  <td class="num">オプション売上の 40〜50%</td>
+  <td>高く売れたら一緒に伸びる／SDの値引きがそのまま響く</td>
+</tr>
+<tr style="background:var(--acc-bg)">
+  <td><strong>C</strong><br><span class="tag on">推奨</span></td>
+  <td>年間ミニマム<br>＋ 従量</td>
+  <td class="num">年間最低保証 240〜360万円<br>＋ 超過分は A または B</td>
+  <td>法規更新を続けられる／交渉項目が1つ増える</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="box dark">
+<h3>Cを推す理由は、値段の話ではなく継続性の話にできるから</h3>
+<p style="margin-bottom:0">SpaceData自身が<strong>「属人ノウハウ依存が懸念」</strong>と言っている。＝先方にとっての本当のリスクは<em>MUD-Aiが食えなくなって手を引くこと</em>だ。年間ミニマムは「値引きしたくない」という話ではなく、<strong>法規改正への追随を止めないための固定費</strong>として説明できる。都市開発の制度・運用基準は改正されるので、放置されたエンジンは数年で使えなくなる。この論法なら先方の懸念に直接答える形になる。</p>
+</div>
+
+<h2>4. アタッチ率をどう上げるか（ここが売上のすべて）</h2>
+
+<p>この座組みでは、<strong>ViewSimが何本売れたか</strong>より<strong>そのうち何%がオプションを付けたか</strong>がMUD-Aiの売上を決める。放っておくとアタッチ率は上がらないので、仕組みで作りにいく。</p>
+
+<div class="box">
+<h3>提案：ViewSimの中に「オプションを提案する導線」を埋める</h3>
+<p>敷地を置いた瞬間に、<em>その敷地が諸制度で伸びる余地があるかを自動判定して示唆する</em>。</p>
+<pre>この敷地は 都市再生緊急整備地域 に該当します
+総合設計制度の適用で 容積率 +◯% の可能性があります
+  → 大規模開発シミュレーションで詳細を検討する（オプション）
+</pre>
+<ul style="margin-bottom:0">
+  <li>判定に必要なデータ（用途地域・都市再生緊急整備地域・活用方針の区域・敷地面積の下限）は<strong>MUD-Ai側に既にある</strong>。判定ロジックだけ渡せば実装できる。</li>
+  <li>SDにとっても客単価が上がる＝<strong>提案として通しやすい</strong>。「MUD-Aiが儲かる仕組み」ではなく「SDの客単価を上げる仕組み」として出す。</li>
+  <li>制度の最低区域面積（例：再開発等促進区は1.0ha以上）で足切りできるので、<strong>見込みのない敷地には出さない</strong>＝押し売り感が出ない。</li>
+</ul>
+</div>
+
+<h2>5. 役割分担</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th>　</th><th>SpaceData</th><th>MUD-Ai</th></tr></thead>
+<tbody>
+<tr><th class="sub">商品</th><td>ViewSim（一般敷地のボリューム＋ビジュアライズ）</td><td>大規模開発シミュレーション（諸制度）</td></tr>
+<tr><th class="sub">顧客接点</th><td>営業・契約・請求・一次サポート</td><td>二次サポート（制度・法規の技術照会）</td></tr>
+<tr><th class="sub">開発</th><td>UI統合・3D表現・オプション導線の実装</td><td>諸制度エンジン・判定ロジック・法規データの更新</td></tr>
+<tr><th class="sub">責任</th><td>稼働・SLA・顧客対応</td><td>算定ロジックの正確性・法改正への追随</td></tr>
+<tr><th class="sub">対外表記</th><td>製品の主体</td><td>オプションの提供元として明記（要合意）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>6. 先に握っておくべきこと</h2>
+
+<div class="warn">
+<h3>顧客接点を持たない側は、構造的に差し替え可能になる</h3>
+<p>これはこの座組みを選ぶ以上どうしても発生するトレードオフで、誰の落ち度でもない。後から取り返せないので、条件を詰めるより先に決めておく。</p>
+<ul style="margin-bottom:0">
+  <li><strong>対外表記を取る</strong>：画面・提案資料・事例発表に「大規模開発シミュレーション：MUD-Ai」を明記。<em>金額より優先度が高い</em>。実績の帰属が消えると次の商談が作れない。</li>
+  <li><strong>法規更新を役務として契約に書く</strong>：継続提供を明記する。相手にとっても保険になるので、通しやすい条件でもある。</li>
+  <li><strong>独占範囲を限定する</strong>：SDが開拓する国内大手デベロッパー向けに限る。設計事務所・自治体・海外・既存顧客は対象外＝<strong>MUD-Aiの直販の余地を残す</strong>。全面独占は受けない。</li>
+  <li><strong>アタッチ率の実績を共有してもらう</strong>：何件中何件がオプションを付けたかが見えないと、料率の妥当性を検証できない。四半期ごとの開示を条件に入れる。</li>
+</ul>
+</div>
+
+<h2>7. 8/7 までに決めること</h2>
+
+<div class="step"><div class="n">1</div><div><strong>座組みの方向にSDが乗るか</strong>（主商品＝ViewSim／オプション＝MUD-Ai供給）。ここが合意できれば以降は条件詰め。</div></div>
+<div class="step"><div class="n">2</div><div><strong>金の流れをA・B・Cのどれにするか</strong>。Cを推すが、先方が初年度に固定費を置けるかで変わる。</div></div>
+<div class="step"><div class="n">3</div><div><strong>対外表記と独占範囲</strong>。金額より先に握る。</div></div>
+<div class="step"><div class="n">4</div><div><strong>オプション導線をViewSimに入れるか</strong>。入れるなら判定ロジックはMUD-Aiが出す。</div></div>
+
+<div class="box acc">
+<h3>持っていく資料は3枚でいい</h3>
+<p style="margin-bottom:0">① 座組み1枚（§1の図）／② 金の流れとアタッチ率の設計1枚（§3＋§4）／③ 役割分担と決めること1枚（§5＋§7）。<strong>帰属や契約条項は前面に出さず、対外表記の1行として置く。</strong> 大作は要らない。</p>
+</div>
+
+<footer>
+合同会社MUD-Ai ｜ 討議用ドラフト（Non-binding）｜ 2026-08-03<br>
+金額はすべてたたき台であり、確定した提示額ではない。
+</footer>
+
+</div>
+</body>
+</html>
