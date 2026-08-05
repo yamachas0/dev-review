@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ツール事業モデル と パートナーシップ・ロードマップ（討議用ドラフト）｜合同会社MUD-Ai</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0A0A0A; --white:#FFFFFF;
+  --acc:#10B981; --acc-d:#059669; --acc-bg:#ECFDF5;
+  --g50:#F9FAFB; --g100:#F3F4F6; --g200:#E5E7EB; --g300:#D1D5DB;
+  --g400:#9CA3AF; --g500:#6B7280; --g700:#374151; --g900:#111827;
+  --font:'Noto Sans JP','Yu Gothic','Hiragino Kaku Gothic ProN','Meiryo',system-ui,sans-serif;
+}
+*{box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+html,body{margin:0; padding:0;}
+body{
+  background:var(--g100); color:var(--g900);
+  font-family:var(--font); font-size:13px; line-height:1.75;
+  -webkit-text-size-adjust:100%;
+}
+
+/* ============ ページ（A4 横） ============ */
+@page{ size:A4 landscape; margin:0; }
+
+.stage{ padding:24px 0; }
+.slide{
+  position:relative; break-inside:avoid; page-break-inside:avoid;
+  width:297mm; height:210mm;
+  margin:0 auto 24px; padding:11mm 13mm 10mm;
+  background:var(--white);
+  display:flex; flex-direction:column;
+  overflow:hidden;
+  box-shadow:0 2px 14px rgba(10,10,10,.10);
+  page-break-after:always; break-after:page;
+}
+.slide:last-of-type{ page-break-after:auto; break-after:auto; margin-bottom:0; }
+
+/* ============ ランニングヘッド ============ */
+.runhead{
+  display:flex; align-items:center; gap:12px;
+  border-bottom:1px solid var(--g200); padding-bottom:6px; margin-bottom:9px;
+}
+.runhead .brand{ font-size:12px; font-weight:900; letter-spacing:.34em; color:var(--black); }
+.runhead .brand .a{ color:var(--acc); }
+.runhead .sheet{ font-size:10.5px; letter-spacing:.14em; color:var(--g500); font-weight:700; }
+.runhead .spacer{ flex:1; }
+.runhead .badge{
+  font-size:10px; font-weight:700; letter-spacing:.08em;
+  color:var(--black); background:var(--acc-bg);
+  border:1px solid var(--acc); border-radius:2px; padding:2px 9px; white-space:nowrap;
+}
+
+/* ============ タイトル ============ */
+.head{ display:flex; align-items:flex-end; gap:16px; margin-bottom:8px; }
+h1{
+  font-size:23px; font-weight:900; line-height:1.35; margin:0;
+  letter-spacing:.01em; color:var(--black);
+  padding-left:11px; border-left:5px solid var(--acc);
+}
+.head .sub{ font-size:11px; color:var(--g500); line-height:1.7; flex:1; padding-bottom:2px; }
+
+.lead{
+  background:var(--acc-bg); border-left:4px solid var(--acc);
+  padding:11px 15px; margin:0 0 10px; font-size:13.5px; font-weight:700; line-height:1.6; color:var(--black);
+}
+.lead .n{ font-weight:400; color:var(--g700); font-size:12px; }
+
+/* ============ 汎用グリッド ============ */
+.cols{ display:grid; gap:9px; align-items:stretch; }
+.c-58-42{ grid-template-columns:1.38fr 1fr; }
+.c-3{ grid-template-columns:repeat(3,1fr); }
+.body-main{ flex:1; display:flex; flex-direction:column; gap:10px; min-height:0; }
+
+h2{
+  font-size:12.5px; font-weight:900; margin:0 0 6px; color:var(--black);
+  letter-spacing:.03em; display:flex; align-items:center; gap:7px;
+}
+h2 .no{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:17px; height:17px; background:var(--black); color:#fff;
+  font-size:10px; font-weight:700; border-radius:2px; flex:0 0 auto;
+}
+h2 .thin{ font-weight:400; color:var(--g500); font-size:10.5px; letter-spacing:0; }
+
+.box{ border:1px solid var(--g200); padding:11px 14px; background:var(--white); }
+.box.tint{ background:var(--g50); }
+p{ margin:0 0 5px; }
+p:last-child{ margin-bottom:0; }
+.muted{ color:var(--g500); font-size:11px; line-height:1.7; }
+strong{ font-weight:700; color:var(--black); }
+.em{ background:linear-gradient(transparent 62%, var(--acc-bg) 62%); font-weight:700; color:var(--black); }
+
+/* ============ 商品3段（STEP） ============ */
+.steps{ display:flex; flex-direction:column; gap:6px; }
+.step{
+  display:grid; grid-template-columns:52px 1fr auto; gap:10px; align-items:center;
+  border:1px solid var(--g200); border-left:3px solid var(--acc); padding:9px 12px; background:var(--white);
+}
+.step .n{
+  font-size:9.5px; font-weight:900; letter-spacing:.1em; color:var(--acc-d);
+  text-align:center; line-height:1.25;
+}
+.step .n b{ display:block; font-size:15px; letter-spacing:0; color:var(--black); }
+.step .t{ font-size:13px; font-weight:700; color:var(--black); line-height:1.45; }
+.step .t span{ display:block; font-weight:400; font-size:11px; color:var(--g500); line-height:1.55; margin-top:1px; }
+.step .p{ text-align:right; white-space:nowrap; font-size:13px; font-weight:900; color:var(--black); line-height:1.35; }
+.step .p span{ display:block; font-size:10px; font-weight:400; color:var(--g500); }
+
+/* ============ 表 ============ */
+table{ width:100%; border-collapse:collapse; font-size:11.5px; }
+th,td{ text-align:left; padding:5.5px 9px; border-bottom:1px solid var(--g200); vertical-align:middle; }
+thead th{ background:var(--black); color:#fff; font-weight:700; font-size:10px; letter-spacing:.04em; border-bottom:none; }
+tbody tr:nth-child(even) td{ background:var(--g50); }
+td.r,th.r{ text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; font-weight:700; }
+tr.rev td{ background:var(--acc-bg) !important; border-top:1px solid var(--acc); border-bottom:none; }
+tr.rev td.r{ color:var(--acc-d); }
+
+/* ============ 役割分担 ============ */
+.roles{ display:flex; flex-direction:column; gap:7px; margin-bottom:9px; }
+.role{ display:grid; grid-template-columns:74px 1fr; gap:9px; align-items:start; font-size:11.5px; line-height:1.65; }
+.role .who{
+  font-size:10px; font-weight:700; letter-spacing:.04em; text-align:center;
+  padding:2px 0; border-radius:2px; background:var(--g100); color:var(--g700);
+}
+.role.mine .who{ background:var(--black); color:#fff; }
+.role.sd .who{ background:var(--acc-bg); color:var(--acc-d); border:1px solid var(--acc); }
+
+/* ============ 帯（パイロット） ============ */
+.band{ background:var(--black); color:#fff; padding:13px 15px; display:grid; grid-template-columns:1fr 1.55fr; gap:14px; }
+.band h2{ color:#fff; margin-bottom:5px; }
+.band h2 .no{ background:var(--acc); color:var(--black); }
+.band h2 .thin{ color:var(--g400); }
+.band p{ color:var(--g300); font-size:11.5px; line-height:1.75; }
+.band strong{ color:#fff; }
+.band .acc{ color:var(--acc); font-weight:700; }
+.kpis{ display:flex; flex-wrap:wrap; gap:5px; margin:5px 0 0; }
+.kpi{
+  font-size:10.5px; font-weight:700; color:#fff;
+  border:1px solid var(--g700); border-radius:2px; padding:2px 8px; background:#141414;
+}
+.exit{ border-left:3px solid var(--acc); padding-left:10px; }
+.exit .lab{ font-size:9.5px; font-weight:900; letter-spacing:.16em; color:var(--acc); margin-bottom:2px; }
+
+/* ============ 変換器の図 ============ */
+.conv{ display:grid; grid-template-columns:1fr 44px 1.24fr 44px 1fr; align-items:stretch; gap:0; }
+.conv .cell{ border:1px solid var(--g200); background:var(--g50); padding:11px 14px; }
+.conv .cell .lab{ font-size:9.5px; font-weight:900; letter-spacing:.14em; color:var(--g500); margin-bottom:3px; }
+.conv .cell .ttl{ font-size:14px; font-weight:900; color:var(--black); line-height:1.4; margin-bottom:3px; }
+.conv .cell .d{ font-size:11px; color:var(--g700); line-height:1.7; }
+.conv .core{ background:var(--black); border-color:var(--black); text-align:center; }
+.conv .core .lab{ color:var(--acc); }
+.conv .core .ttl{ color:#fff; font-size:17px; }
+.conv .core .d{ color:var(--g300); }
+.conv .arw{
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; font-weight:700; color:var(--acc); letter-spacing:0;
+}
+
+/* ============ ジャーニー ============ */
+.journey{ position:relative; padding-top:13px; }
+.journey .line{
+  position:absolute; top:5px; left:16.4%; right:16.4%; height:3px; background:var(--acc);
+}
+.journey .cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:11px; }
+.jcard{ position:relative; border:1px solid var(--g200); border-top:none; padding:11px 13px 11px; background:var(--white); }
+.jcard .dot{
+  position:absolute; top:-19px; left:50%; transform:translateX(-50%);
+  width:13px; height:13px; border-radius:50%; background:var(--acc); border:3px solid var(--white);
+  box-shadow:0 0 0 1px var(--acc);
+}
+.jcard .ph{ font-size:9.5px; font-weight:900; letter-spacing:.18em; color:var(--acc-d); }
+.jcard h3{ font-size:14px; font-weight:900; margin:1px 0 5px; color:var(--black); line-height:1.4; }
+.jcard h3 .price{ display:block; font-size:11px; font-weight:700; color:var(--acc-d); letter-spacing:.02em; }
+.jcard p{ font-size:11.5px; color:var(--g700); line-height:1.8; }
+.jcard .split{ margin-top:6px; border-top:1px dashed var(--g300); padding-top:6px; font-size:11px; line-height:1.7; color:var(--g700); }
+.jcard .split b{ color:var(--black); }
+
+.beyond{
+  border:1px dashed var(--g300); background:var(--g50); padding:8px 14px;
+  font-size:11.5px; color:var(--g700); display:flex; align-items:center; gap:10px;
+}
+.beyond .lab{ font-size:9.5px; font-weight:900; letter-spacing:.14em; color:var(--g500); white-space:nowrap; }
+
+.closing{ background:var(--black); color:#fff; padding:12px 16px; display:flex; align-items:center; gap:14px; }
+.closing .mark{ font-size:11px; font-weight:900; letter-spacing:.2em; color:var(--acc); white-space:nowrap; }
+.closing p{ font-size:12.5px; line-height:1.8; color:#fff; }
+.closing .acc{ color:var(--acc); font-weight:700; }
+
+/* ============ フッター ============ */
+.foot{
+  margin-top:auto; padding-top:6px; border-top:1px solid var(--g200);
+  display:flex; align-items:flex-end; gap:14px; font-size:9.5px; color:var(--g500); line-height:1.6;
+}
+.foot .note{ flex:1; }
+.foot .note b{ color:var(--g700); font-weight:700; }
+.foot .pg{ font-weight:900; color:var(--black); font-size:11px; letter-spacing:.06em; white-space:nowrap; }
+
+/* ============ 画面表示の調整（印刷には影響させない） ============ */
+@media screen and (max-width:1200px) and (min-width:861px){
+  .slide{ zoom:.78; }
+}
+@media screen and (max-width:860px){
+  body{ font-size:14px; line-height:1.8; background:var(--white); }
+  .stage{ padding:0; }
+  .slide{
+    width:auto; height:auto; min-height:0; margin:0 0 28px; padding:18px 16px 24px;
+    box-shadow:none; border-bottom:8px solid var(--g100); overflow:visible;
+  }
+  .slide:last-of-type{ border-bottom:none; }
+  .runhead{ flex-wrap:wrap; gap:5px 10px; }
+  .runhead .spacer{ display:none; }
+  .runhead .badge{ white-space:normal; font-size:10px; }
+  h1{ font-size:20px; }
+  h2{ flex-wrap:wrap; align-items:baseline; font-size:14.5px; margin-bottom:8px; }
+  h2 .no{ align-self:center; }
+  h2 .thin{ flex:0 0 calc(100% - 24px); margin-left:24px; font-size:12px; }
+  .head{ display:block; }
+  .head .sub{ margin-top:6px; font-size:12px; }
+  .lead{ font-size:14px; }
+  .c-58-42,.c-3,.conv,.journey .cards,.band{ grid-template-columns:1fr; }
+  .conv .arw{ padding:5px 0; transform:rotate(90deg); }
+  .step{ grid-template-columns:46px 1fr; }
+  .step .p{ grid-column:1 / -1; text-align:left; padding-top:3px; border-top:1px dashed var(--g300); }
+  .step .p span{ display:inline; margin-left:6px; }
+  .step .t,.jcard p,.role,.band p{ font-size:13px; }
+  table{ font-size:12.5px; }
+  .journey{ padding-top:0; }
+  .journey .line{ display:none; }
+  .jcard{ border-top:3px solid var(--acc); }
+  .jcard .dot{ display:none; }
+  .closing,.beyond{ display:block; }
+  .closing .mark,.beyond .lab{ display:block; margin-bottom:5px; }
+  .foot{ display:block; }
+  .foot .pg{ margin-top:6px; }
+}
+@media print{
+  body{ background:#fff; }
+  .stage{ padding:0; }
+  .slide{ box-shadow:none; margin:0; }
+}
+</style>
+</head>
+<body>
+<div class="stage">
+
+<!-- ==================== 枚1 ツール事業モデル ==================== -->
+<section class="slide">
+  <div class="runhead">
+    <span class="brand">MUD<span class="a">-</span>Ai</span>
+    <span class="sheet">01 ／ ツール事業モデル</span>
+    <span class="spacer"></span>
+    <span class="badge">討議用ドラフト・Non-binding（法的拘束力なし）</span>
+  </div>
+
+  <div class="head">
+    <h1>ツール事業モデル</h1>
+    <div class="sub">都市開発諸制度シミュレーターの商品・価格・現在地と、SpaceDataとの役割分担<br>合同会社MUD-Ai ｜ 2026-08-07 ｜ 価格はすべて税別</div>
+  </div>
+
+  <div class="lead">
+    今あるツールに商品名と価格を付け、販売できる状態にした。SpaceDataとの座組みは、この「すでに実在する入り口」から始められる。
+    <span class="n">＝ 構想ではなく、動いている入り口を共有するという提案。</span>
+  </div>
+
+  <div class="body-main">
+
+    <div class="cols c-58-42">
+      <!-- 左：商品3段＋現在地 -->
+      <div>
+        <h2><span class="no">1</span>商品は3段構え<span class="thin">— 敷地単位で試し、部署単位の常用へ引き上げる</span></h2>
+        <div class="steps">
+          <div class="step">
+            <div class="n">STEP<b>1</b></div>
+            <div class="t">制度クイックスタディ
+              <span>5制度の比較・容積緩和の考え方・必要な公開空地／広場の量・3Dボリューム案を定型で納品</span>
+            </div>
+            <div class="p">50万円 ／ 敷地<span>5営業日・β期間 33万円×5件</span></div>
+          </div>
+          <div class="step">
+            <div class="n">STEP<b>2</b></div>
+            <div class="t">有償トライアル
+              <span>継続利用の可否を、実案件を回しながら判断してもらう期間</span>
+            </div>
+            <div class="p">90万円<span>3敷地 ／ 4週間</span></div>
+          </div>
+          <div class="step">
+            <div class="n">STEP<b>3</b></div>
+            <div class="t">アカウントサブスク
+              <span>敷地ごとの買い方から、部署単位の常用へ（estie型の課金体系）</span>
+            </div>
+            <div class="p">240〜360万円 ／ 年<span>年間ミニマム ＋ 従量</span></div>
+          </div>
+        </div>
+
+        <h2 style="margin-top:9px"><span class="no">2</span>現在地</h2>
+        <div class="box tint">
+          <p><strong>複数の大手デベロッパーと、トライアル前提で協議が進行中。</strong></p>
+          <p class="muted">上流（制度検討）から入るため、計画が固まる前の段階で事業者と接触できている。<span class="em">SpaceDataにとっての見込み案件は、仮説ではなく実体として存在する</span>——ここから一緒に広げたい。</p>
+        </div>
+      </div>
+
+      <!-- 右：役割分担＋配分 -->
+      <div>
+        <h2><span class="no">3</span>SpaceDataとの役割分担<span class="thin">— 8/3の打合せで確認した座組み</span></h2>
+        <div class="roles">
+          <div class="role sd">
+            <div class="who">SpaceData</div>
+            <div>一般敷地の<strong>ボリュームスタディ〜ビジュアライズ（ViewSim）を主商品として販売</strong></div>
+          </div>
+          <div class="role mine">
+            <div class="who">MUD-Ai</div>
+            <div><strong>大規模開発・諸制度シミュレーションをオプションとして供給</strong></div>
+          </div>
+          <div class="role">
+            <div class="who">課金</div>
+            <div>オプションを付けるかどうかは<strong>発注者が選ぶ</strong>（SpaceDataの商品体系を崩さない）</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>関与の役割</th><th class="r">配分の目安</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>紹介のみ</td><td class="r">10%</td></tr>
+            <tr><td>商談設定まで</td><td class="r">15%</td></tr>
+            <tr><td>共同営業</td><td class="r">20〜25%</td></tr>
+            <tr><td>契約主体＋一次サポートまで</td><td class="r">30〜40%</td></tr>
+            <tr class="rev"><td><strong>逆送客</strong>：MUD-Ai → SpaceData への送客</td><td class="r">5〜15%</td></tr>
+          </tbody>
+        </table>
+        <p class="muted" style="margin-top:5px">上4行＝MUD-Ai側売上に対するSpaceDataの配分、最下行はその逆（<strong>送客は双方向</strong>）。案件ごとに、どこまで担うかを確認して決めたい。</p>
+      </div>
+    </div>
+
+    <!-- 共同パイロット -->
+    <div class="band">
+      <div>
+        <h2><span class="no">4</span>共同パイロット<span class="thin">— 60〜90日</span></h2>
+        <p>座組みを机上で確定させず、<strong>実案件で検証してから決める</strong>。この60〜90日が、今回の提案の実質的な「次の一手」。</p>
+        <div class="kpis">
+          <span class="kpi">対象敷地数</span>
+          <span class="kpi">共同提案数</span>
+          <span class="kpi">受注率</span>
+          <span class="kpi">顧客フィードバック</span>
+        </div>
+      </div>
+      <div class="exit">
+        <div class="lab">出口（パイロット終了時にやること）</div>
+        <p>取得したKPIと顧客の反応を持ち寄り、<strong>継続する座組みを一緒に決める</strong>。決めるのは<span class="acc">①対象範囲（敷地規模・地域）②価格と配分 ③役割分担 ④供給の形</span>の4点。<br>期間内に判断材料が揃わない項目は、次のパイロットで測る対象として明示的に残す。<strong>「保留」は作らない。</strong></p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <div class="note">
+      <b>※</b> 知的財産の取扱いは別途双方協議のうえ整理する（本資料はこれに影響しない）。<br>
+      <b>※</b> 本資料は討議のためのドラフトであり、法的拘束力を持たない（Non-binding）。価格・配分はいずれも協議のたたき台としての目安。
+    </div>
+    <div class="pg">合同会社MUD-Ai　—　1 / 2</div>
+  </div>
+</section>
+
+<!-- ==================== 枚2 パートナーシップ・ロードマップ ==================== -->
+<section class="slide">
+  <div class="runhead">
+    <span class="brand">MUD<span class="a">-</span>Ai</span>
+    <span class="sheet">02 ／ パートナーシップ・ロードマップ</span>
+    <span class="spacer"></span>
+    <span class="badge">討議用ドラフト・Non-binding（法的拘束力なし）</span>
+  </div>
+
+  <div class="head">
+    <h1>パートナーシップ・ロードマップ</h1>
+    <div class="sub">MUD-Aiがどう立ち、SpaceDataとどこまで一緒に伸びるか<br>合同会社MUD-Ai ｜ 2026-08-07</div>
+  </div>
+
+  <div class="lead">
+    MUD-Aiは、<span class="em">「都市開発の実務」と「新技術」の間に立つ変換器</span>である。SpaceDataは、その変換能力を最も大きく活かせる最重要のパートナー。
+  </div>
+
+  <div class="body-main">
+
+    <!-- 変換器の図 -->
+    <div>
+      <h2><span class="no">1</span>MUD-Aiの立ち位置<span class="thin">— 実務の言葉と、技術の言葉を、双方向に翻訳する</span></h2>
+      <div class="conv">
+        <div class="cell">
+          <div class="lab">SIDE A</div>
+          <div class="ttl">都市開発の実務</div>
+          <div class="d">制度・行政協議・事業性・設計実務。<br>事業者が実際に意思決定している現場の言葉。</div>
+        </div>
+        <div class="arw">⇄</div>
+        <div class="cell core">
+          <div class="lab">CONVERTER</div>
+          <div class="ttl">MUD-Ai</div>
+          <div class="d">実務経験 × AI開発力。<br>両方を一人の中で往復できる状態そのものが提供価値。</div>
+        </div>
+        <div class="arw">⇄</div>
+        <div class="cell">
+          <div class="lab">SIDE B</div>
+          <div class="ttl">新技術</div>
+          <div class="d">デジタルツイン・各種シミュレーション・AI。<br>技術側が持つ、まだ実務に届いていない力。</div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:6px">都市開発諸制度シミュレーターは、<strong>この変換能力の第1号</strong>であり、同時に、<span class="em">SpaceDataが都市開発領域での提案機会を広げるためのエントリーポイント</span>として機能する。</p>
+    </div>
+
+    <!-- ジャーニー -->
+    <div>
+      <h2><span class="no">2</span>顧客との関係の育て方<span class="thin">— P1からP3までは一本の線でつながっている</span></h2>
+      <div class="journey">
+        <div class="line"></div>
+        <div class="cards">
+          <div class="jcard">
+            <span class="dot"></span>
+            <div class="ph">PHASE 1</div>
+            <h3>入口をつくる</h3>
+            <p>ツールが事業者との接点を創出する。制度検討という<strong>最上流の相談から入る</strong>ため、計画が固まる前に接触できる。</p>
+            <div class="split"><b>SpaceDataにとって：</b>案件が動き出す前の段階でリードが立ち上がる＝プリセールスの手前を押さえられる。</div>
+          </div>
+          <div class="jcard">
+            <span class="dot"></span>
+            <div class="ph">PHASE 2</div>
+            <h3>意思決定ツイン<span class="price">共同診断パック 150〜300万円</span></h3>
+            <p><strong>MUD-Aiが「制度上どこまで建てられるか」を構造化し、SpaceDataが「その計画を都市空間に置いたとき何が起きるか」を可視化する。</strong></p>
+            <div class="split"><b>共同商品：</b>どちらか一方では成立しない。上流の数字と下流の空間表現が一つの成果物になる。</div>
+          </div>
+          <div class="jcard">
+            <span class="dot"></span>
+            <div class="ph">PHASE 3</div>
+            <h3>継続関係にする</h3>
+            <p>アカウントサブスクで関係を年単位の継続に移し、そこから<strong>SpaceDataのアセット（デジタルツイン・各種シミュレーション）へアップセル</strong>する。</p>
+            <div class="split"><b>効き方：</b>1案件ごとの受注から、部署単位で使われ続ける取引へ。積み上がる売上に変わる。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="beyond">
+      <span class="lab">その先</span>
+      <span><strong>自治体案件や、より大きな複合開発への広がり</strong>がある。ただし今回は、まずP1〜P3を実際に通すことに集中したい。</span>
+    </div>
+
+    <div class="closing">
+      <span class="mark">PARTNERSHIP</span>
+      <p>MUD-Aiは、都市開発の実務と新技術の間を埋める役割を、これからも担い続けます。<span class="acc">SpaceDataはその役割を最も大きく活かせるパートナー</span>であり、こちらから差し出せるものも、受け取りたいものも、まだ先があると考えています。まずは<span class="acc">60〜90日の共同パイロット</span>から、一緒に確かめさせてください。</p>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <div class="note">
+      <b>※</b> 知的財産の取扱いは別途双方協議のうえ整理する（本資料はこれに影響しない）。<br>
+      <b>※</b> 本資料は討議のためのドラフトであり、法的拘束力を持たない（Non-binding）。記載の金額はいずれも税別・協議のたたき台としての目安。
+    </div>
+    <div class="pg">合同会社MUD-Ai　—　2 / 2</div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
