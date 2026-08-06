@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>日影規制・天空率の組み込み実現性検討 — 都市開発諸制度シミュレーター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0A0A0A; --white:#fff;
+  --accent:#10B981; --accent-dark:#059669; --accent-bg:#ECFDF5;
+  --g50:#F9FAFB; --g100:#F3F4F6; --g200:#E5E7EB; --g300:#D1D5DB;
+  --g500:#6B7280; --g600:#4B5563; --g700:#374151; --g900:#111827;
+  --font:'Noto Sans JP','Hiragino Kaku Gothic ProN','Meiryo',system-ui,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  margin:0; background:var(--white); color:var(--g900);
+  font-family:var(--font); font-size:16px; line-height:1.8;
+  font-weight:400; word-wrap:break-word; overflow-wrap:anywhere;
+}
+.wrap{max-width:820px; margin:0 auto; padding:0 20px 80px;}
+
+/* ---- header ---- */
+header{background:var(--black); color:var(--white); padding:34px 0 30px; margin-bottom:34px;}
+header .wrap{padding-bottom:0;}
+.eyebrow{font-size:11.5px; letter-spacing:.18em; color:var(--accent);
+  font-weight:700; margin:0 0 10px;}
+h1{font-size:25px; line-height:1.45; margin:0 0 14px; font-weight:900; letter-spacing:.01em;}
+.meta{font-size:12.5px; color:var(--g300); line-height:1.9; margin:0;}
+.meta b{color:var(--white); font-weight:500;}
+
+/* ---- headings ---- */
+h2{
+  font-size:19px; font-weight:900; margin:52px 0 18px; padding:9px 0 9px 14px;
+  border-left:5px solid var(--accent); background:var(--g50);
+  line-height:1.5; letter-spacing:.01em;
+}
+h3{font-size:16.5px; font-weight:700; margin:34px 0 12px; padding-bottom:7px;
+  border-bottom:2px solid var(--black); line-height:1.5;}
+h4{font-size:15px; font-weight:700; margin:24px 0 8px; color:var(--g900); line-height:1.5;}
+p{margin:0 0 14px;}
+a{color:var(--accent-dark); text-decoration:underline; text-underline-offset:2px;}
+
+/* ---- conclusion box ---- */
+.verdict{border:2px solid var(--black); padding:20px 18px; margin:0 0 30px; background:var(--white);}
+.verdict h2{margin:0 0 16px; border:none; background:none; padding:0; font-size:17px;}
+.vrow{display:flex; gap:12px; padding:14px 0; border-top:1px solid var(--g200);}
+.vrow:first-of-type{border-top:none; padding-top:0;}
+.vnum{flex:0 0 auto; width:30px; height:30px; background:var(--black); color:var(--white);
+  border-radius:2px; display:flex; align-items:center; justify-content:center;
+  font-weight:900; font-size:14px;}
+.vbody{flex:1 1 auto; min-width:0;}
+.vjudge{font-weight:900; font-size:15.5px; margin:2px 0 5px; line-height:1.5;}
+.vjudge .tag{display:inline-block; font-size:11px; font-weight:700; padding:2px 8px;
+  border-radius:2px; margin-right:8px; vertical-align:2px; letter-spacing:.04em;}
+.tag-ok{background:var(--accent-bg); color:var(--accent-dark); border:1px solid var(--accent);}
+.tag-cond{background:var(--g100); color:var(--g900); border:1px solid var(--g500);}
+.tag-no{background:var(--black); color:var(--white);}
+.vbody p{margin:0; font-size:14.5px; color:var(--g700); line-height:1.75;}
+
+/* ---- generic blocks ---- */
+.box{border:1px solid var(--g200); background:var(--g50); padding:16px 16px 4px; margin:18px 0; border-radius:2px;}
+.box.accent{border-left:4px solid var(--accent); background:var(--accent-bg);}
+.box.dark{background:var(--black); color:var(--white); border-color:var(--black);}
+.box.dark b, .box.dark strong{color:var(--white);}
+.box h4{margin-top:0;}
+.box p{font-size:14.5px;}
+.label{font-size:11px; font-weight:700; letter-spacing:.12em; color:var(--accent-dark);
+  margin:0 0 8px; text-transform:uppercase;}
+.box.dark .label{color:var(--accent);}
+
+ul,ol{margin:0 0 16px; padding-left:1.35em;}
+li{margin-bottom:9px; line-height:1.8;}
+li::marker{color:var(--g500);}
+strong,b{font-weight:700;}
+.em{background:linear-gradient(transparent 62%, var(--accent-bg) 62%); font-weight:700;}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.86em;
+  background:var(--g100); padding:1.5px 5px; border-radius:2px; color:var(--g900);}
+.note{font-size:13px; color:var(--g600); line-height:1.75;}
+hr{border:none; border-top:1px solid var(--g200); margin:36px 0;}
+
+/* ---- spec list (表の代わり・スマホ縦で崩れない) ---- */
+.spec{margin:16px 0; border-top:1px solid var(--g200);}
+.spec > div{border-bottom:1px solid var(--g200); padding:12px 0;}
+.spec dt{font-weight:700; font-size:14.5px; margin:0 0 4px; color:var(--black);}
+.spec dd{margin:0; font-size:14px; color:var(--g700); line-height:1.75;}
+.spec dd + dd{margin-top:3px;}
+.pill{display:inline-block; font-size:11px; font-weight:700; padding:1px 7px;
+  border:1px solid var(--g300); border-radius:2px; color:var(--g700);
+  background:var(--white); margin-left:6px; vertical-align:1px;}
+.pill.on{border-color:var(--accent); background:var(--accent-bg); color:var(--accent-dark);}
+.pill.off{border-color:var(--g300); background:var(--g100); color:var(--g500);}
+
+/* ---- measured data ---- */
+.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:12.5px;
+  line-height:1.85; background:var(--g50); border:1px solid var(--g200);
+  padding:14px; overflow-x:auto; margin:14px 0; white-space:pre; border-radius:2px;}
+
+/* ---- compact table (最小限だけ使う) ---- */
+.tbl{width:100%; border-collapse:collapse; font-size:13.5px; margin:14px 0;}
+.tbl th,.tbl td{border:1px solid var(--g200); padding:8px 9px; text-align:left; vertical-align:top;}
+.tbl th{background:var(--g100); font-weight:700; font-size:12.5px;}
+.tbl td.n{text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums;}
+
+/* ---- steps ---- */
+.step{border:1px solid var(--g200); border-left:4px solid var(--black); padding:14px 16px 6px;
+  margin:14px 0; background:var(--white);}
+.step.l1{border-left-color:var(--accent);}
+.step .sh{font-weight:900; font-size:15.5px; margin:0 0 4px;}
+.step .cost{font-size:12.5px; color:var(--accent-dark); font-weight:700; margin:0 0 9px;}
+.step p{font-size:14.5px; margin-bottom:10px;}
+
+.src{font-size:12px; color:var(--g600); margin:6px 0 0; line-height:1.7;}
+.src b{color:var(--g900);}
+footer{border-top:2px solid var(--black); margin-top:56px; padding-top:20px;
+  font-size:12.5px; color:var(--g600); line-height:1.9;}
+@media(max-width:520px){
+  body{font-size:15.5px;}
+  h1{font-size:21px;} h2{font-size:17.5px;} h3{font-size:15.5px;}
+  .wrap{padding:0 16px 60px;}
+  .mono{font-size:11px;}
+  .tbl{font-size:12px;} .tbl th,.tbl td{padding:6px 6px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow">MUD-Ai / 技術検討レポート</p>
+    <h1>「ADSボタン」は作れるか<br>日影規制・天空率の組み込み実現性検討</h1>
+    <p class="meta">
+      対象：都市開発諸制度シミュレーター（site-trace-mvp / Phase3 ボリューム）<br>
+      作成：2026-08-07 ／ <b>実装は行っていない。検討のみ</b><br>
+      法令はすべて e-Gov 法令API の条文原文で確認。OSS・製品はすべて実在確認済み。
+    </p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ 結論 ============ -->
+<div class="verdict">
+  <h2>結論（3行）</h2>
+
+  <div class="vrow">
+    <div class="vnum">①</div>
+    <div class="vbody">
+      <p class="vjudge"><span class="tag tag-cond">条件付きでできる</span>日影は自作できる。ただし段階を切る</p>
+      <p>計算そのものは軽い（<b>実測：等時間日影図の生成 0.61秒</b>）。規制値データも東京なら機械可読で取れることを実データで確認した。難所は<b>逆方向の焼き直し</b>で、そこは全自動を諦めて「探索の自動化」に置き換える。推奨＝<b>L0 計算コア → L1 判定 → L2 日影図出力</b>。ただし<span class="em">初期版は「確認申請の判定」ではなく「企画段階の設計支援・事前検証」と位置づける</span>のが誠実。</p>
+    </div>
+  </div>
+
+  <div class="vrow">
+    <div class="vnum">②</div>
+    <div class="vbody">
+      <p class="vjudge"><span class="tag tag-cond">できるが、やる価値が薄い</span>天空率は後回しでいい</p>
+      <p>技術的には日影と同系統で、むしろ時間積分が無いぶん単純（<b>実測：1点0.25秒</b>。ただし現状の実装精度は申請グレードに届かず、要改良）。それ以前に<span class="em">この案件が扱う5制度のうち4制度は、そもそも斜線制限（法56条）が適用除外</span>になる。天空率は「斜線を緩和する手段」なので、斜線が効かない制度では出番が無い。①を終えてから判断すべき。</p>
+    </div>
+  </div>
+
+  <div class="vrow">
+    <div class="vnum">③</div>
+    <div class="vbody">
+      <p class="vjudge"><span class="tag tag-no">「シームレス」は不可能</span>ブリッジは作れる。ただし人が1回触る</p>
+      <p>調べた全ベンダ（ADS／i-ARM／GLOOBE／DRA-CAD 他）の公開情報に<b>API・コマンドライン・SDK が一つも無い</b>。公開手段だけでの全自動連携は無理。現実解は<b>「入力の下ごしらえ」を自動化するDXF／CSV書き出し</b>で、人の作業を数十分→数分に落とすこと。無料のADS相当ソフトは実質存在しない（ADS-win 55万円＋年8.4万円）。</p>
+    </div>
+  </div>
+</div>
+
+<div class="box accent">
+  <p class="label">先に訂正しておく</p>
+  <p style="margin-bottom:14px;">社内メモに「PLATEAU Volume-Shape-Generator が日影・天空率をカバーする唯一のOSS参考実装」と記録してあったが、<b>これは誤りだった</b>。今回ソースツリーと国交省レポート本文の両方を直接当たって確認した。</p>
+  <ul style="margin-bottom:12px;">
+    <li>同リポジトリの<b>ソース全25ファイルに、影・太陽・天空率に該当するファイルは1つも無い</b>（GitHub tree API で実測。<code>shadow / sun / solar / sky / 日影 / 天空</code> いずれもヒット0）。READMEも「容積率可視化シミュレータ」で、実装は<b>容積率＋道路斜線＋隣地斜線のみ</b>。</li>
+    <li>国交省の技術検証レポート本文 p.21-22 の法規制対応表で、<b>北側斜線・天空率・日影規制は「非対応」ブロックに明記</b>されている。</li>
+    <li>さらに同レポートは、<span class="em">国交省の実証事業でも「正解データ」は市販ADSで作らせて自作シミュレータの精度検証に使っている</span>（p.27「専用ソフトウェア『ADS』により例示」）。つまり③のブリッジ案には国の前例がある。</li>
+  </ul>
+  <p class="note" style="margin-bottom:12px;">※この訂正は社内メモに反映済み。</p>
+</div>
+
+<!-- ============ 1. 制度別に要否 ============ -->
+<h2>1. まず前提：その制度、そもそも日影・天空率が要るのか</h2>
+
+<p>「ADSボタン」を作る前に確認すべきことがあった。<b>都市開発諸制度は、建築基準法の高さ制限を条文レベルで外す制度</b>だということだ。制度ごとに何が外れるかが違い、それによって①②の価値が根本から変わる。条文原文で確認した結果が以下。</p>
+
+<div class="spec">
+  <div>
+    <dt>特定街区 <span class="pill off">日影 不要</span><span class="pill off">斜線 不要</span></dt>
+    <dd><b>法60条3項</b>「特定街区内の建築物については、<b>第五十二条から前条まで</b>並びに第六十条の三第一項及び第二項の規定は、適用しない」</dd>
+    <dd>＝法52条〜59条の2 が丸ごと適用除外。<b>法56条（斜線）も法56条の2（日影）も法的には不要</b>。都市計画決定の協議で日影検討を求められることはあるが、それは法規制ではない。</dd>
+  </div>
+  <div>
+    <dt>都市再生特別地区 <span class="pill on">越境日影のみ</span><span class="pill off">斜線 不要</span></dt>
+    <dd><b>法60条の2第5項</b>で法56条（斜線）は適用しない。<b>同第6項</b>「<b>第五十六条の二第一項に規定する対象区域外にある建築物とみなして</b>、同条の規定を適用する。この場合における同条第四項の規定の適用については、同項中『対象区域内の土地』とあるのは『対象区域（都市再生特別地区を除く。）内の土地』とする」</dd>
+    <dd>＝<span class="em">自分の区域に落ちる日影は無視、区域外の日影規制対象区域に落とす日影だけが規制される</span>。いわゆる越境日影。大規模再開発の日影検討の実像はまさにこれ。</dd>
+  </div>
+  <div>
+    <dt>高度利用地区 <span class="pill on">日影 必要</span><span class="pill on">隣地・北側斜線 必要</span></dt>
+    <dd><b>法59条4項</b>：特定行政庁が許可した建築物は「第五十六条第一項第一号及び第二項から第四項までの規定は、適用しない」</dd>
+    <dd>＝除外されるのは<b>道路斜線だけ</b>。隣地斜線・北側斜線・日影規制は生きている。<b>5制度のうち天空率に出番があるのは実質ここだけ</b>（隣地・北側について）。</dd>
+  </div>
+  <div>
+    <dt>再開発等促進区 <span class="pill on">日影 必要</span><span class="pill off">斜線 不要</span></dt>
+    <dd><b>法68条の3第4項</b>：許可した建築物については「<b>第五十六条の規定は、適用しない</b>」</dd>
+    <dd>＝斜線は全部外れるが、<b>法56条の2（日影）は列挙されていない＝日影規制は生きる</b>。</dd>
+  </div>
+  <div>
+    <dt>総合設計 <span class="pill on">日影 必要</span><span class="pill off">斜線 緩和可</span></dt>
+    <dd><b>法59条の2第1項</b>：許可の範囲内で「第五十二条第一項から第九項まで、第五十五条第一項、<b>第五十六条</b>又は第五十七条の二第六項の規定による限度を超えるものとすることができる」</dd>
+    <dd>＝<span class="em">列挙に法56条の2（日影）が無い＝総合設計の許可では日影規制は緩和されない</span>。日影は最後まで残る制約。</dd>
+  </div>
+</div>
+
+<div class="box dark">
+  <p class="label">ここから導かれる優先順位</p>
+  <p><b>日影は5制度中4制度で生き残る（特定街区だけが完全に外れる）。一方、天空率が意味を持つのは高度利用地区の隣地・北側斜線だけ。</b>つまり施主の直感どおり①が先、②は明確に後回しでいい。しかもこの「制度別の要否表」自体が、いま実装されていない価値ある情報だ。</p>
+</div>
+
+<p class="src"><b>出典：</b>建築基準法（法令ID 325AC0000000201）第56条の2・第59条・第59条の2・第60条・第60条の2・第68条の3、施行令（325CO0000000338）第135条の5〜13。すべて e-Gov 法令API で条文XMLを取得し原文確認（2026-08-06）。</p>
+
+<!-- ============ 2. 日影の技術分解 ============ -->
+<h2>2. ① 日影：技術分解と実現性</h2>
+
+<h3>2-1. 法が要求している計算要素</h3>
+
+<p>条文の構造を正確に押さえておく。<b>重要なのは、冬至・真太陽時8〜16時・5m超という条件は「別表第4」ではなく法56条の2第1項の本文そのものに書かれている</b>こと。別表第4は地域・対象建築物・測定面高さ・時間数だけを定める。</p>
+
+<div class="spec">
+  <div>
+    <dt>時刻と日付 — 法56条の2第1項本文</dt>
+    <dd>「<b>冬至日の真太陽時による午前八時から午後四時まで</b>（道の区域内にあつては、午前九時から午後三時まで）の間において」</dd>
+    <dd class="note">※真太陽時＝日時計の時刻。標準時ではないので均時差・経度差の補正が要る。北海道だけ時間帯が違う。</dd>
+  </div>
+  <div>
+    <dt>測定範囲 — 同 第1項本文＋別表第4（に）欄</dt>
+    <dd>「<b>敷地境界線からの水平距離が五メートルを超える範囲</b>において」＋（に）欄が「10m以内」「10m超」の2列。実質「5m超10m以内」と「10m超」の2本の規制線。</dd>
+  </div>
+  <div>
+    <dt>測定面 — 別表第4（は）欄</dt>
+    <dd>低層住専・田園住居＝<b>1.5m</b>／中高層住専・住居・近商・準工＝<b>4m または 6.5m</b>（条例で選択）。基準は「平均地盤面からの高さ」。</dd>
+    <dd class="note">※非自明な発見：別表第4の「平均地盤面」の定義は<b>単純な周囲接地平均</b>で、通常の高さ算定に使う令2条2項の「地盤面」（高低差3m超なら3mごとに区分）とは<b>別概念</b>。実装時に混同すると数値がずれる。</dd>
+  </div>
+  <div>
+    <dt>みなし境界線の緩和 — 令135条の12第3項一号</dt>
+    <dd>敷地が道路・水面・線路敷等に接する場合、境界線は「その幅の<b>二分の一だけ外側</b>」にあるものとみなす。ただし幅が<b>10mを超えるとき</b>は「反対側の境界線から敷地の側に水平距離<b>五メートル</b>の線」を境界線とみなす。</dd>
+    <dd class="note">→ Phase3 は既に道路辺と幅員を持っているので、この緩和は<b>そのまま実装できる</b>。</dd>
+  </div>
+  <div>
+    <dt>高低差の緩和 — 令135条の12第3項二号</dt>
+    <dd>敷地の平均地盤面が隣地より<b>1m以上低い</b>場合、「当該高低差から1mを減じたものの<b>二分の一だけ高い位置</b>にある」とみなす。＝(H−1)/2。</dd>
+  </div>
+  <div>
+    <dt>複数棟の扱い — 法56条の2第2項</dt>
+    <dd>同一敷地内に2以上の建築物がある場合は<b>1の建築物とみなす</b>。＝基壇＋タワー＋別棟をまとめて1つの影として合成する。</dd>
+  </div>
+  <div>
+    <dt>越境日影 — 法56条の2第4項</dt>
+    <dd>「<b>対象区域外にある高さ10mを超える建築物</b>で、冬至日において、対象区域内の土地に日影を生じさせるものは、当該対象区域内にある建築物とみなして」規制する。</dd>
+    <dd class="note">→ 商業地域の再開発が、隣の住居系地域に落とす影。<b>この案件の主戦場はここ</b>。</dd>
+  </div>
+</div>
+
+<h4>別表第4の規制値（実装時の参照表）</h4>
+<table class="tbl">
+<thead><tr><th>地域</th><th>対象建築物／測定面</th><th>(一)</th><th>(二)</th><th>(三)</th></tr></thead>
+<tbody>
+<tr><td>一低層・二低層・田園住居</td><td>軒高7m超 or 3階以上<br>測定面 1.5m</td><td class="n">3h/2h</td><td class="n">4h/2.5h</td><td class="n">5h/3h</td></tr>
+<tr><td>一中高・二中高</td><td>高さ10m超<br>測定面 4m or 6.5m</td><td class="n">3h/2h</td><td class="n">4h/2.5h</td><td class="n">5h/3h</td></tr>
+<tr><td>一住・二住・準住・近商・準工</td><td>高さ10m超<br>測定面 4m or 6.5m</td><td class="n">4h/2.5h</td><td class="n">5h/3h</td><td class="n">—</td></tr>
+<tr><td>用途地域の指定なし</td><td>イ:軒高7m超/1.5m<br>ロ:10m超/4m</td><td class="n">3h/2h</td><td class="n">4h/2.5h</td><td class="n">5h/3h</td></tr>
+</tbody>
+</table>
+<p class="note">各セルは「5m超10m以内 ／ 10m超」の時間。北海道は別値（例：(一)号なら2h/1.5h）。どの号を採用するかは<b>地方公共団体の条例で指定</b>。<b>商業地域・工業地域・工業専用地域は別表第4に無い＝日影規制の対象になり得ない</b>（ただし前述の越境日影を受ける側にはならない、というだけで、落とす側の規制は法56条の2第4項で効く）。</p>
+
+<h3>2-2. Phase3 のボリュームはそのまま使えるか → 使える</h3>
+
+<p>Phase3 のデータ構造を読んだ。結論から言うと<b>日影計算にとって理想的な形</b>をしている。</p>
+
+<div class="spec">
+  <div>
+    <dt>ボリュームの実体</dt>
+    <dd><code>Placement.podium</code> / <code>Placement.tower</code> ＝ いずれも<b>2次元の閉じた環（頂点列）</b>。高さは <code>metrics["h_podium"]</code> / <code>metrics["h_tower"]</code> に別途スカラーで入る。つまり<b>平面ポリゴンの鉛直押し出し（プリズム）</b>。</dd>
+  </div>
+  <div>
+    <dt>座標系</dt>
+    <dd><code>envelope.Projection</code> による<b>ローカルENU（東西・南北・鉛直のメートル系）</b>。Nが真北を向いている。日影計算は真北基準なので<b>座標変換が不要</b>。これは大きい。</dd>
+  </div>
+  <div>
+    <dt>テーパーのある形状</dt>
+    <dd><code>volume._volume_bands()</code> が <code>{h_low, h_high, ring}</code> の階段状ソリッドを返す。斜線テーパー付きのボリュームも<b>「高さ帯ごとのプリズムの積み重ね」で表現済み</b>。</dd>
+  </div>
+  <div>
+    <dt>周辺データ</dt>
+    <dd>道路辺（幅員つき）・敷地環・用途地域・周辺建物（PLATEAU）が既に揃っている。みなし境界線の緩和も越境判定も、追加のデータ取得なしで組める。</dd>
+  </div>
+</div>
+
+<h4>これが効く理由：影が厳密に解ける</h4>
+<p>鉛直プリズムの影は、レイトレーシング（光線を飛ばして当たり判定する重い計算）を使わずに<b>厳密解が求まる</b>。ポリゴンPを太陽と反対方向へ、下端の高さぶんから上端の高さぶんまで平行移動させた「掃引」は、<span class="em">ポリゴンと線分のミンコフスキー和（2つの図形を足し合わせた図形）</span>そのもので、Pの各辺が作る平行四辺形＋両端のPを合成するだけで正確に出る。近似ではない。</p>
+
+<h3>2-3. 実測：プロトタイプを書いて速度を測った</h3>
+
+<p>検討だけで終わらせず、Phase3と同じ構造（基壇100×80m・31m＋タワー50×40m・150m、測定面4m、東京 lat 35.68）で実際に計算した。<b>site-trace-mvp のコードには一切触れていない</b>（別作業中のため読み取り専用で扱った）。</p>
+
+<div class="mono">■ 冬至の太陽位置（検算：南中高度 = 90 − 35.68 − 23.43 = 30.89°）
+  真太陽時 8:00   高度 h= 8.08°   方位 −53.37°   146m分の影長 1028.9 m
+  真太陽時10:00   高度 h=24.41°   方位 −30.25°   146m分の影長  321.7 m
+  真太陽時12:00   高度 h=30.87°   方位   0.00°   146m分の影長  244.2 m
+  真太陽時16:00   高度 h= 8.08°   方位 +53.37°   146m分の影長 1028.9 m
+
+■ 処理時間（Python + shapely、ノートPC実測）
+  影ポリゴン 97時刻（5分ピッチ）生成 ............ 0.27 s
+  等時間日影図 ラスタ積算（1m格子・約120万点）.... 0.61 s
+  等時間日影図 ラスタ積算（0.5m格子・約478万点）.. 1.94 s
+  等時間日影線の抽出（2/2.5/3/4/5h の5本）....... 0.30 s
+  規制線上の高精度評価（1分ピッチ481時刻×1842点）.. 7.85 s
+
+■ 計算領域（8時・16時の低い太陽で影が伸びる）
+  東西 ±851 m ／ 南北 −40〜+634 m</div>
+
+<div class="box">
+  <p class="label">読み取れること</p>
+  <ul>
+    <li><b>計算速度は問題にならない。</b>日影図2種の生成は1秒前後。Phase3が制度カード×方位で数十パターン回すことを考えても十分。</li>
+    <li><b>ただし計算領域が広い。</b>150mのタワーは冬至8時に<b>1km超の影</b>を落とす。周辺建物や地形を含めた図を描くなら、現在のPhase3の描画範囲（数百m）を超える設計が要る。</li>
+    <li><b>「厳密」なのは影の形であって、時間ではない。</b>影のポリゴン自体は近似なしで解けるが、日影時間は1分ピッチで刻んだ離散和なので、規制値ギリギリの案では1分ぶんの誤差で判定が反転しうる。<b>境界事例は「要精査」として人に返す設計が要る</b>。</li>
+  </ul>
+</div>
+
+<div class="box accent">
+  <p class="label">設計を1つ修正した（Codexレビューでの指摘）</p>
+  <p>当初は「5m線・10m線の<b>線上</b>だけ評価すれば合否が確定する」と考えていたが、<b>これは誤り</b>。条文が制限しているのは「5m超10m以内の<b>範囲</b>」「10m超の<b>範囲</b>」という<b>面</b>であって、線ではない。</p>
+  <p>影は建物から離れるほど短くなるとは限らない。<span class="em">基壇からセットバックしたタワーがある場合、10m線の点より遠い点の方が長く影に入ることが実際に起きる</span>（近い点は低い基壇の影だけ、遠い点は高いタワーの影に入る）。凹形敷地や分棟でも同じことが起きる。線上だけ見ると<b>判定が甘くなる</b>。</p>
+  <p>したがって<b>線上評価は「高速な一次スクリーニング」に格下げ</b>し、確定判定は<b>面（区域全体）で等時間日影の超過領域を求め、それが規制線の内側に収まるか</b>で行う。幸いラスタ積算が0.61秒なので、面でやってもコストはほとんど変わらない。</p>
+</div>
+
+<h3>2-4. 規制値データは取れるのか → 東京は取れる（実データで確認した）</h3>
+
+<p><b>日影規制の「規制値」は法律に書いていない。</b>法56条の2第1項は「別表第4の各項に掲げる地域…の全部又は一部で<b>地方公共団体の条例で指定する区域</b>」「（一）（二）（三）の号のうちから地方公共団体が…条例で指定する号」としか定めていない。つまり<b>対象区域・採用する号・測定面（4m か 6.5m）は条例を見ないと分からない</b>。ここが最大のリスクだと見ていたが、調べたら想定より良かった。</p>
+
+<div class="spec">
+  <div>
+    <dt>根拠条例は都で一本化されている</dt>
+    <dd><b>東京都日影による中高層建築物の高さの制限に関する条例</b>が全区市町村を一括で規定している（区ごとの独自条例ではない）。<b>別表第一</b>が原則パターンで、用途地域 × 容積率 × 高度地区の組み合わせで号と測定面を決める。<b>別表第二・三・五</b>が町字単位の例外・追加指定。</dd>
+  </div>
+  <div>
+    <dt>例外・追加指定区域はシェープファイルで無償公開されている <span class="pill on">実データ確認済</span></dt>
+    <dd>東京都都市整備局が「日影規制」レイヤを東京都オープンデータカタログで配布。<b>実際にダウンロードして属性を直接読んだ</b>結果が下記。</dd>
+  </div>
+  <div>
+    <dt>現在のツールが持つ用途地域データには入っていない</dt>
+    <dd>実測したところ属性は <code>yoto_code / yoto_name / kenpei / yoseki / kodo</code> の5つだけ（165フィーチャ・港区周辺、うち商業地域87件）。<b>日影規制の属性は無い</b>ので、上記レイヤの追加取り込みが要る。</dd>
+  </div>
+</div>
+
+<div class="mono">■ 東京都「日影規制」シェープファイル（実測・2026-08-07 ダウンロード）
+  レコード数 601（ポリゴン）／ 測地系 JGD2011 平面直角座標系 第9系
+  都市計画決定時点 区部=令和5年4月28日 / 多摩=令和6年4月26日
+
+  属性は3つだけ:
+    AREA    図形面積
+    HIKAGE1 日影条例別表コード  2=別表第二 3=別表第三 4=別表第四 5=別表第五
+    HIKAGE2 日影規制内容コード  10=a(3h/2h/1.5m)  11=b(4h/2.5h/1.5m)
+                               12=c(5h/3h/1.5m)  13=d(3h/2h/4m)
+                               14=e(4h/2.5h/4m)  15=f(5h/3h/4m)
+                               16=g(3h/2h/6.5m)  17=h(4h/2.5h/6.5m)
+                               18=i(5h/3h/6.5m)  19=無
+
+  実データの分布: HIKAGE2 = 14(4h/2.5h/4m) 272件 / 15(5h/3h/4m) 148件
+                  12(5h/3h/1.5m) 55件 / 19(無) 82件 / その他 44件</div>
+
+<div class="box accent">
+  <p class="label">つまり</p>
+  <p><span class="em">規制時間と測定面高さがコード化された属性として、そのまま機械可読で手に入る</span>。「条例PDFを人手で起こす」という最悪シナリオは、少なくとも東京では回避できる。</p>
+  <p><b>ただし正確に言うと：</b>このレイヤがカバーするのは<b>別表第二〜第五（例外・追加指定）だけ</b>。原則パターンの<b>別表第一は含まれていない</b>ので、そちらは<b>用途地域 × 容積率 × 高度地区</b>から条例の対応表を引いて算出する必要がある。用途地域と容積率はツールが既に持っており、高度地区は同じ東京都のGISパッケージ（<code>gis02_koudochiku</code>）にある。<b>「別表第一を計算する対応表の実装」＋「例外レイヤの上書き」の2段構え</b>になる。</p>
+  <p class="note">なお国土数値情報の用途地域データ（A29）は製品仕様書を確認したが、属性は範囲・行政コード・用途種類・建蔽率・容積率・備考のみで<b>日影規制の項目は無い</b>。こちらは使えない。東京都以外の自治体は未調査。</p>
+</div>
+
+<h3>2-5. 段階案と概算工数</h3>
+
+<div class="step l1">
+  <p class="sh">L0 — 計算コアと答え合わせ</p>
+  <p class="cost">概算 2〜3週間</p>
+  <p>単純敷地・平坦地・規制値を手入力、という限定条件で計算エンジンだけを作り、精度を固める。箱型・凹形・分棟・段状・浮いたボリューム・等時間線が分裂するケースをテストケースとして用意し、後述の案B（市販ソフトとの突き合わせ）で答え合わせする。<b>ここを飛ばすと、後から数値がずれた時に原因が切り分けられない。</b></p>
+</div>
+
+<div class="step l1">
+  <p class="sh">L1 — 判定（推奨：まずここまで）</p>
+  <p class="cost">概算 ＋3〜5週間</p>
+  <p>Phase3 の各制度カードについて「日影規制に抵触するか」を判定と実数で返す。<b>区域全体を面で評価</b>し、みなし境界線の緩和（令135条の12）、同一敷地複数棟の合成（法56条の2第2項）、越境判定（同第4項）、複数の規制値がまたがる場合まで含む。</p>
+  <ul>
+    <li>内訳：条文ロジック（緩和・越境・測定面・地域またぎ）8日／規制値データの取り込みと別表第一の対応表実装 4〜6日／面での判定と誤差管理 5日／テストと検証 4日</li>
+    <li><b>判定は○×ではなく3値にする</b>：<b>適合</b>（誤差を見ても規制値以下）／<b>要精査</b>（差が誤差の範囲内）／<b>超過</b>（誤差を見ても超過）。企画段階のツールとして、これが最も誠実で使える形。</li>
+    <li><b>成果物：制度カードに「日影：適合／規制値4h に対し最大3.2h」のような1行が出る</b></li>
+  </ul>
+</div>
+
+<div class="step">
+  <p class="sh">L2 — 日影図2種を出力</p>
+  <p class="cost">概算 ＋1〜2週間</p>
+  <p>時刻日影図（8時〜16時の1時間ごとの影の輪郭を重ね描き）と等時間日影図（積算時間の等値線を2h/2.5h/3h/4h/5hで引く）。計算は L1 の副産物で、実測1秒未満。作業の実体は<b>作図</b>（Phase3ビューアへの重畳、方位記号、規制線、凡例、印刷体裁）。</p>
+</div>
+
+<div class="step">
+  <p class="sh">L3 — ボリュームの自動焼き直し</p>
+  <p class="cost">概算 ＋3〜4週間・成功保証なし → 次章で正直に書く</p>
+  <p>施主の理想形「基準を守れるボリュームをフィードバック」。ここだけ難易度が段違いなので独立して評価する。</p>
+</div>
+
+<!-- ============ 3. 逆方向 ============ -->
+<h2>3. 逆方向（焼き直し）の難易度 — 正直に書く</h2>
+
+<p>「日影に引っかかったら自動で直す」は、順方向（判定）とはまったく別の問題だ。<b>ここも憶測で書かず、実際に逆探索を回して確かめた。</b></p>
+
+<h3>3-1. 仮説：少数パラメータなので単調探索で解ける</h3>
+<p>Phase3 の massing は「基壇＋タワー」で、実質のパラメータは<b>タワー高さ・プレート寸法・タワー位置・基壇高さ・広場位置</b>くらいしかない。自由曲面の形状最適化ではなく、数変数の探索に落ちるはず——という見立てで検証した。</p>
+
+<h3>3-2. 実測結果：仮説は半分外れた</h3>
+
+<div class="mono">■ L3-a: タワー高さの二分探索（形状固定・北側隣接地に対象区域があると想定）
+  限度 5m線 4.0h / 10m線 2.5h
+  初期 H=200m -> 8.03h / 8.03h  NG
+  iter1  H=115.5m -> 8.03h / 8.03h  NG
+  iter5  H= 36.3m -> 8.03h / 8.03h  NG
+  iter9  H= 31.3m -> 8.03h / 8.03h  NG
+  => 適合最大高さ ≒ 31.0 m ＝ 基壇高さに張り付いて、なお NG
+  （評価10回 / 12.0 s、1評価1.2s）
+
+■ 犯人を特定：基壇（タワーを消して基壇だけで評価）
+  基壇 100x80m H=31m 単独 -> 8.03h / 8.03h  NG
+  基壇 100x80m H=20m 単独 -> 8.03h / 8.03h  NG
+  基壇 100x80m H=12m 単独 -> 8.03h / 4.27h  NG
+  基壇 100x80m H= 8m 単独 -> 1.73h / 0.37h  OK
+
+■ 基壇を北側から後退させる（H=31m 固定）
+  後退  0m -> 8.03h / 8.03h  NG
+  後退 20m -> 8.03h / 8.03h  NG
+  後退 30m -> 7.60h / 6.97h  NG
+  後退 40m（敷地の半分を空ける）-> 3.23h / 2.90h  なお NG</div>
+
+<div class="box dark">
+  <p class="label">この実測が意味すること</p>
+  <p><b>日影を拘束しているのはタワーではなく基壇だった。</b>タワーをいくら削っても解けない。100m×80mの低層部が31m立っていれば、北側の規制線は一日中影に入る。基壇を8mまで下げるか、敷地の半分近くを空けるかしないと適合しない。</p>
+  <p style="margin-top:12px;">つまり L3 は「タワー高さを1変数で下げる」では絶対に解けない。<b>基壇高さ・基壇外形・広場位置の連立</b>になり、しかも<span class="em">容積は所与なので、日影で削った床はどこかに戻さねばならない</span>。それは Phase2.5（広場配置）→ Phase3（配棟）のループに戻ることを意味し、収束の保証が無い。</p>
+</div>
+
+<h3>3-3. だから L3 はこう置き換える</h3>
+
+<p>「全自動で正解ボリュームを吐く」のではなく、<b>探索を自動化して候補を並べる</b>形にするのが現実解。しかも<span class="em">この案件は既に探索空間を持っている</span>——制度カード × 広場位置（N/S/E/W/auto）× 空地率モードのグリッドがそれだ。</p>
+
+<ol>
+  <li><b>判定（L1）</b>：現在の案が何時間オーバーしているかを出す</li>
+  <li><b>感度表示</b>：基壇高さ／基壇北側後退／タワー位置を1つずつ振って、どの変数が何時間効くかを出す（実測1.2秒/評価なので、20点振っても25秒）</li>
+  <li><b>候補生成</b>：規制線上の各点・各時刻について「その時刻に影を落とさない高さの上限」は <code>z₀ + d·tan(太陽高度)</code> で直接逆算できる。これを重ねると<b>逆日影の包絡面</b>（ADSの逆日影に相当する考え方）が作れる。ただし日影規制は「全時刻で影を落とすな」ではなく「合計◯時間まで」なので、<span class="em">どの時刻の影を許すかという組合せの選択が入り、包絡面だけでは解が決まらない</span>。だから<b>包絡面で候補を作り、順方向の計算で検証する</b>という往復にする。</li>
+  <li><b>候補提示</b>：既存の広場位置グリッドを日影で再評価し、「適合する配置はこれとこれ」と並べる</li>
+</ol>
+
+<div class="box accent">
+  <p class="label">おまけの発見：既存パラメータと正面衝突する</p>
+  <p><code>build_phase25.py</code> に <code>PLAZA_NORTH_PENALTY = 0.15</code>（北側広場は日照面で不利なので減点）というパラメータがあり、コメントに「<b>日影の観点で高層棟を南に寄せる話は別途『日影軸』で評価する予定</b>」と施主自身の言葉で書かれている。</p>
+  <p>今回の実測はまさにその答えになっている。<b>北側広場は「広場自体の日当たり」では不利だが、「北隣に落とす日影」では決定的に有利</b>。日影を入れると、この0.15という減点係数は再検討対象になる。予定されていた「日影軸」を、定性評価ではなく実数で埋められる。</p>
+</div>
+
+<!-- ============ 4. 天空率 ============ -->
+<h2>4. ② 天空率：①とどこが同じで、どこが別物か</h2>
+
+<h3>4-1. 制度構造（条文で確認）</h3>
+<div class="spec">
+  <div>
+    <dt>定義 — 令135条の5</dt>
+    <dd>「天空率とは、次の式によつて計算した数値をいう。<b>Rs＝（As−Ab）／As</b>」As＝想定半球の水平投影面積、Ab＝建築物等を同一の想定半球に投影した投影面の水平投影面積。</dd>
+  </div>
+  <div>
+    <dt>判定の型 — 令135条の6〜8</dt>
+    <dd>計画建築物の天空率が、<b>「斜線制限ぴったりに建てた仮想建築物（適合建築物）」の天空率以上</b>であること。道路については加えて後退距離の比較も要る（令135条の6第2号）。</dd>
+  </div>
+  <div>
+    <dt>基準線 — 法56条7項（政令ではなく法本文に数値がある）</dt>
+    <dd>道路＝前面道路の反対側の境界線上／隣地＝隣地境界線から<b>16m</b>（勾配1.25の場合）または<b>12.4m</b>（2.5の場合）外側／北側＝真北方向に<b>4m</b>（低層住専・田園）または<b>8m</b>（中高層住専）外側。</dd>
+  </div>
+  <div>
+    <dt>算定位置の間隔 — 令135条の9・10・11</dt>
+    <dd>道路＝<b>幅員の1/2以内</b>／隣地＝<b>8m</b>（1.25）・<b>6.2m</b>（2.5）以内／北側＝<b>1m</b>（低層住専）・<b>2m</b>（中高層住専）以内。いずれも両端＋その間に均等配置。道路は「前面道路の路面の中心の高さ」を想定半球の中心とする。</dd>
+  </div>
+</div>
+
+<h3>4-2. ①との共通点・相違点</h3>
+
+<h4>共通（＝①をやれば②が安くなる部分）</h4>
+<ul>
+  <li>同じ鉛直押し出しプリズムを入力に取る。ボリューム側の準備は完全に共用できる</li>
+  <li>敷地環・道路辺・幅員・真北という同じ前提データを使う</li>
+  <li>「指定された測定点の集合で個別に評価して、全点で合否を取る」という評価の型が同じ</li>
+  <li>高低差1m以上の緩和が (H−1)/2 という<b>日影と同じ式</b>（令135条の9第4項）</li>
+</ul>
+
+<h4>別物（＝②固有の追加コスト）</h4>
+<ul>
+  <li><b>時間の代わりに立体角。</b>日影は「2D平面上の影を時間積分」、天空率は「3Dの見え方を半球に投影して面積比」。ただし鉛直プリズムなら<b>方位θごとに遮蔽される仰角区間を求める1次元積分</b>に落ちる（後述の実測どおり厳密解に収束する）。</li>
+  <li><b>「適合建築物」という仮想立体を作る必要がある。</b>ここは朗報で、<code>envelope.build_birdcage()</code> / <code>shahen_reference()</code> / <code>hlimit_reference()</code> が既に斜線包絡面を生成している。<b>素材は揃っている</b>。</li>
+  <li><b>制度の場合分けが泥沼。</b>2以上の道路がある場合の区域分割、屈曲道路、敷地が複数地域にまたがる場合——実装コストの大半はここで、幾何計算ではない。</li>
+  <li><b>精度要求が日影より厳しい。</b>合否が0.01ポイント差で決まるため、近似（魚眼画像のピクセル数え等）では確認申請グレードにならない。</li>
+</ul>
+
+<h3>4-3. 実測：天空率もプロトタイプを書いた</h3>
+<p>正射影（半球を真上から見た投影）では、仰角eの方向は半径 cos(e) に写る。よって遮蔽面積は方位θについての1次元積分に落ちる。実際に計算した（敷地60×40m、南に幅員20m道路、勾配1.5・適用距離30m相当の適合建築物と比較）。</p>
+
+<div class="mono">■ 道路の算定位置（反対側境界線上・5m間隔）での比較
+  x= 0.0  計画 86.178% / 適合 88.368%  差 −2.190pt  NG
+  x=15.0  計画 80.645% / 適合 81.608%  差 −0.962pt  NG
+  x=30.0  計画 78.349% / 適合 79.634%  差 −1.285pt  NG
+  x=60.0  計画 86.178% / 適合 88.368%  差 −2.190pt  NG
+  （13点 × 2建物 = 56.1 s。1点あたり約0.25秒/建物）
+
+■ 方位分割数と収束（x=30.0 の計画建築物）
+  n=  90 -> 78.869892 %   0.01 s
+  n= 360 -> 78.195212 %   0.07 s
+  n= 720 -> 78.289603 %   0.13 s
+  n=1440 -> 78.349467 %   0.25 s
+  n=2880 -> 78.295991 %   0.47 s</div>
+
+<p class="note">※このモデルは「150mのタワーが道路斜線の適合建築物より天空を塞ぐ」という当たり前の結果を返しているだけで、実物件の判定ではない。確認したかったのは<b>計算が成立し、実用速度で解が求まる</b>ことで、それは確認できた。</p>
+
+<div class="box accent">
+  <p class="label">ただし精度は足りていない（正直に）</p>
+  <p>上の収束表をよく見ると、分割数を倍にしても値が<b>78.19 → 78.29 → 78.35 → 78.30</b> と単調にならず<b>0.05ポイント幅で振動</b>している。方位を等間隔で刻むと、建物の角がちょうど分割線に乗ったり外れたりするために起きる正常な挙動だが、<span class="em">天空率の合否は0.01ポイント差で決まる</span>ので、<b>この精度では申請グレードを名乗れない</b>。</p>
+  <p>対策は分かっている：等間隔をやめ、<b>建物の全頂点の方位角を積分の分割点に入れて、遮蔽の切り替わり区間ごとに適応的に積分する</b>。加えて、令135条の5 の定義が Ab を「建築物<b>及びその敷地の地盤</b>を投影した投影面」としている以上、算定位置が敷地地盤面より低い場合は<b>地盤自体も遮蔽物に含める</b>必要がある。②に着手する時は、この2点が最初の実装課題になる。</p>
+</div>
+
+<div class="box">
+  <p class="label">②の結論</p>
+  <p>技術的には<b>できる</b>。時間積分が無いぶん、コアの数式は日影よりむしろ単純だった。だが<b>1章の制度整理どおり、5制度中4制度で斜線そのものが適用除外</b>になる。天空率は斜線を緩和する道具なので、外れている制度では使い道がない。<b>投資対効果で①に大差で負ける</b>。①を出し切ってから、高度利用地区の隣地・北側斜線に需要があるかを見て判断すべき。</p>
+</div>
+
+<!-- ============ 5. ブリッジ ============ -->
+<h2>5. ③ 市販ツールへのブリッジ：どこまでシームレスにできるか</h2>
+
+<h3>5-1. 市販ツールの実態（公式サイトで確認できた分だけ）</h3>
+
+<div class="spec">
+  <div>
+    <dt>ADS-win Ver10（生活産業研究所）<span class="pill">日影◯ 天空率◯ 逆日影◯</span></dt>
+    <dd><b>550,000円（税込605,000円）＋ 2年目以降 年84,000円（税込92,400円）</b></dd>
+    <dd>日影・天空率・斜線・逆日影・逆天空率の全部入り。Windows専用・日本語のみ。</dd>
+  </div>
+  <div>
+    <dt>ADS-LA（同）<span class="pill">天空率のみ</span></dt>
+    <dd><b>150,000円（税込165,000円）＋ 年40,000円（税込44,000円）</b>。逆天空率なし。</dd>
+  </div>
+  <div>
+    <dt>ADS-BT for ARCHICAD / Revit / Vectorworks（同）</dt>
+    <dd><b>280,000円（税込308,000円）〜＋年72,000円</b>。BIMデータを与条件（方位・用途地域・建蔽率・容積率・日影規制条件）込みでADS形式へ変換。</dd>
+    <dd class="note">重要：ARCHICAD／Revit／Vectorworks<b>単体には確認申請グレードの日影・天空率機能が無い</b>。BIM大手3製品の日本国内規制計算は事実上この1社が供給している。</dd>
+  </div>
+  <div>
+    <dt>i-ARM（構造システム）<span class="pill on">連携の本命</span></dt>
+    <dd>価格は公式に記載なし（要問合せ）。30日間の体験版あり。日影・天空率・逆日影・逆天空率。</dd>
+    <dd><b>入力形式が圧倒的：</b>DXF, DWG, JWW, JWC, SFC, P21, IFC, STB, 3DM, SKP, FBX, <b>GML/ZIP（PLATEAU都市モデル）</b>, SIMA, <b>JSON</b>, <b>CSV</b>, TXT, XLSX, PDF。</dd>
+  </div>
+  <div>
+    <dt>GLOOBE（福井コンピュータ）／DRA-CAD（構造システム）／B-MOS（ハウテック）／ACSYS（シーピーユー）</dt>
+    <dd>いずれも日影・天空率機能あり。価格は公式に明示なし（GLOOBEは天空率NG点の自動ボリュームカット機能あり）。ACSYS は天空率データをADSへエクスポートする機能を持つ。</dd>
+  </div>
+</div>
+
+<h3>5-2. 「本当に無料のADS」は存在するか → 実質しない</h3>
+<ul>
+  <li><b>確認申請グレードの完全無料ツールは見つからなかった。</b>探した範囲：フリーソフト（窓の杜・Vector・個人開発）、Webサービス、自治体提供、SketchUpプラグイン。</li>
+  <li>見つかった無料系は<b>消費者向けの簡易日照シミュレーション</b>のみ（「日当り君」＝2017年以降更新なし・天空率なし、PLATEAU利用の地図系Webサービス＝規制判定用ではない）。</li>
+  <li>SketchUpプラグイン「1001日影＆天空率」はデモ版無料だが、<b>サイト記載が2009年で止まっている</b>。</li>
+  <li>ADS の体験版は<b>14日間</b>。ADS-BT for Vectorworks の公式明記では「<b>体験版は各種表の出力は出来ません</b>」。ただし<span class="em">期限後も「ADS-win／LAとのデータコンバータ」としては使い続けられる</span>と公式に書かれている——ここは③の設計で使える可能性がある。</li>
+</ul>
+
+<h3>5-3. 自動連携の口はあるか → 無い</h3>
+
+<div class="box dark">
+  <p class="label">これが③の結論を決めた</p>
+  <p><b>調べた全ベンダ（ADS／i-ARM／B-MOS／DRA-CAD）の公式サイトに、API・コマンドライン・SDK・スクリプト機能の記載が一つも無かった。</b>公開情報として案内されている連携手段はすべてGUIのインポート／変換ツール。したがって「ボタンを押したら市販ADSが裏で回って結果が返ってくる」は<b>公開されている手段の範囲では実現できない</b>。</p>
+  <p style="margin-top:12px;" class="note">※非公開の連携手段や、法人向けの個別対応まで否定するものではない。本気で連携するなら<b>ベンダに直接問い合わせる価値はある</b>（特に i-ARM の構造システムは入力形式の開放度が高く、話が通る可能性がある）。</p>
+</div>
+
+<p>さらに ADS の実運用フローを公式FAQで確認したところ、DXFを取り込んだ後は<b>「与条件設定→本敷地」で人間が図形をなぞって（トレースして）敷地・建物を確定させる</b>のが基本だった。図形をそのまま敷地として自動認識するわけではない（自動トレース機能「外部図形変換」も別途あるが、レイヤ命名規約が公開されていないため精度は実機検証が必要）。</p>
+
+<h3>5-4. だから、現実的なブリッジはこう作る</h3>
+
+<div class="step l1">
+  <p class="sh">案A（推奨）— 「入力の下ごしらえ」を出力する</p>
+  <p class="cost">概算 1週間 ＋ 実機検証</p>
+  <p>Phase3 から、ADS／i-ARM が食える形で<b>敷地・道路・建物ボリューム・方位・与条件</b>を書き出す。人の作業を「ゼロから入力」から「読み込んで確認」に変える。シームレスではないが、実務の手間はここで9割落ちる。</p>
+  <ul>
+    <li><b>DXF（3D）</b>：敷地境界／道路境界＋幅員／基壇・タワーのプリズム を<b>レイヤ分けして</b>出力。Phase3 は既に ENU メートル座標を持っているので変換は素直。</li>
+    <li><b>CSV / JSON</b>：<b>i-ARM が CSV・JSON・GML(PLATEAU) を直接食える</b>ので、ADSよりこちらの方が自動化の余地が大きい。連携先として第一候補。</li>
+    <li>与条件（用途地域・建蔽率・容積率・日影規制の号・測定面）も併せて書き出す。ツールは既に全部持っている。</li>
+  </ul>
+</div>
+
+<div class="step">
+  <p class="sh">案B — 逆向きに使う：ADSを「答え合わせ」に使う</p>
+  <p class="cost">概算 数日（自作L1の検証工程として）</p>
+  <p><b>国交省がPLATEAU実証でやったのと同じ手</b>（レポートp.27で「専用ソフトウェア『ADS』により例示」と明記）。自作L1の判定結果を、代表案件でADSの結果と突き合わせて精度を担保する。<b>①の信頼性を最も安く買える方法</b>で、ADS-LA（15万円）または体験版14日で足りる可能性がある。</p>
+</div>
+
+<div class="step">
+  <p class="sh">案C — GUI自動操作（RPA）</p>
+  <p class="cost">非推奨</p>
+  <p>APIが無いのでGUIを自動操作する発想はあり得るが、<b>ベンダのバージョンアップで即壊れる・利用規約の確認が要る・確認申請の成果物に使う品質を担保できない</b>。伝聞にある「ADSのバイナリをAIで使えるようにした」件も、裏取りできていないので<b>技術的可能性の信号としてのみ扱い、設計の前提には置かない</b>。</p>
+</div>
+
+<!-- ============ 6. 推奨ルート ============ -->
+<h2>6. 推奨ルートまとめ</h2>
+
+<table class="tbl">
+<thead><tr><th>順</th><th>やること</th><th>工数</th><th>得られるもの</th></tr></thead>
+<tbody>
+<tr><td class="n">0</td><td>制度別の日影・斜線 要否表を実装（1章の内容）</td><td class="n">2〜3日</td><td>各カードに「この制度では日影が効く／効かない」が出る。<b>最も安く価値が出る</b></td></tr>
+<tr><td class="n">1</td><td>規制値データの取り込み（東京都の日影規制レイヤ＋別表第一の対応表）</td><td class="n">4〜6日</td><td>L1の前提。<b>東京はシェープで取れることを実データで確認済</b></td></tr>
+<tr><td class="n">2</td><td><b>L0 計算コア＋答え合わせ</b></td><td class="n">2〜3週</td><td>精度が固まる。ここを飛ばすと後で切り分けできない</td></tr>
+<tr><td class="n">3</td><td><b>L1 日影判定</b>（越境・緩和・面評価込み）</td><td class="n">＋3〜5週</td><td>「日影：適合／規制値4h に対し最大3.2h」の3値判定</td></tr>
+<tr><td class="n">4</td><td><b>L2 日影図2種</b>（時刻・等時間）</td><td class="n">＋1〜2週</td><td>提案書に貼れる図。計算は1秒、作業は作図</td></tr>
+<tr><td class="n">5</td><td>案A DXF/CSVブリッジ ＋ 案B ADSで答え合わせ</td><td class="n">＋1週</td><td>市販ソフトへの受け渡し／自作の精度担保。<b>L0と同時でよい</b></td></tr>
+<tr><td class="n">6</td><td><b>L3 探索型の焼き直し</b>（全自動ではない）</td><td class="n">＋3〜4週</td><td>感度表示＋適合候補の提示。既存の広場位置グリッドを流用</td></tr>
+<tr><td class="n">7</td><td>天空率</td><td class="n">4〜6週</td><td>高度利用地区の隣地・北側に需要があれば。<b>適応積分が前提</b></td></tr>
+</tbody>
+</table>
+
+<p class="note">工数は Phase3 の既存構造をそのまま使える前提の概算。ステップ0と1は独立して先行できる。</p>
+
+<!-- ============ 7. 不確実性 ============ -->
+<h2>7. 残る不確実性（確認できていないこと）</h2>
+
+<ul>
+  <li><b>東京都の日影規制レイヤが「別表第一（原則パターン）」をどこまで含むか。</b>属性の作りからは例外・追加指定（別表第二〜五）が主と読めるが、原則区域が全部含まれるかは未検証。含まれない前提で対応表を実装する想定にしてある。</li>
+  <li><b>東京都以外の自治体は未調査。</b>同じ形でデータが出ているとは限らない。ツールの当面の対象が都内なら問題にならない。</li>
+  <li><b>ADS のDXFレイヤ命名規約・独自ファイル拡張子は非公開。</b>案Aの「どこまで自動認識されるか」は実機で1回試すまで確定しない。</li>
+  <li><b>日影計算の時間ピッチの実務標準</b>（何分刻みが確認機関に通るか）を定める公表統一基準は特定できなかった。日本建築行政会議のサイトにも該当なし。ベンダの製品仕様に「60分または30分刻み」の記述は見たが業界標準ではない。自作する場合は安全側（細かいピッチ）で組み、案Bの答え合わせで担保する。</li>
+  <li><b>ADSの逆日影・逆天空率の機能仕様は一次情報で取れていない。</b>メーカー公式サイトが外部アクセスを拒否（403）するため、検索結果の要約でしか確認できていない。それによれば逆日影＝斜線と日影の両方に適合する建築可能範囲をメッシュ・等高線・断面で表示、逆天空率＝不適合な計画建物を「ナビゲーション」「オートカット」で解消する形状に修正、とされるが<b>裏取り未了</b>。</li>
+  <li><b>天空率の告示</b>：e-Gov法令データベースでは「天空率」を含む告示はヒットせず、算定式・算定位置・間隔はすべて政令本文に直接書かれていることを確認した。別途の告示委任は確認できていない。</li>
+  <li><b>日建設計でADSのバイナリをAIで使えるようにした人がいる、という伝聞</b>は裏取り不可能。本レポートでは事実として扱っていない。</li>
+</ul>
+
+<hr>
+
+<h2>付録：実在確認したもの一覧</h2>
+
+<h4>OSS（日影・天空率まわり）</h4>
+<ul>
+  <li><b>日影規制を計算するOSSは、今回の検索条件では1件も発見できなかった</b>（GitHub全文検索で「日影」「nichiei」「shadow regulation」「insolation regulation」等。ヒットしたのは無関係のリポジトリのみ）</li>
+  <li><b>Project-PLATEAU/Volume-Shape-Generator</b> — 容積率＋道路斜線＋隣地斜線のみ。日影・天空率は<b>未実装</b>。TypeScript+Babylon.js、2023-12で停止、star 1。ライセンスファイル無し（PLATEAUサイトポリシー＝CC BY 4.0＋政府標準利用規約2.0）</li>
+  <li><b>20niship/skyratio_calc</b> — 天空率のみ。MIT、C++/Python、<b>アーカイブ済み</b>。レイキャストで数値を出すだけで、適合建築物との比較は未実装</li>
+  <li><b>yokoyama-gif/arch-to-3d</b>（内 <code>sky_factor.py</code>）— 天空率の基準比較ロジックあり。ただし<b>LICENSEファイル無し</b>、作者自身が「法適合の最終判定用ではなく初期ボリューム比較用の近似」と明記</li>
+  <li><b>ladybug-tools</b>（Radiance系）— 日射・日照解析は可能だが、<b>日本の日影規制判定・天空率の適合建築物比較は無い</b>（切り分け確認済）。AGPL-3.0</li>
+  <li>汎用部品（すべて実在・現役）：pvlib（BSD-3）／pysolar（<b>GPL-3.0＝商用組込注意</b>）／suncalc（BSD-2）／shapely（BSD-3）／trimesh（MIT）／embree（Apache-2.0）</li>
+</ul>
+
+<h4>市販ツール</h4>
+<ul>
+  <li>ADS-win Ver10 ／ ADS-LA ／ ADS-BT（生活産業研究所）— 価格は公式掲載を確認</li>
+  <li>i-ARM ／ DRA-CAD（構造システム）— 入力形式は公式仕様ページで確認、価格は要問合せ</li>
+  <li>GLOOBE ／ ARCHITREND ZERO（福井コンピュータ）、B-MOS（ハウテック）、ACSYS（シーピーユー）、ALTA（コンピュータシステム研究所＝ADS連携）、RootPro CAD日影・天空率アドイン</li>
+</ul>
+
+<h4>データ</h4>
+<ul>
+  <li><b>東京都「日影規制」シェープファイル</b>（東京都都市整備局／東京都オープンデータカタログ、データセットID t000008d2000000022）— 実際にダウンロードして属性を直接読み、601レコード・HIKAGE1/HIKAGE2 のコード体系を確認済み</li>
+  <li><b>東京都 都市計画決定情報GISデータ</b> — 用途地域・高度地区・地域地区・防火地域等が一式シェープで公開（<code>gis01_youtochiiki</code> / <code>gis02_koudochiku</code> 等）。別表第一の算出に必要</li>
+  <li><b>国土数値情報 用途地域（A29）</b> — 製品仕様書を確認。<b>日影規制の属性は無い</b>ため今回の用途には使えない</li>
+</ul>
+
+<h4>法令（すべて e-Gov 法令API の条文原文で確認）</h4>
+<p class="note">建築基準法（325AC0000000201）第56条・第56条の2・別表第4・第59条・第59条の2・第60条・第60条の2・第68条の3／建築基準法施行令（325CO0000000338）第2条・第135条の5〜第135条の13。</p>
+
+<div class="box dark" style="margin-top:40px;">
+  <p class="label">最後に、位置づけを1文で</p>
+  <p>日影・天空率とも<b>計算機能の実装は可能で、企画段階の比較検討には十分に有効</b>。一方、<b>確認申請と同等の適合判定</b>を名乗るには、区域全体の評価・数値誤差の管理・自治体ごとの法令と行政運用の確認が別途要る。<b>初期版は「設計支援・事前検証」として出すのが正しい</b>。</p>
+</div>
+
+<footer>
+  <p>本レポートは実装を伴わない検討であり、site-trace-mvp リポジトリには一切の変更を加えていない（別作業中のため読み取り専用で扱った）。掲載した処理時間はすべてノートPC上での実測値。法令の条番号・数値は e-Gov 法令API の原文で確認したが、実プロジェクトへの適用にあたっては特定行政庁との協議が前提となる。技術的結論は OpenAI Codex による第三者レビューを経て、指摘のあった「規制線上だけの判定では不十分」「天空率の積分精度不足」等を反映済み。</p>
+  <p>合同会社MUD-Ai ／ 2026-08-07</p>
+</footer>
+
+</div>
+</body>
+</html>
