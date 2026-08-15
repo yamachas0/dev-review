@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cloudflare Access 設定手順書 — sim.mud-ai.com に鍵をかける</title>
+<style>
+
+:root{
+  --black:#0A0A0A; --white:#fff;
+  --accent:#10B981; --accent-dark:#059669; --accent-bg:#ECFDF5;
+  --g50:#F9FAFB; --g100:#F3F4F6; --g200:#E5E7EB; --g300:#D1D5DB;
+  --g500:#6B7280; --g600:#4B5563; --g700:#374151; --g900:#111827;
+  --font:'Noto Sans JP','Hiragino Kaku Gothic ProN','Hiragino Sans','Yu Gothic',Meiryo,system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  margin:0; background:var(--white); color:var(--g900);
+  font-family:var(--font); font-size:16px; line-height:1.8;
+  font-weight:400; word-wrap:break-word; overflow-wrap:anywhere;
+}
+.wrap{max-width:720px; margin:0 auto; padding:0 18px 80px;}
+
+/* ---- header ---- */
+header{background:var(--black); color:var(--white); padding:30px 0 26px; margin-bottom:28px;}
+header .wrap{padding-bottom:0;}
+.eyebrow{font-size:11.5px; letter-spacing:.16em; color:var(--accent);
+  font-weight:700; margin:0 0 10px;}
+h1{font-size:22px; line-height:1.45; margin:0 0 12px; font-weight:900; letter-spacing:.01em;}
+.meta{font-size:12.5px; color:var(--g300); line-height:1.9; margin:0;}
+.meta b{color:var(--white); font-weight:500;}
+
+/* ---- intro ---- */
+.intro{font-size:15px; color:var(--g700); line-height:1.9; margin:0 0 22px;}
+
+/* ---- headings ---- */
+h2{
+  font-size:18px; font-weight:900; margin:44px 0 16px; padding:9px 0 9px 14px;
+  border-left:5px solid var(--accent); background:var(--g50);
+  line-height:1.5; letter-spacing:.01em;
+}
+h2:first-of-type{margin-top:8px;}
+p{margin:0 0 14px;}
+a{color:var(--accent-dark); text-decoration:underline; text-underline-offset:2px; word-break:break-all;}
+
+/* ---- callout boxes ---- */
+.box{border:1px solid var(--g200); background:var(--g50); padding:16px 16px 4px; margin:18px 0; border-radius:3px;}
+.box.accent{border-left:4px solid var(--accent); background:var(--accent-bg); border-top-color:var(--accent-bg); border-right-color:var(--accent-bg); border-bottom-color:var(--accent-bg);}
+.box.dark{background:var(--black); color:var(--white); border-color:var(--black);}
+.box.dark b, .box.dark strong{color:var(--white);}
+.box.warn{border:2px solid var(--black); background:var(--white); padding:18px 16px 6px;}
+.box h4{margin-top:0; font-size:15.5px; font-weight:900;}
+.box p{font-size:14.5px;}
+.label{font-size:11px; font-weight:700; letter-spacing:.12em; color:var(--accent-dark);
+  margin:0 0 8px; text-transform:uppercase;}
+.box.dark .label{color:var(--accent);}
+.box.warn .label{color:var(--black); background:var(--black); color:var(--white); display:inline-block; padding:3px 9px; border-radius:2px; letter-spacing:.08em;}
+
+/* ---- step cards ---- */
+.step{border:1px solid var(--g200); border-left:5px solid var(--black); padding:16px 16px 8px;
+  margin:16px 0; background:var(--white); position:relative;}
+.step.key{border-left-color:var(--accent);}
+.sh{display:flex; align-items:flex-start; gap:12px; margin:0 0 8px;}
+.snum{flex:0 0 auto; width:32px; height:32px; background:var(--black); color:var(--white);
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-weight:900; font-size:15px;}
+.step.key .snum{background:var(--accent-dark);}
+.stitle{font-weight:900; font-size:16px; line-height:1.5; padding-top:5px;}
+.step p{font-size:14.5px; margin:0 0 10px; padding-left:44px;}
+.step ul{margin:0 0 10px; padding-left:0; list-style:none;}
+.step ul li{font-size:14.5px; margin:0 0 10px; padding-left:44px; line-height:1.8;}
+
+kbd{
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.88em; font-weight:600;
+  background:var(--g100); border:1px solid var(--g300); padding:2px 7px; border-radius:4px;
+  color:var(--g900); white-space:nowrap;
+}
+.box.dark kbd{background:#1a1a1a; border-color:#333; color:var(--white);}
+.arrow{color:var(--g500); font-weight:700; margin:0 2px;}
+
+strong,b{font-weight:700;}
+ul,ol{margin:0 0 16px; padding-left:1.35em;}
+li{margin-bottom:9px; line-height:1.8;}
+li::marker{color:var(--g500);}
+
+.note{font-size:13px; color:var(--g600); line-height:1.75;}
+hr{border:none; border-top:1px solid var(--g200); margin:32px 0;}
+
+.checklist{margin:16px 0; border-top:1px solid var(--g200);}
+.checklist > div{border-bottom:1px solid var(--g200); padding:12px 0; display:flex; gap:10px; align-items:flex-start;}
+.checkmark{flex:0 0 auto; width:22px; height:22px; border:2px solid var(--accent-dark); border-radius:4px; margin-top:1px;}
+.checklist dd{margin:0; font-size:14.5px; color:var(--g700); line-height:1.75;}
+
+footer{border-top:2px solid var(--black); margin-top:48px; padding-top:18px; padding-bottom:10px;}
+footer p{font-size:12.5px; color:var(--g500); margin:0 0 6px;}
+
+@media (max-width:400px){
+  h1{font-size:20px;}
+  .stitle{font-size:15px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">セキュリティ設定・作業手順</div>
+    <h1>Cloudflare Access 設定手順書<br>— sim.mud-ai.com に「鍵」をかける</h1>
+    <p class="meta">対象URL: <b>sim.mud-ai.com</b><br>所要時間の目安: 5〜10分<br>作業する場所: <b>Cloudflareのダッシュボード（設定画面）</b>のみ</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <p class="intro">
+    今の状態: 「P0止血（緊急の穴ふさぎ）」という応急処置により、公開URL（<code style="font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.9em;background:var(--g100);padding:1.5px 5px;border-radius:2px;">sim.mud-ai.com</code>）は今、<b>「画面は開くが、計算は動かない」安全な状態</b>になっています。他社の検討履歴が誰でも見えてしまっていた穴はすでに塞ぎました。この手順書では、Cloudflare Access（アクセスできる人を、指定したメールアドレスの人だけに絞る仕組み）を設定して、「指定した人だけが入れる鍵」をかけます。
+  </p>
+
+  <div class="box warn">
+    <div class="label">先に知っておくこと</div>
+    <h4>この設定だけでは、外から計算はまだ動きません</h4>
+    <p>今回の手順は「<b>誰が画面を見られるか</b>」を絞るだけです。「計算そのものを外から動かせるようにする」には、サーバー側のスイッチをもう一つ入れる作業（統括側で対応）が別途必要です。それはこの手順とセットで別途仕上げます。<b>この手順を終えた直後に「計算が動かない」と思っても異常ではありません。</b></p>
+  </div>
+
+  <h2>手順</h2>
+
+  <div class="step">
+    <div class="sh"><div class="snum">1</div><div class="stitle">ダッシュボードにログイン</div></div>
+    <p>ブラウザで <a href="https://one.dash.cloudflare.com/" target="_blank" rel="noopener">https://one.dash.cloudflare.com/</a> を開き、Cloudflare（サイトの表示やアクセス制御を担うサービス）のダッシュボード（設定画面）にログインします。</p>
+  </div>
+
+  <div class="step">
+    <div class="sh"><div class="snum">2</div><div class="stitle">Access のメニューを開く</div></div>
+    <p>左側のメニューから <kbd>Access</kbd> <span class="arrow">→</span> <kbd>Applications</kbd> を選びます。</p>
+  </div>
+
+  <div class="step">
+    <div class="sh"><div class="snum">3</div><div class="stitle">アプリケーションを追加</div></div>
+    <p><kbd>Add an application</kbd> ボタンを押し、種類は <kbd>Self-hosted</kbd>（自社で動かしているサイト、の意味）を選びます。</p>
+  </div>
+
+  <div class="step">
+    <div class="sh"><div class="snum">4</div><div class="stitle">基本情報を入力</div></div>
+    <ul>
+      <li><b>Application name</b>: <kbd>shoseido-sim</kbd>（名前はわかりやすければ何でもOKです）</li>
+      <li><b>Session Duration</b>（一度認証したら何時間有効か）: <kbd>24 hours</kbd></li>
+      <li><b>Application domain</b>（対象のURL）: <kbd>sim.mud-ai.com</kbd></li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <div class="sh"><div class="snum">5</div><div class="stitle">次へ進む</div></div>
+    <p><kbd>Next</kbd> ボタンを押します。</p>
+  </div>
+
+  <div class="step key">
+    <div class="sh"><div class="snum">6</div><div class="stitle">ポリシー（誰を許可するかのルール）を作成 — 最重要ステップ</div></div>
+    <ul>
+      <li><b>Policy name</b>: <kbd>allow-list</kbd></li>
+      <li><b>Action</b>: <kbd>Allow</kbd></li>
+      <li><b>Configure rules</b> の中の <kbd>Include</kbd> で、選択項目から <kbd>Emails</kbd> を選びます。</li>
+      <li>そこに、<b>許可するメールアドレスを1件ずつ追加</b>します（山川さん本人のメールアドレス ＋ JRE側の担当者のメールアドレス）。</li>
+    </ul>
+  </div>
+
+  <div class="box dark">
+    <div class="label">⚠ 最重要の注意</div>
+    <h4>「Login method = One-time PIN」だけの設定に絶対にしないでください</h4>
+    <p>ログイン方法（Login method）を <kbd>One-time PIN</kbd>（毎回メールに届く一時的な暗証番号）にするだけで満足してしまうと、<b>有効なメールアドレスを持っている人なら誰でも入れてしまいます</b>（Cloudflare公式も注意喚起している落とし穴です）。</p>
+    <p>必ず、上の手順6の <b>Emails（メールアドレスを個別に指定する項目）</b>で、許可したい人のアドレスをひとつずつ登録してください。これが「指定した人だけが入れる鍵」の実体です。</p>
+  </div>
+
+  <div class="step">
+    <div class="sh"><div class="snum">7</div><div class="stitle">保存して完了</div></div>
+    <p><kbd>Next</kbd> <span class="arrow">→</span> <kbd>Add application</kbd> を押して保存します。</p>
+  </div>
+
+  <div class="step">
+    <div class="sh"><div class="snum">8</div><div class="stitle">これで完了</div></div>
+    <p>これ以降、<code style="font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.9em;background:var(--g100);padding:1.5px 5px;border-radius:2px;">sim.mud-ai.com</code> にアクセスすると、メールアドレスの入力とワンタイムPIN（毎回メールに届く一時的な暗証番号）の入力が求められる画面が出るようになります。登録したメールアドレス以外の人はここで弾かれます。</p>
+  </div>
+
+  <h2>設定後の確認</h2>
+  <dl class="checklist">
+    <div><div class="checkmark"></div><dd>ブラウザの「シークレットウィンドウ」（ログイン状態を持たない、新規のプライベートな閲覧画面）で <code style="font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.9em;background:var(--g100);padding:1.5px 5px;border-radius:2px;">https://sim.mud-ai.com</code> を開く</dd></div>
+    <div><div class="checkmark"></div><dd>メールアドレスの入力欄が表示され、ワンタイムPINの入力を求められることを確認する</dd></div>
+    <div><div class="checkmark"></div><dd>登録したメールアドレスで実際にPINを受け取り、入力して画面に入れることを確認する</dd></div>
+  </dl>
+  <p class="note">人を追加・削除したい時は、同じポリシー（<kbd>allow-list</kbd>）の Emails のリストを編集するだけです。個人単位で発行・失効できます。費用は50ユーザーまで無料です。</p>
+
+  <h2>うまくいかない時（トラブルシュート）</h2>
+  <ul>
+    <li>Access の認証画面が出ずに、いきなり中身が見えてしまう、または全く違うエラーになる場合<span class="arrow">→</span>DNS（ドメイン名とサーバーの住所を結びつける設定）が <code style="font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.9em;background:var(--g100);padding:1.5px 5px;border-radius:2px;">sim.mud-ai.com</code> を正しく指しているか確認してください。</li>
+    <li>サイト自体が開かない（真っ白・エラー）場合<span class="arrow">→</span>Tunnel（このPCとインターネットを安全につなぐ経路）が起動しているかどうかの確認が必要です。これは統括側で確認します。</li>
+    <li>迷ったら、この画面のスクリーンショットを撮ってDiscordに送ってもらえれば、そこから先を一緒に確認します。</li>
+  </ul>
+
+  <hr>
+
+  <footer>
+    <p>この手順書は sim.mud-ai.com のアクセス制限（Cloudflare Access）設定用です。設定後は「サーバー側のスイッチ」対応と合わせてセットで仕上げます。</p>
+  </footer>
+
+</div>
+
+</body>
+</html>
