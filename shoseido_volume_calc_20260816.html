@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>容積計算の見取り図 — 本命案（特区／広場東・東西長手プレート）</title>
+<style>
+  :root{
+    --black:#0A0A0A; --white:#FFFFFF;
+    --accent:#10B981; --accent-dark:#059669; --accent-light:#A7F3D0;
+    --gray-50:#F9FAFB; --gray-100:#F3F4F6; --gray-200:#E5E7EB; --gray-300:#D1D5DB;
+    --gray-400:#9CA3AF; --gray-500:#6B7280; --gray-700:#374151; --gray-900:#111827;
+    --bg-highlight:#ECFDF5;
+    --font:'Noto Sans JP','Hiragino Kaku Gothic ProN','Meiryo',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--white);color:var(--gray-900);font-family:var(--font);font-size:15px;line-height:1.8;}
+  .wrap{max-width:720px;margin:0 auto;padding:32px 20px 60px;}
+  header{margin-bottom:36px;}
+  .kicker{font-size:12px;color:var(--accent-dark);letter-spacing:.08em;font-weight:700;margin-bottom:10px;}
+  h1{font-size:26px;font-weight:800;color:var(--black);margin:0 0 6px;line-height:1.4;letter-spacing:.01em;}
+  .subtitle{font-size:14px;color:var(--gray-500);margin-bottom:10px;}
+  .meta{font-size:12px;color:var(--gray-400);border-top:1px solid var(--gray-200);padding-top:10px;}
+
+  section{margin-bottom:44px;}
+  .sec-no{font-size:12px;color:var(--accent-dark);font-weight:700;letter-spacing:.08em;margin-bottom:2px;}
+  h2{font-size:19px;font-weight:800;color:var(--black);margin:0 0 14px;padding-left:12px;border-left:4px solid var(--accent);letter-spacing:.02em;}
+  h3{font-size:13px;font-weight:700;color:var(--gray-700);margin:18px 0 8px;}
+
+  .premise{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:2px;padding:18px 20px;}
+  .premise h2{margin-bottom:10px;}
+  .premise-list{list-style:none;margin:0;padding:0;font-size:13.5px;color:var(--gray-700);}
+  .premise-list li{position:relative;padding-left:16px;margin-bottom:6px;}
+  .premise-list li:last-child{margin-bottom:0;}
+  .premise-list li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:6px;background:var(--accent);}
+  .premise-list b{color:var(--black);font-weight:700;}
+
+  .formula{background:var(--gray-50);border:1px solid var(--gray-200);padding:12px 16px;font-size:13px;color:var(--gray-700);margin:0 0 16px;border-radius:2px;}
+
+  .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table.calc{width:100%;border-collapse:collapse;font-size:13.5px;margin-bottom:10px;table-layout:fixed;}
+  table.calc td{padding:9px 12px;border-bottom:1px solid var(--gray-200);color:var(--gray-700);vertical-align:top;word-break:break-word;}
+  table.calc td:first-child{color:var(--gray-900);font-weight:500;width:38%;}
+  table.calc td.v{color:var(--gray-700);width:62%;}
+  table.calc tr.result td{background:var(--bg-highlight);font-weight:700;color:var(--black);}
+  table.calc tr.result td.v{color:var(--accent-dark);}
+  table.calc tr.final td{background:var(--black);color:var(--white);}
+  table.calc tr.final td.v{color:var(--accent-light);}
+
+  .note{font-size:12px;color:var(--gray-500);margin:6px 0 0;}
+  .note.center{text-align:center;}
+
+  .viz{margin-top:22px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:2px;padding:18px 14px 14px;}
+  .viz svg{width:100%;height:auto;display:block;}
+  .viz-cap{font-size:11px;color:var(--gray-400);letter-spacing:.04em;margin-bottom:10px;text-transform:uppercase;}
+
+  .callout{background:var(--bg-highlight);border-left:4px solid var(--accent);padding:14px 18px;font-size:13.5px;color:var(--gray-700);margin-bottom:18px;border-radius:2px;}
+  .callout p{margin:0 0 6px;}
+  .callout p:last-child{margin-bottom:0;}
+
+  .warn{border:1px solid var(--gray-900);border-radius:2px;overflow:hidden;}
+  .warn .warn-head{background:var(--black);color:var(--white);padding:12px 18px;font-size:13px;font-weight:700;letter-spacing:.04em;}
+  .warn .warn-head .dot{display:inline-block;width:7px;height:7px;background:var(--accent);border-radius:50%;margin-right:8px;}
+  .warn .warn-body{padding:16px 18px;}
+  .warn ul{list-style:none;margin:0;padding:0;font-size:13px;color:var(--gray-700);}
+  .warn li{position:relative;padding-left:18px;margin-bottom:12px;}
+  .warn li:last-child{margin-bottom:0;padding-top:10px;border-top:1px dashed var(--gray-300);}
+  .warn li::before{content:"—";position:absolute;left:0;color:var(--accent-dark);font-weight:700;}
+
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--gray-200);font-size:11.5px;color:var(--gray-400);line-height:1.9;}
+  footer b{color:var(--gray-600);}
+
+  @media (max-width:420px){
+    h1{font-size:22px;}
+    .wrap{padding:24px 16px 48px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">都市開発諸制度シミュレーション ｜ 容積計算</div>
+    <h1>容積計算の見取り図</h1>
+    <div class="subtitle">本命案（特区／広場東・東西長手プレート）</div>
+    <div class="meta">作成日 2026-08-16</div>
+  </header>
+
+  <section class="premise">
+    <h2>前提</h2>
+    <ul class="premise-list">
+      <li>敷地 <b>6,711.1㎡</b></li>
+      <li>計画容積率 <b>1,446%</b></li>
+      <li>計画容積対象面積 <b>97,042.6㎡</b>（＝6,711.1×14.46）</li>
+      <li>用途別容積：育成 <b>19,026.0㎡</b>・業務 <b>78,016.6㎡</b></li>
+      <li>プレート <b>4,000㎡</b>（約80m×約50m）・コア <b>1,350㎡</b></li>
+    </ul>
+  </section>
+
+  <!-- ① 総貸床面積 -->
+  <section id="s1">
+    <div class="sec-no">①</div>
+    <h2>総貸床面積</h2>
+    <div class="formula">
+      総貸床 ＝ 基準階貸床 × 基準階数<br>
+      基準階貸床 ＝ プレート − コア −（端部デッド）−（1フロア貸床上限2,200坪の超過分）
+    </div>
+
+    <div class="tablewrap">
+    <table class="calc">
+      <tbody>
+        <tr><td>プレート面積</td><td class="v">4,000㎡</td></tr>
+        <tr><td>− コア面積</td><td class="v">1,350㎡</td></tr>
+        <tr><td>− 端部デッド</td><td class="v">0㎡</td></tr>
+        <tr><td>− 上限超過</td><td class="v">0㎡（802坪 &lt; 上限2,200坪）</td></tr>
+        <tr class="result"><td>＝ 基準階貸床</td><td class="v">2,650㎡（802坪）／有効率 66.2%（＝2,650÷4,000）</td></tr>
+        <tr><td>× 基準階数</td><td class="v">20F</td></tr>
+        <tr class="final"><td>＝ 総貸床</td><td class="v">53,000㎡</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">注記：ロビー階・基壇（低層部）・機械室階は含まない（＝基準階だけを積んだオフィス貸床）</p>
+
+    <div class="viz">
+      <div class="viz-cap">Visual — プレート内訳</div>
+      <svg viewBox="0 0 640 128" role="img" aria-label="プレート4,000㎡の内訳。コア1,350㎡と基準階貸床2,650㎡">
+        <line x1="0" y1="14" x2="640" y2="14" stroke="#111827" stroke-width="1"/>
+        <line x1="0" y1="8" x2="0" y2="14" stroke="#111827" stroke-width="1"/>
+        <line x1="640" y1="8" x2="640" y2="14" stroke="#111827" stroke-width="1"/>
+        <text x="320" y="8" text-anchor="middle" font-size="12" fill="#111827" font-weight="700">プレート面積 4,000㎡</text>
+
+        <rect x="0" y="26" width="216" height="56" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="1"/>
+        <rect x="216" y="26" width="424" height="56" fill="#10B981" stroke="#059669" stroke-width="1"/>
+
+        <text x="108" y="50" text-anchor="middle" font-size="12" fill="#374151">コア</text>
+        <text x="108" y="66" text-anchor="middle" font-size="12" fill="#374151">1,350㎡</text>
+
+        <text x="428" y="50" text-anchor="middle" font-size="13" fill="#ffffff" font-weight="700">基準階貸床</text>
+        <text x="428" y="68" text-anchor="middle" font-size="13" fill="#ffffff" font-weight="700">2,650㎡（802坪）</text>
+
+        <text x="320" y="110" text-anchor="middle" font-size="11.5" fill="#6B7280">有効率 66.2%（＝2,650÷4,000）</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ② 基準階の階数 -->
+  <section id="s2">
+    <div class="sec-no">②</div>
+    <h2>基準階の階数</h2>
+    <div class="formula">
+      基準階数 ＝ ceil( 業務の純容積 ÷ (プレート − 昇降路の実面積) ) − 1（ロビー階）
+    </div>
+
+    <div class="tablewrap">
+    <table class="calc">
+      <tbody>
+        <tr><td>業務の純容積</td><td class="v">74,293.8㎡（③の按分後）</td></tr>
+        <tr><td>1フロアの容積対象面積</td><td class="v">プレート 4,000 − 昇降路 448.0（＝112.0㎡×4バンク） ＝ 3,552.0㎡/階</td></tr>
+        <tr><td>74,293.8 ÷ 3,552.0</td><td class="v">20.92 → 切り上げ 21</td></tr>
+        <tr class="final"><td>− ロビー階 1</td><td class="v">基準階 20F（タワー21F＝ロビー1F＋基準階20F、機械室階は階数外）</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">注記：事務所で容積不算入になるのは昇降機の昇降路だけ（令2条）。廊下・階段の不算入は共同住宅等が対象、機械室は算入。バンク数↔昇降路↔階数はループするので収束計算で固定点を採る。</p>
+
+    <div class="viz">
+      <div class="viz-cap">Visual — 断面図（簡略）</div>
+      <svg viewBox="0 0 340 520" role="img" aria-label="断面図。下から基壇27m、機械室10m、ロビー10m、基準階86m、塔屋10mで最高143m">
+        <!-- height bracket -->
+        <line x1="26" y1="30" x2="26" y2="490" stroke="#111827" stroke-width="1"/>
+        <line x1="20" y1="30" x2="26" y2="30" stroke="#111827" stroke-width="1"/>
+        <line x1="20" y1="490" x2="26" y2="490" stroke="#111827" stroke-width="1"/>
+        <text x="8" y="264" text-anchor="middle" font-size="12" fill="#111827" font-weight="700" transform="rotate(-90 8 264)">最高143m</text>
+
+        <!-- 塔屋 10m -->
+        <rect x="60" y="30.0" width="140" height="32.2" fill="#F9FAFB" stroke="#D1D5DB"/>
+        <text x="210" y="50.6" font-size="12" fill="#374151">塔屋 +10m</text>
+
+        <!-- 基準階 20F 86m -->
+        <rect x="60" y="62.2" width="140" height="276.6" fill="#ECFDF5" stroke="#10B981" stroke-width="1.5"/>
+        <text x="210" y="180" font-size="13" fill="#065F46" font-weight="700">基準階</text>
+        <text x="210" y="198" font-size="12" fill="#374151">20層×4.3m＝86m</text>
+
+        <!-- ロビー 10m -->
+        <rect x="60" y="338.8" width="140" height="32.2" fill="#F9FAFB" stroke="#D1D5DB"/>
+        <text x="210" y="359.4" font-size="12" fill="#374151">ロビー 10m</text>
+
+        <!-- 機械室 10m -->
+        <rect x="60" y="371.0" width="140" height="32.2" fill="#F3F4F6" stroke="#D1D5DB"/>
+        <text x="210" y="391.6" font-size="12" fill="#374151">機械室 10m</text>
+
+        <!-- 基壇 27m -->
+        <rect x="60" y="403.2" width="140" height="86.8" fill="#F9FAFB" stroke="#D1D5DB"/>
+        <text x="210" y="436" font-size="12" fill="#374151">基壇 27m</text>
+        <text x="210" y="452" font-size="10.5" fill="#6B7280">低層6層：B1＋地上5層</text>
+        <text x="210" y="466" font-size="10.5" fill="#6B7280">屋内空地の床を含む</text>
+      </svg>
+    </div>
+    <p class="note">※ 屋内空地の床の配置順：①B1の半分 → ②1Fの半分 → ③基壇上層を上から → ④余りはB1/1Fの残り半分</p>
+  </section>
+
+  <!-- ③ 用途按分 -->
+  <section id="s3">
+    <div class="sec-no">③</div>
+    <h2>屋内有効空地の容積の用途按分</h2>
+
+    <div class="callout">
+      <p>屋内・屋上の有効空地は床＝容積が発生する。</p>
+      <p>全体共用なので用途ごとに按分され、各用途が専用に使える「純容積」がその分減る。</p>
+      <p>フェーズ2の棒グラフの用途別容積そのものは変わらない（按分分を含んだ値）。</p>
+    </div>
+
+    <h3>表A — 空地</h3>
+    <div class="tablewrap">
+    <table class="calc">
+      <tbody>
+        <tr><td>必要有効空地</td><td class="v">4,630.7㎡</td></tr>
+        <tr><td>地上青空で確保（青空率50%）</td><td class="v">2,315.35㎡</td></tr>
+        <tr><td>屋内・屋上で確保（評価量）</td><td class="v">2,315.35㎡</td></tr>
+        <tr class="final"><td>屋内の実面積（低減係数で評価量の2倍必要）</td><td class="v">4,630.7㎡ ＝ 2,315.35×2.0</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>表B — 按分</h3>
+    <div class="tablewrap">
+    <table class="calc">
+      <tbody>
+        <tr><td>按分率</td><td class="v">4,630.7 ÷ 97,042.6 ＝ 4.772%</td></tr>
+        <tr><td>育成</td><td class="v">19,026.0 → 純 18,118.1（−907.9）</td></tr>
+        <tr><td>業務</td><td class="v">78,016.6 → 純 74,293.8（−3,722.8）</td></tr>
+        <tr class="result"><td>検算</td><td class="v">907.9＋3,722.8 ＝ 4,630.7 ✔</td></tr>
+        <tr class="final"><td>全体検算</td><td class="v">基壇（育成純18,118.1＋屋内空地4,630.7＝22,748.8）＋業務純74,293.8 ＝ 97,042.6 ＝ 計画容積対象面積 ✔</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="viz">
+      <div class="viz-cap">Visual — 積み上げ図（before / after）</div>
+      <svg viewBox="0 0 480 460" role="img" aria-label="按分の前後比較。before育成19026業務78016.6、after育成純18118.1屋内空地4630.7業務純74293.8">
+        <defs>
+          <pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+            <rect width="7" height="7" fill="#F3F4F6"/>
+            <line x1="0" y1="0" x2="0" y2="7" stroke="#9CA3AF" stroke-width="1.6"/>
+          </pattern>
+        </defs>
+
+        <!-- baseline -->
+        <line x1="20" y1="400" x2="460" y2="400" stroke="#D1D5DB" stroke-width="1"/>
+
+        <!-- BEFORE bar: 業務 bottom, 育成 top -->
+        <rect x="55" y="110.6" width="90" height="289.4" fill="#059669"/>
+        <rect x="55" y="40.0" width="90" height="70.6" fill="#A7F3D0" stroke="#10B981" stroke-width="1"/>
+        <text x="100" y="26" text-anchor="middle" font-size="12" fill="#111827" font-weight="700">before</text>
+        <text x="100" y="260" text-anchor="middle" font-size="12" fill="#ffffff" font-weight="700">業務</text>
+        <text x="100" y="278" text-anchor="middle" font-size="11.5" fill="#ffffff">78,016.6㎡</text>
+        <text x="100" y="70" text-anchor="middle" font-size="11.5" fill="#065F46" font-weight="700">育成</text>
+        <text x="100" y="88" text-anchor="middle" font-size="10.5" fill="#065F46">19,026.0㎡</text>
+        <text x="100" y="416" text-anchor="middle" font-size="10.5" fill="#6B7280">計 97,042.6㎡</text>
+
+        <!-- AFTER bar: 業務純 bottom, 屋内空地 middle, 育成純 top -->
+        <rect x="290" y="124.4" width="90" height="275.6" fill="#059669"/>
+        <rect x="290" y="107.2" width="90" height="17.2" fill="url(#hatch)" stroke="#9CA3AF" stroke-width="1"/>
+        <rect x="290" y="40.0" width="90" height="67.2" fill="#A7F3D0" stroke="#10B981" stroke-width="1"/>
+        <text x="335" y="26" text-anchor="middle" font-size="12" fill="#111827" font-weight="700">after</text>
+        <text x="335" y="265" text-anchor="middle" font-size="12" fill="#ffffff" font-weight="700">業務純</text>
+        <text x="335" y="283" text-anchor="middle" font-size="11.5" fill="#ffffff">74,293.8㎡</text>
+        <line x1="380" y1="115.8" x2="398" y2="115.8" stroke="#6B7280" stroke-width="1"/>
+        <text x="402" y="112" text-anchor="start" font-size="10.5" fill="#374151">屋内空地</text>
+        <text x="402" y="126" text-anchor="start" font-size="10.5" fill="#374151">4,630.7㎡</text>
+        <text x="335" y="70" text-anchor="middle" font-size="11.5" fill="#065F46" font-weight="700">育成純</text>
+        <text x="335" y="88" text-anchor="middle" font-size="10.5" fill="#065F46">18,118.1㎡</text>
+        <text x="335" y="416" text-anchor="middle" font-size="10.5" fill="#6B7280">計 97,042.6㎡</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 確定値ではないもの -->
+  <section class="warn">
+    <div class="warn-head"><span class="dot"></span>確定値ではないもの（要確認・行政協議事項）</div>
+    <div class="warn-body">
+      <ul>
+        <li>屋内の倍率2.0（有効係数0.5相当）は施主指定のシナリオ値。一次資料の有効係数は形状・段差別の離散値（例0.4）</li>
+        <li>特区の地上青空50%は一次資料なしの裁量値（2026-07-30 施主指示）</li>
+        <li>按分分を育成用途の床に数えてよいかは行政協議事項</li>
+        <li>小さな不整合：カードの「残り2,293㎡」は必要有効空地−実際に取れた青空（1,432+905=2,337）、台帳の屋内評価量2,315㎡は必要有効空地×(1−50%)。根拠が違うので22㎡ずれる（実害なし・揃えるかは施主判断）</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    根拠：phase3_engine/build_phase35.py（総貸床）・core_sizing.py（有効率・昇降路）・volume_ledger.py（按分・階数・高さ）・phase2_values.py（青空率）<br>
+    数値は2026-08-16時点の実装の実測値
+  </footer>
+
+</div>
+</body>
+</html>
