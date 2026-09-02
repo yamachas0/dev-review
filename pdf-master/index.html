@@ -94,6 +94,14 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .selection-rect{fill:rgba(74,124,255,.08);stroke:var(--accent);stroke-width:1;stroke-dasharray:4;}
 .text-input-overlay{position:absolute;background:rgba(255,255,255,.95);border:2px solid var(--accent);color:#111;font-family:'Noto Sans JP',sans-serif;padding:6px 8px;outline:none;min-width:100px;min-height:32px;resize:both;z-index:100;border-radius:4px;box-shadow:0 2px 12px rgba(0,0,0,.4);}
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+/* Page popup (サムネダブルクリック拡大) */
+#pg-modal{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;background:rgba(15,17,23,.88);}
+#pg-modal.show{display:flex;}
+.pgm-box{display:flex;flex-direction:column;gap:8px;max-width:94vw;max-height:94vh;}
+.pgm-top{display:flex;align-items:center;gap:10px;}
+.pgm-lbl{font-size:12px;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-right:auto;}
+.pgm-body{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:auto;box-shadow:0 16px 48px rgba(0,0,0,.7);line-height:0;}
+.pgm-body canvas{display:block;background:#fff;}
 /* Loading / progress overlay */
 #loading{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;background:rgba(15,17,23,.9);flex-direction:column;gap:12px;}
 #loading.show{display:flex;}
@@ -205,6 +213,15 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
   <div id="grid-overlay"></div>
 </div>
 </div>
+<div id="pg-modal">
+  <div class="pgm-box">
+    <div class="pgm-top">
+      <span class="pgm-lbl" id="pgm-lbl"></span>
+      <button class="btn btn-secondary" id="pgm-close" title="閉じる (Esc)">✕ 閉じる</button>
+    </div>
+    <div class="pgm-body" id="pgm-body"><canvas id="pgm-cv"></canvas></div>
+  </div>
+</div>
 <div class="save-menu" id="save-menu">
   <button class="save-item" id="sv-sel">📄 選択ページを保存<span class="sub">Ctrl/Shiftで選択したページのみ</span></button>
   <button class="save-item" id="sv-anno">✏️ 注釈付きで保存<span class="sub">全ページ＋注釈を焼き込み</span></button>
@@ -309,8 +326,9 @@ async function loadFiles(files){
     const ab=await f.arrayBuffer();const abC=ab.slice(0);
     const jsDoc=await pdfjsLib.getDocument({data:new Uint8Array(ab)}).promise;
     const libDoc=await PDFDocument.load(abC);
+    const ar=await docAspect(jsDoc);
     for(let i=0;i<jsDoc.numPages;i++){
-      vPages.push({jsDoc,jsPageNum:i+1,libDoc,libPageIdx:i});
+      vPages.push({jsDoc,jsPageNum:i+1,libDoc,libPageIdx:i,aspect:ar});
       totalPages++;
       Prog.step(`${f.name} を読み込み中...`,i+1,jsDoc.numPages);
       await new Promise(r=>setTimeout(r,0));
@@ -321,11 +339,9 @@ async function loadFiles(files){
   document.getElementById('toolbar').style.display='flex';
   document.getElementById('main-layout').style.display='flex';
   await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-  Prog.step('サムネイル生成中...',85);Prog.note(`${totalPages} ページ`);
+  Prog.step('表示準備中...',90);Prog.note(`${totalPages} ページ`);
   await Prog.yieldUI();
-  await renderThumbs();
-  Prog.step('表示準備中...',95);
-  await Prog.yieldUI();
+  renderThumbs();// 枠だけ即並べる（描画は可視域＋アイドルで後追い）
   await doFitWidth();await renderPage(0);
   Prog.step(null,100);
   Prog.hide();
@@ -341,21 +357,104 @@ async function addFiles(files){
   const ab=await f.arrayBuffer();const abC=ab.slice(0);
   const jsDoc=await pdfjsLib.getDocument({data:new Uint8Array(ab)}).promise;
   const libDoc=await PDFDocument.load(abC);
-  for(let i=0;i<jsDoc.numPages;i++){vPages.push({jsDoc,jsPageNum:i+1,libDoc,libPageIdx:i});Prog.step(`${f.name} を追加中...`,i+1,jsDoc.numPages);await new Promise(r=>setTimeout(r,0));}}
-  Prog.step('サムネイル生成中...',90);
+  const ar=await docAspect(jsDoc);
+  for(let i=0;i<jsDoc.numPages;i++){vPages.push({jsDoc,jsPageNum:i+1,libDoc,libPageIdx:i,aspect:ar});Prog.step(`${f.name} を追加中...`,i+1,jsDoc.numPages);await new Promise(r=>setTimeout(r,0));}}
+  Prog.step('表示準備中...',90);
   await Prog.yieldUI();
-  await renderThumbs();await renderPage(vPageIdx);
+  renderThumbs();await renderPage(vPageIdx);
   Prog.hide();
   }catch(err){console.error(err);Prog.fail('⚠ PDFの追加に失敗しました',err);}
 }
 
-// ═══ THUMBNAILS (cached) ═══
-async function ensureThumb(pg){if(pg.thumbCv)return;const p=await pg.jsDoc.getPage(pg.jsPageNum);const vp=p.getViewport({scale:.15});const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;await p.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;pg.thumbCv=c;}
+// 1文書につき1回だけ1ページ目の縦横比を取る（プレースホルダの高さ用・実描画で上書きされる）
+async function docAspect(jsDoc){
+  try{const p=await jsDoc.getPage(1);const vp=p.getViewport({scale:1});return vp.height/vp.width;}
+  catch(e){return 842/595;}
+}
+
+// ═══ THUMBNAILS (プレースホルダ先行＋遅延描画) ═══
+// 施主要望「荒くていいから早く開けてほしい」＝①描画幅を固定の小さい値に落とす
+// ②全ページ描き終わるまで待たずに枠だけ即並べ、見えている物から順に描く
+// ③残りは requestIdleCallback で少しずつ埋める。メインビューの画質は不変。
+const THUMB_W=72;// サムネの描画幅(px)。旧実装は scale .15（A4で約89px）
+let thumbIO=null,idleHandle=null,idleRunning=false;
+function thumbPlaceholder(pg){
+  const c=document.createElement('canvas');
+  const ar=pg.aspect||842/595;
+  c.width=THUMB_W;c.height=Math.max(1,Math.round(THUMB_W*ar));
+  const g=c.getContext('2d');g.fillStyle='#20232e';g.fillRect(0,0,c.width,c.height);
+  return c;
+}
+// サムネ画像の生成（1ページにつき1本だけ走らせ、同じ Promise を共有する）
+function thumbCanvas(pg){
+  if(pg.thumbCv)return Promise.resolve(pg.thumbCv);
+  if(pg.thumbPromise)return pg.thumbPromise;
+  pg.thumbPromise=(async()=>{
+    const p=await pg.jsDoc.getPage(pg.jsPageNum);
+    const base=p.getViewport({scale:1});
+    const vp=p.getViewport({scale:Math.max(.02,THUMB_W/base.width)});
+    const c=document.createElement('canvas');
+    c.width=Math.max(1,Math.round(vp.width));c.height=Math.max(1,Math.round(vp.height));
+    await p.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+    pg.thumbCv=c;return c;
+  })().catch(e=>{pg.thumbFail=true;console.warn('thumb',e);return null;})
+     .finally(()=>{pg.thumbPromise=null;});
+  return pg.thumbPromise;
+}
+// 出来た画像を「今そのページがある位置」の枠に取り付ける。
+// 描画中に並べ替え・削除が入るので、idx は使わず vPages.indexOf で引き直す。
+function attachThumb(pg){
+  if(!pg.thumbCv)return;
+  const cur=vPages.indexOf(pg);if(cur<0)return;// 削除済み
+  const item=sidebar.querySelector('.vt[data-idx="'+cur+'"]');
+  if(!item||item.dataset.painted==='1')return;
+  const old=item.querySelector('canvas');
+  if(old&&old!==pg.thumbCv)item.replaceChild(pg.thumbCv,old);
+  item.dataset.painted='1';
+}
+async function paintThumb(idx){
+  const pg=vPages[idx];if(!pg||pg.thumbFail)return;
+  if(!pg.thumbCv)await thumbCanvas(pg);
+  attachThumb(pg);
+}
+function thumbsPending(){return vPages.some(p=>!p.thumbCv&&!p.thumbFail);}
+// 可視域に入ったサムネから描く
+function setupThumbIO(){
+  if(thumbIO)thumbIO.disconnect();
+  if(!('IntersectionObserver'in window))return;
+  thumbIO=new IntersectionObserver(ents=>{
+    ents.forEach(en=>{if(en.isIntersecting)paintThumb(parseInt(en.target.dataset.idx));});
+  },{root:sidebar,rootMargin:'400px 0px'});
+  sidebar.querySelectorAll('.vt').forEach(el=>thumbIO.observe(el));
+}
+// 残りをアイドル時間に少しずつ
+function scheduleIdleThumbs(){
+  if(idleHandle||idleRunning||!thumbsPending())return;
+  // timeout を付けないと非アクティブタブでいつまでも呼ばれない
+  const ric=window.requestIdleCallback?(f=>window.requestIdleCallback(f,{timeout:1000})):(f=>setTimeout(f,150));
+  idleHandle=ric(async()=>{
+    idleHandle=null;idleRunning=true;
+    try{
+      // 1バッチ4枚を並列で。pdf.js はワーカー側で解析するので直列より速い
+      const batch=[];
+      for(let i=0;i<vPages.length&&batch.length<4;i++){
+        const pg=vPages[i];if(pg.thumbCv||pg.thumbFail||pg.thumbPromise)continue;
+        batch.push(paintThumb(i));
+      }
+      if(batch.length)await Promise.all(batch);
+    }finally{idleRunning=false;}
+    if(thumbsPending())scheduleIdleThumbs();
+  });
+}
 function buildThumbEl(idx){
   const pg=vPages[idx],item=document.createElement('div');item.className='vt'+(idx===vPageIdx?' active':'');item.dataset.idx=idx;
   const chk=document.createElement('div');chk.className='vchk';chk.textContent='';
   const lbl=document.createElement('div');lbl.className='vlbl';lbl.textContent=idx+1;
-  item.append(chk,pg.thumbCv,lbl);
+  const cvEl=pg.thumbCv||thumbPlaceholder(pg);
+  if(pg.thumbCv)item.dataset.painted='1';
+  item.append(chk,cvEl,lbl);
+  // ダブルクリックでそのページを拡大ポップアップ（Ctrl/Shift併用時は複数選択を優先）
+  item.addEventListener('dblclick',e=>{if(e.ctrlKey||e.metaKey||e.shiftKey)return;e.preventDefault();openPageModal(parseInt(item.dataset.idx));});
   item.addEventListener('mousedown',e=>thumbMouseDown(e,parseInt(item.dataset.idx)));
   item.draggable=true;
   item.addEventListener('dragstart',e=>{const i=parseInt(item.dataset.idx);sidebarDragIdx=i;item.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(i));});
@@ -364,31 +463,49 @@ function buildThumbEl(idx){
   item.addEventListener('drop',e=>{e.preventDefault();clearDI();if(sidebarDragIdx<0||sidebarDropIdx<0)return;doReorder(sidebarDragIdx,sidebarDropIdx);});
   return item;
 }
-async function renderThumbs(){for(const pg of vPages)await ensureThumb(pg);refreshSB();}
-function refreshSB(){const sc=sidebar.scrollTop;sidebar.querySelectorAll('.vt,.drop-indicator').forEach(e=>e.remove());for(let i=0;i<vPages.length;i++)sidebar.appendChild(buildThumbEl(i));sidebar.scrollTop=sc;}
+// 全ページ描き終わるまで待たない＝枠を即並べて、可視域＋アイドルで順に埋める
+function renderThumbs(){refreshSB();}
+function refreshSB(){const sc=sidebar.scrollTop;sidebar.querySelectorAll('.vt,.drop-indicator').forEach(e=>e.remove());for(let i=0;i<vPages.length;i++)sidebar.appendChild(buildThumbEl(i));sidebar.scrollTop=sc;setupThumbIO();scheduleIdleThumbs();}
 function showDI(item,after){clearDI();const d=document.createElement('div');d.className='drop-indicator';if(after)item.after(d);else item.before(d);}
 function clearDI(){sidebar.querySelectorAll('.drop-indicator').forEach(d=>d.remove());}
 // #sidebar の第1子は .sidebar-resize（リサイズ用の掴み棒）なので sidebar.children[i] は
 // サムネイル番号と1つズレる。ページ番号で引くときは必ずこれを使う。
 function vtEls(){return sidebar.querySelectorAll('.vt');}
 function doReorder(from,to){if(from===to||to===from+1)return;savePageUndo();const n=vPages.length,order=[];for(let i=0;i<n;i++)order.push(i);const moved=order.splice(from,1)[0];const ins=to>from?to-1:to;order.splice(ins,0,moved);const np=order.map(i=>vPages[i]);const na={};order.forEach((o,ni)=>{if(annotations[o])na[ni]=annotations[o];});vPages=np;annotations=na;if(vPageIdx===from)vPageIdx=ins;else if(from<vPageIdx&&ins>=vPageIdx)vPageIdx--;else if(from>vPageIdx&&ins<=vPageIdx)vPageIdx++;refreshSB();}
-function thumbMouseDown(e,idx){if(e.button!==0)return;const vts=vtEls();if(e.ctrlKey||e.metaKey){const it=vts[idx];if(!it)return;it.classList.toggle('selected');it.querySelector('.vchk').textContent=it.classList.contains('selected')?'✓':'';lastShiftIdx=idx;e.preventDefault();return;}if(e.shiftKey&&lastShiftIdx>=0){const lo=Math.min(lastShiftIdx,idx),hi=Math.max(lastShiftIdx,idx);for(let i=lo;i<=hi;i++){const it=vts[i];if(!it)continue;it.classList.add('selected');it.querySelector('.vchk').textContent='✓';}e.preventDefault();return;}lastShiftIdx=idx;const sx=e.clientX,sy=e.clientY;const up=ev=>{window.removeEventListener('mouseup',up);if(Math.abs(ev.clientX-sx)<5&&Math.abs(ev.clientY-sy)<5)renderPage(idx);};window.addEventListener('mouseup',up);}
+function thumbMouseDown(e,idx){if(e.button!==0)return;const vts=vtEls();if(e.ctrlKey||e.metaKey){const it=vts[idx];if(!it)return;it.classList.toggle('selected');it.querySelector('.vchk').textContent=it.classList.contains('selected')?'✓':'';lastShiftIdx=idx;e.preventDefault();return;}if(e.shiftKey&&lastShiftIdx>=0){const lo=Math.min(lastShiftIdx,idx),hi=Math.max(lastShiftIdx,idx);for(let i=lo;i<=hi;i++){const it=vts[i];if(!it)continue;it.classList.add('selected');it.querySelector('.vchk').textContent='✓';}e.preventDefault();return;}lastShiftIdx=idx;const sx=e.clientX,sy=e.clientY;const up=ev=>{window.removeEventListener('mouseup',up);
+  // ev.detail>1 はダブルクリックの2打目＝拡大ポップアップ側の担当。ここで再描画しない
+  if(ev.detail>1)return;
+  if(Math.abs(ev.clientX-sx)<5&&Math.abs(ev.clientY-sy)<5)renderPage(idx);};window.addEventListener('mouseup',up);}
 
 // ═══ PAGE RENDER ═══
 const cvCont=document.getElementById('cv-container');
 const textLayer=document.getElementById('textLayer');
+let mainRenderTask=null,mainRenderGen=0;
+// 高速なページ送り・ダブルクリックで renderPage が多重に走る。非同期の完了順は
+// 呼び出し順と一致しないため、①前の描画は即 cancel ②世代番号(gen)で古い呼び出しの
+// 結果を全ての await 境界で捨てる、の2段構えで「最後に要求したページだけが残る」。
 async function renderPage(idx){
-  if(idx<0||idx>=vPages.length)return;vPageIdx=idx;
+  if(idx<0||idx>=vPages.length)return;
+  const gen=++mainRenderGen;
+  if(mainRenderTask){try{mainRenderTask.cancel();}catch(_){}mainRenderTask=null;}
+  vPageIdx=idx;
   const pg=vPages[idx];const p=await pg.jsDoc.getPage(pg.jsPageNum);
+  if(gen!==mainRenderGen)return;
   const vp=p.getViewport({scale:vScale});
   cv.width=vp.width;cv.height=vp.height;
-  await p.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+  const task=p.render({canvasContext:cv.getContext('2d'),viewport:vp});
+  mainRenderTask=task;
+  try{await task.promise;}
+  catch(err){if(err&&err.name==='RenderingCancelledException')return;throw err;}
+  finally{if(mainRenderTask===task)mainRenderTask=null;}
+  if(gen!==mainRenderGen)return;
   svgEl.setAttribute('width',vp.width);svgEl.setAttribute('height',vp.height);
   svgEl.style.width=vp.width+'px';svgEl.style.height=vp.height+'px';
   // Text layer
   textLayer.innerHTML='';textLayer.style.width=vp.width+'px';textLayer.style.height=vp.height+'px';
   try{
     const tc=await p.getTextContent();
+    if(gen!==mainRenderGen)return;
     let count=0;
     if(tc.items&&tc.items.length){
       const pageH=p.getViewport({scale:1}).height;
@@ -428,11 +545,56 @@ async function renderPage(idx){
     }
     if(!count){const msg=document.createElement('div');msg.className='no-text-msg';msg.textContent='このページにコピー可能なテキストはありません';textLayer.appendChild(msg);}
   }catch(e){console.warn('TextLayer:',e);}
+  if(gen!==mainRenderGen)return;
   updateLayerMode();
   // Vertical center for height-fit
   const vGap=Math.max(0,(wrap.clientHeight-vp.height)/2);
   cvCont.style.marginTop=fitMode==='height'?vGap+'px':'0';
   selSet.clear();renderAnnos();const vts=vtEls();vts.forEach((t,i)=>t.classList.toggle('active',i===idx));const at=vts[idx];if(at)at.scrollIntoView({block:'nearest',behavior:'smooth'});}
+
+// ═══ PAGE POPUP (サムネをダブルクリック → 拡大表示) ═══
+const pgModal=document.getElementById('pg-modal'),pgmCv=document.getElementById('pgm-cv'),
+      pgmLbl=document.getElementById('pgm-lbl'),pgmBody=document.getElementById('pgm-body');
+let pgmToken=0,pgmTask=null;
+function pgModalOpen(){return pgModal.classList.contains('show');}
+function cancelPgm(){if(pgmTask){try{pgmTask.cancel();}catch(_){}pgmTask=null;}}
+function closePageModal(){pgmToken++;cancelPgm();pgModal.classList.remove('show');const g=pgmCv.getContext('2d');g.clearRect(0,0,pgmCv.width,pgmCv.height);}
+async function openPageModal(idx){
+  const pg=vPages[idx];if(!pg)return;
+  cancelPgm();// 開き直しに備えて先に前の描画を打ち切る
+  const token=++pgmToken;
+  pgmLbl.textContent=`ページ ${idx+1} / ${vPages.length} — 描画中...`;
+  pgModal.classList.add('show');pgmBody.scrollTop=0;pgmBody.scrollLeft=0;
+  try{
+    const p=await pg.jsDoc.getPage(pg.jsPageNum);
+    if(token!==pgmToken)return;
+    const base=p.getViewport({scale:1});
+    // ビューポートの約90%に収める。表示は等倍、実解像度は DPR 分だけ上げて綺麗に出す
+    const maxW=window.innerWidth*.9-16,maxH=window.innerHeight*.9-56;
+    const fit=Math.max(.01,Math.min(maxW/base.width,maxH/base.height));// 表示倍率
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    // 実解像度は DPR 分だけ上げるが、canvas の寸法上限（辺8192px/総1600万px）で頭打ちにする
+    const MAXDIM=8192,MAXPX=16e6;
+    const rs=Math.max(.01,Math.min(fit*dpr,MAXDIM/base.width,MAXDIM/base.height,
+      Math.sqrt(MAXPX/(base.width*base.height))));
+    const vp=p.getViewport({scale:rs});
+    pgmCv.width=Math.max(1,Math.round(vp.width));pgmCv.height=Math.max(1,Math.round(vp.height));
+    pgmCv.style.width=Math.round(base.width*fit)+'px';pgmCv.style.height=Math.round(base.height*fit)+'px';
+    const g=pgmCv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,pgmCv.width,pgmCv.height);
+    const task=p.render({canvasContext:g,viewport:vp});pgmTask=task;
+    await task.promise;
+    if(pgmTask===task)pgmTask=null;
+    if(token!==pgmToken)return;
+    pgmLbl.textContent=`ページ ${idx+1} / ${vPages.length}`;
+  }catch(err){
+    if(err&&err.name==='RenderingCancelledException')return;
+    console.error(err);
+    if(token===pgmToken)pgmLbl.textContent=`ページ ${idx+1} — 表示に失敗しました: ${err&&err.message||err}`;
+  }
+}
+document.getElementById('pgm-close').onclick=closePageModal;
+// 外側（背景）クリックで閉じる。中身のクリックでは閉じない
+pgModal.addEventListener('mousedown',e=>{if(e.target===pgModal)closePageModal();});
 
 // ═══ ZOOM ═══
 async function doFitWidth(){if(!vPages.length)return;fitMode='width';const p=await vPages[vPageIdx].jsDoc.getPage(vPages[vPageIdx].jsPageNum);const vp=p.getViewport({scale:1});vScale=Math.max(.1,(wrap.clientWidth-16)/vp.width);document.getElementById('z-lbl').textContent=Math.round(vScale*100)+'%';}
@@ -596,6 +758,8 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&Prog.canClose()){Prog.hide();return;}
   // オーバーレイ表示中（処理中・完了/エラー表示中とも）は背後の編集操作を通さない
   if(Prog.visible())return;
+  // 拡大ポップアップ表示中は Esc で閉じるだけ。背後の編集は通さない
+  if(pgModalOpen()){if(e.key==='Escape')closePageModal();return;}
   if(e.key==='Escape'){setTool('select');gridEl.classList.remove('show');return;}
   const inInp=['TEXTAREA','INPUT'].includes(document.activeElement.tagName);
   if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();
