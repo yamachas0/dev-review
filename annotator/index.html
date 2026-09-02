@@ -64,7 +64,8 @@ body {
   accent-color: #4a9eff;
 }
 
-.sep { width: 1px; background: #444; margin: 2px 2px; align-self: stretch; }
+/* ツールのグループ区切り（ペン系／図形系／塗り系／その他） */
+.sep { width: 2px; background: #4a4a4a; border-radius: 1px; margin: 2px 6px; align-self: stretch; }
 
 #drop-zone {
   flex: 1;
@@ -148,15 +149,25 @@ canvas {
 <body>
 
 <div id="toolbar">
+  <!-- ペン系（自由・線） -->
+  <button class="tool-btn" data-tool="pen">✏ ペン</button>
+  <button class="tool-btn" data-tool="underline">／ 線</button>
+  <button class="tool-btn" data-tool="arrow">➤ 矢印</button>
+  <div class="sep"></div>
+  <!-- 図形系（枠線） -->
+  <button class="tool-btn" data-tool="rect">▭ 四角</button>
+  <button class="tool-btn" data-tool="circle">○ 丸</button>
+  <button class="tool-btn" data-tool="cloud">☁ 雲</button>
+  <button class="tool-btn" data-tool="polygon">⬠ 多角形</button>
+  <div class="sep"></div>
+  <!-- 塗り系 -->
   <button class="tool-btn active" data-tool="black">■ 黒塗り</button>
   <button class="tool-btn" data-tool="mosaic">⊞ モザイク</button>
   <button class="tool-btn" data-tool="marker">▬ マーカー</button>
-  <button class="tool-btn" data-tool="underline">／ 線</button>
-  <button class="tool-btn" data-tool="circle">○ 丸</button>
-  <button class="tool-btn" data-tool="rect">▭ 四角</button>
-  <button class="tool-btn" data-tool="pen">✏ ペン</button>
-  <button class="tool-btn" data-tool="arrow">➤ 矢印</button>
-  <button class="tool-btn" data-tool="polygon">⬠ 多角形</button>
+  <button class="tool-btn" data-tool="fillcircle">● 塗り丸</button>
+  <button class="tool-btn" data-tool="fillcloud">🌩 塗り雲</button>
+  <div class="sep"></div>
+  <!-- その他 -->
   <button class="tool-btn" data-tool="callout">💬 引き出し</button>
   <button class="tool-btn" data-tool="trim">✂ トリム</button>
   <div class="sep"></div>
@@ -203,6 +214,13 @@ let drawing = false;
 let startX = 0, startY = 0;
 let undoStack = [];
 let snapshot = null;
+let dragTool = null;        // ドラッグ開始時のツール（途中でツールが変わっても確定は開始時のもの）
+let lastPos = null;        // 直近のポインタ位置（Shift 押下／解放でプレビューを描き直すため）
+let lastShift = false;
+// Shift で縦横を揃える（正円・正方形）ツール
+const SQUARE_TOOLS = new Set(['circle', 'rect', 'cloud', 'fillcircle', 'fillcloud']);
+// Shift 押下でプレビューが変わるツール（underline は水平・垂直スナップ）
+const SHIFT_TOOLS = new Set([...SQUARE_TOOLS, 'underline']);
 let originalState = null;   // 画像読み込み直後の状態（リセット用・スタックから外れても保持）
 const UNDO_MAX_BYTES = 256 * 1024 * 1024;
 
@@ -229,8 +247,11 @@ const hints = {
   mosaic: 'ドラッグしてモザイク範囲を指定',
   marker: 'ドラッグしてハイライト範囲を指定',
   underline: 'ドラッグして線を引く（Shiftで水平・垂直）',
-  circle: 'ドラッグして丸を描く',
-  rect: 'ドラッグして四角を描く',
+  circle: 'ドラッグして丸を描く（Shiftで正円）',
+  rect: 'ドラッグして四角を描く（Shiftで正方形）',
+  cloud: 'ドラッグして雲を描く（Shiftで正方形範囲）',
+  fillcircle: 'ドラッグして塗りつぶしの丸を描く（Shiftで正円）',
+  fillcloud: 'ドラッグして塗りつぶしの雲を描く（Shiftで正方形範囲）',
   pen: 'なぞってフリーハンド描画',
   arrow: 'ドラッグして矢印を描く（始点→終点）',
   polygon: 'クリックで頂点を追加／起点クリック・ダブルクリック・Enterで閉じる（Escで中断）',
@@ -249,6 +270,16 @@ document.querySelectorAll('[data-tool]').forEach(btn => {
   });
 });
 
+// 進行中のドラッグ描画を打ち切る（undo・画像差し替え・ツール切替で古い snapshot が
+// 生き残り、リリース時に消したはずの図形が復活する事故を防ぐ）
+function abortDrag() {
+  drawing = false;
+  snapshot = null;
+  dragTool = null;
+  lastPos = null;
+  lastShift = false;
+}
+
 // 進行中の多角形・引き出し線を破棄して元の描画に戻す
 function cancelPending() {
   if (polyBase) ctx.putImageData(polyBase, 0, 0);
@@ -258,6 +289,7 @@ function cancelPending() {
 
 // 進行中の状態だけ捨てる（キャンバスは触らない＝画像入れ替え・undo時用）
 function discardPending() {
+  abortDrag();
   polyPts = []; polyBase = null;
   calloutTarget = null; calloutBase = null; calloutBox = null;
   textEditor.style.display = 'none';
@@ -335,6 +367,8 @@ function restoreState(s) {
 document.getElementById('undo-btn').addEventListener('click', () => {
   // 進行中の多角形／引き出しがあれば、まずそれを取り消す
   if (polyBase || calloutBase) { cancelPending(); return; }
+  abortDrag(); // ドラッグ途中の undo で古い snapshot が復活しないように
+
   if (undoStack.length <= 1) return;
   undoStack.pop();
   restoreState(undoStack[undoStack.length - 1]);
@@ -410,6 +444,15 @@ canvas.addEventListener('mousemove', onMove);
 canvas.addEventListener('touchmove', onMove, { passive: false });
 canvas.addEventListener('mouseup', onEnd);
 canvas.addEventListener('touchend', onEnd);
+// キャンバスの外でボタンを離してもドラッグを確定させる（drawing 中でなければ即 return）
+window.addEventListener('mouseup', onEnd);
+window.addEventListener('touchend', onEnd);
+// スワイプ中断・通話着信等で touch が失われた時は描きかけを捨てる
+window.addEventListener('touchcancel', () => {
+  if (!drawing) return;
+  if (snapshot) ctx.putImageData(snapshot, 0, 0);
+  abortDrag();
+});
 
 function onStart(e) {
   e.preventDefault();
@@ -420,10 +463,13 @@ function onStart(e) {
   if (currentTool === 'callout') { handleCalloutClick(getPos(e)); return; }
 
   drawing = true;
+  dragTool = currentTool;
   const p = getPos(e);
   startX = p.x;
   startY = p.y;
   snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  lastPos = p;
+  lastShift = !!e.shiftKey;
 
   if (currentTool === 'pen') {
     ctx.beginPath();
@@ -441,23 +487,35 @@ function onMove(e) {
   if (!drawing) return;
   e.preventDefault();
   const p = getPos(e);
-  const x = p.x, y = p.y;
 
   if (currentTool === 'pen') {
     ctx.strokeStyle = colorPicker.value;
     ctx.lineWidth = parseInt(strokeSize.value);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.lineTo(x, y);
+    ctx.lineTo(p.x, p.y);
     ctx.stroke();
     return;
   }
+
+  lastPos = p;
+  lastShift = !!e.shiftKey;
+  renderShape(p.x, p.y, lastShift);
+}
+
+// ドラッグ系ツールのプレビュー／確定描画（プレビューと確定で同じ絵になるよう一本化）
+function renderShape(rawX, rawY, shift) {
+  if (!snapshot) return;
+  const tool = dragTool || currentTool;
+  const c = SQUARE_TOOLS.has(tool) ? constrain(rawX, rawY, shift) : { x: rawX, y: rawY };
+  const x = c.x, y = c.y;
 
   ctx.putImageData(snapshot, 0, 0);
   const w = x - startX, h = y - startY;
   const lw = parseInt(strokeSize.value);
 
-  switch (currentTool) {
+  ctx.save(); // lineJoin/lineCap/lineDash 等をツール間で持ち越さない
+  switch (tool) {
     case 'black':
       ctx.fillStyle = '#000';
       ctx.fillRect(startX, startY, w, h);
@@ -476,7 +534,7 @@ function onMove(e) {
       break;
     case 'underline': {
       // Shift 押下時だけ水平・垂直にスナップ（移動量が大きい方に揃える）
-      const snap = !!e.shiftKey;
+      const snap = !!shift;
       const endX = snap ? (Math.abs(w) >= Math.abs(h) ? x : startX) : x;
       const endY = snap ? (Math.abs(w) >= Math.abs(h) ? startY : y) : y;
       ctx.strokeStyle = colorPicker.value;
@@ -499,10 +557,33 @@ function onMove(e) {
       );
       ctx.stroke();
       break;
+    case 'fillcircle':
+      ctx.fillStyle = colorPicker.value;
+      ctx.beginPath();
+      ctx.ellipse(
+        startX + w / 2, startY + h / 2,
+        Math.abs(w / 2), Math.abs(h / 2),
+        0, 0, Math.PI * 2
+      );
+      ctx.fill();
+      break;
     case 'rect':
       ctx.strokeStyle = colorPicker.value;
       ctx.lineWidth = lw;
       ctx.strokeRect(startX, startY, w, h);
+      break;
+    case 'cloud':
+      ctx.strokeStyle = colorPicker.value;
+      ctx.lineWidth = lw;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      cloudPath(startX, startY, w, h);
+      ctx.stroke();
+      break;
+    case 'fillcloud':
+      ctx.fillStyle = colorPicker.value;
+      cloudPath(startX, startY, w, h);
+      ctx.fill();
       break;
     case 'arrow':
       drawArrowShape(startX, startY, x, y, colorPicker.value, lw);
@@ -537,19 +618,30 @@ function onMove(e) {
       break;
     }
   }
+  ctx.restore();
 }
 
 function onEnd(e) {
   if (!drawing) return;
   drawing = false;
+  const tool = dragTool || currentTool;
 
-  if (currentTool === 'mosaic') {
+  // Shift の効くツールだけ、最終位置＋最終Shift状態で描き直す
+  // （プレビューと確定結果を必ず一致させる。他ツールは既存どおり最後の move の絵をそのまま確定）
+  if (SHIFT_TOOLS.has(tool)) {
+    const shift = typeof e.shiftKey === 'boolean' ? e.shiftKey : lastShift;
+    const p = getPos(e);
+    renderShape(p.x, p.y, shift);
+  }
+  lastPos = null; lastShift = false;
+
+  if (tool === 'mosaic') {
     const p = getPos(e);
     ctx.putImageData(snapshot, 0, 0);
     applyMosaic(startX, startY, p.x - startX, p.y - startY);
   }
 
-  if (currentTool === 'trim') {
+  if (tool === 'trim') {
     const p = getPos(e);
     ctx.putImageData(snapshot, 0, 0);
     const rx = Math.round(Math.min(startX, p.x));
@@ -563,12 +655,14 @@ function onEnd(e) {
       ctx.putImageData(cropped, 0, 0);
       // undo スタックは捨てない＝トリムも1手として戻せる
       saveState();
+      snapshot = null; dragTool = null;
       hint.textContent = hints[currentTool];
       return;
     }
   }
 
   saveState();
+  snapshot = null; dragTool = null;
 }
 
 function applyMosaic(x, y, w, h) {
@@ -604,6 +698,50 @@ function hexToRgba(hex, a) {
   const g = parseInt(hex.slice(3,5), 16);
   const b = parseInt(hex.slice(5,7), 16);
   return `rgba(${r},${g},${b},${a})`;
+}
+
+// Shift 拘束：ドラッグ方向の符号は保ったまま縦横を max(|dx|,|dy|) に揃える
+function constrain(x, y, shift) {
+  if (!shift) return { x, y };
+  const dx = x - startX, dy = y - startY;
+  const m = Math.max(Math.abs(dx), Math.abs(dy));
+  return {
+    x: startX + (dx < 0 ? -m : m),
+    y: startY + (dy < 0 ? -m : m),
+  };
+}
+
+// Shift の押下／解放でプレビューを即座に更新（マウスを動かさなくても効く）
+function onShiftToggle(e) {
+  if (e.key !== 'Shift') return;
+  if (!drawing || !lastPos || !snapshot || !SHIFT_TOOLS.has(dragTool || currentTool)) return;
+  lastShift = (e.type === 'keydown');
+  renderShape(lastPos.x, lastPos.y, lastShift);
+}
+window.addEventListener('keydown', onShiftToggle);
+window.addEventListener('keyup', onShiftToggle);
+
+// ☁ リビジョン雲：楕円の外周を円弧（2次ベジェ）の連なりで描く
+// pdf-master/index.html の cloudPath() を canvas パスへ移植
+function cloudPath(x, y, w, h) {
+  const aw = Math.abs(w), ah = Math.abs(h);
+  const cx = x + w / 2, cy = y + h / 2;
+  // 元実装は 14 分割だが、16 にすると 0°/90°/180°/270° に頂点が乗り
+  // Shift（正方形）時に縦横の膨らみが揃う
+  const n = 16;
+  const r = Math.min(aw, ah) * 0.12;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const a1 = i / n * Math.PI * 2, a2 = (i + 1) / n * Math.PI * 2;
+    const px = cx + aw / 2 * Math.cos(a1), py = cy + ah / 2 * Math.sin(a1);
+    const px2 = cx + aw / 2 * Math.cos(a2), py2 = cy + ah / 2 * Math.sin(a2);
+    const mid = (a1 + a2) / 2;
+    const mx = (px + px2) / 2 + r * Math.cos(mid) * 1.8;
+    const my = (py + py2) / 2 + r * Math.sin(mid) * 1.8;
+    if (!i) ctx.moveTo(px, py);
+    ctx.quadraticCurveTo(mx, my, px2, py2);
+  }
+  ctx.closePath();
 }
 
 // ➤ 矢印: 軸線＋矢頭（太さに連動）
@@ -878,7 +1016,12 @@ document.addEventListener('keydown', (e) => {
     strokeSize.value = Math.max(1, parseInt(strokeSize.value) - 1);
     hint.textContent = `太さ: ${strokeSize.value}`;
   }
-  const keys = { '1':'black','2':'mosaic','3':'marker','4':'underline','5':'circle','6':'pen','7':'trim','8':'polygon','9':'callout','0':'rect','a':'arrow' };
+  // 既存の割当（1〜9／0／a）は筋肉記憶保護のため変更しない。新ツールは空き文字キーへ
+  const keys = {
+    '1':'black','2':'mosaic','3':'marker','4':'underline','5':'circle','6':'pen',
+    '7':'trim','8':'polygon','9':'callout','0':'rect','a':'arrow',
+    'c':'cloud','f':'fillcircle','g':'fillcloud',
+  };
   if (keys[e.key]) {
     const btn = document.querySelector(`[data-tool="${keys[e.key]}"]`);
     if (btn) btn.click();
