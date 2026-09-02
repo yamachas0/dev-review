@@ -368,8 +368,11 @@ async function renderThumbs(){for(const pg of vPages)await ensureThumb(pg);refre
 function refreshSB(){const sc=sidebar.scrollTop;sidebar.querySelectorAll('.vt,.drop-indicator').forEach(e=>e.remove());for(let i=0;i<vPages.length;i++)sidebar.appendChild(buildThumbEl(i));sidebar.scrollTop=sc;}
 function showDI(item,after){clearDI();const d=document.createElement('div');d.className='drop-indicator';if(after)item.after(d);else item.before(d);}
 function clearDI(){sidebar.querySelectorAll('.drop-indicator').forEach(d=>d.remove());}
+// #sidebar の第1子は .sidebar-resize（リサイズ用の掴み棒）なので sidebar.children[i] は
+// サムネイル番号と1つズレる。ページ番号で引くときは必ずこれを使う。
+function vtEls(){return sidebar.querySelectorAll('.vt');}
 function doReorder(from,to){if(from===to||to===from+1)return;savePageUndo();const n=vPages.length,order=[];for(let i=0;i<n;i++)order.push(i);const moved=order.splice(from,1)[0];const ins=to>from?to-1:to;order.splice(ins,0,moved);const np=order.map(i=>vPages[i]);const na={};order.forEach((o,ni)=>{if(annotations[o])na[ni]=annotations[o];});vPages=np;annotations=na;if(vPageIdx===from)vPageIdx=ins;else if(from<vPageIdx&&ins>=vPageIdx)vPageIdx--;else if(from>vPageIdx&&ins<=vPageIdx)vPageIdx++;refreshSB();}
-function thumbMouseDown(e,idx){if(e.button!==0)return;if(e.ctrlKey||e.metaKey){const it=sidebar.children[idx];it.classList.toggle('selected');it.querySelector('.vchk').textContent=it.classList.contains('selected')?'✓':'';lastShiftIdx=idx;e.preventDefault();return;}if(e.shiftKey&&lastShiftIdx>=0){const lo=Math.min(lastShiftIdx,idx),hi=Math.max(lastShiftIdx,idx);for(let i=lo;i<=hi;i++){sidebar.children[i].classList.add('selected');sidebar.children[i].querySelector('.vchk').textContent='✓';}e.preventDefault();return;}lastShiftIdx=idx;const sx=e.clientX,sy=e.clientY;const up=ev=>{window.removeEventListener('mouseup',up);if(Math.abs(ev.clientX-sx)<5&&Math.abs(ev.clientY-sy)<5)renderPage(idx);};window.addEventListener('mouseup',up);}
+function thumbMouseDown(e,idx){if(e.button!==0)return;const vts=vtEls();if(e.ctrlKey||e.metaKey){const it=vts[idx];if(!it)return;it.classList.toggle('selected');it.querySelector('.vchk').textContent=it.classList.contains('selected')?'✓':'';lastShiftIdx=idx;e.preventDefault();return;}if(e.shiftKey&&lastShiftIdx>=0){const lo=Math.min(lastShiftIdx,idx),hi=Math.max(lastShiftIdx,idx);for(let i=lo;i<=hi;i++){const it=vts[i];if(!it)continue;it.classList.add('selected');it.querySelector('.vchk').textContent='✓';}e.preventDefault();return;}lastShiftIdx=idx;const sx=e.clientX,sy=e.clientY;const up=ev=>{window.removeEventListener('mouseup',up);if(Math.abs(ev.clientX-sx)<5&&Math.abs(ev.clientY-sy)<5)renderPage(idx);};window.addEventListener('mouseup',up);}
 
 // ═══ PAGE RENDER ═══
 const cvCont=document.getElementById('cv-container');
@@ -429,7 +432,7 @@ async function renderPage(idx){
   // Vertical center for height-fit
   const vGap=Math.max(0,(wrap.clientHeight-vp.height)/2);
   cvCont.style.marginTop=fitMode==='height'?vGap+'px':'0';
-  selSet.clear();renderAnnos();sidebar.querySelectorAll('.vt').forEach((t,i)=>t.classList.toggle('active',i===idx));const at=sidebar.children[idx];if(at)at.scrollIntoView({block:'nearest',behavior:'smooth'});}
+  selSet.clear();renderAnnos();const vts=vtEls();vts.forEach((t,i)=>t.classList.toggle('active',i===idx));const at=vts[idx];if(at)at.scrollIntoView({block:'nearest',behavior:'smooth'});}
 
 // ═══ ZOOM ═══
 async function doFitWidth(){if(!vPages.length)return;fitMode='width';const p=await vPages[vPageIdx].jsDoc.getPage(vPages[vPageIdx].jsPageNum);const vp=p.getViewport({scale:1});vScale=Math.max(.1,(wrap.clientWidth-16)/vp.width);document.getElementById('z-lbl').textContent=Math.round(vScale*100)+'%';}
