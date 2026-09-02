@@ -94,17 +94,34 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .selection-rect{fill:rgba(74,124,255,.08);stroke:var(--accent);stroke-width:1;stroke-dasharray:4;}
 .text-input-overlay{position:absolute;background:rgba(255,255,255,.95);border:2px solid var(--accent);color:#111;font-family:'Noto Sans JP',sans-serif;padding:6px 8px;outline:none;min-width:100px;min-height:32px;resize:both;z-index:100;border-radius:4px;box-shadow:0 2px 12px rgba(0,0,0,.4);}
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-/* Loading overlay */
-#loading{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;background:rgba(15,17,23,.9);flex-direction:column;gap:12px;}
+/* Loading / progress overlay */
+#loading{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;background:rgba(15,17,23,.9);flex-direction:column;gap:12px;}
 #loading.show{display:flex;}
+.load-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px 28px;display:flex;flex-direction:column;align-items:center;gap:10px;min-width:320px;max-width:min(560px,86vw);box-shadow:0 12px 40px rgba(0,0,0,.6);}
 .load-bar{width:280px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
 .load-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .2s;width:0%;}
-.load-text{font-size:13px;color:var(--dim);}
+.load-text{font-size:13px;color:var(--text);text-align:center;font-weight:500;}
+.load-sub{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;min-height:15px;text-align:center;}
+.load-result{display:none;font-size:12px;color:var(--dim);white-space:pre-wrap;text-align:center;line-height:1.7;max-height:38vh;overflow:auto;width:100%;}
+.load-result.show{display:block;}
+.load-result.err{color:var(--red);text-align:left;font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(255,92,92,.08);border:1px solid rgba(255,92,92,.3);border-radius:6px;padding:8px 10px;}
+#loading.done .load-fill{background:var(--green);}
+#loading.done .load-text{color:var(--green);}
+#loading.err .load-fill{background:var(--red);}
+#loading.err .load-text{color:var(--red);}
 </style>
 </head>
 <body>
 <div id="app">
-<div id="loading"><div class="load-text" id="load-text">読み込み中...</div><div class="load-bar"><div class="load-fill" id="load-fill"></div></div></div>
+<div id="loading">
+  <div class="load-panel">
+    <div class="load-text" id="load-text">読み込み中...</div>
+    <div class="load-bar"><div class="load-fill" id="load-fill"></div></div>
+    <div class="load-sub" id="load-sub"></div>
+    <div class="load-result" id="load-result"></div>
+    <button class="btn btn-secondary" id="load-close" style="display:none;">閉じる</button>
+  </div>
+</div>
 <div id="drop-overlay">
   <div class="drop-zone" id="main-drop">
     <div style="font-size:48px;margin-bottom:12px;opacity:.5;">📐</div>
@@ -199,6 +216,58 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
 const{PDFDocument,PDFName}=PDFLib;
 function dlBlob(b,n){const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=n;a.click();URL.revokeObjectURL(u);}
 function fmtSz(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(2)+' MB';}
+
+// ═══ PROGRESS OVERLAY (読み込み・保存で共有) ═══
+// 長い処理でUIが固まって見える問題への対策。ページごとに yieldUI() で
+// ブラウザに再描画の隙を渡し、進捗が「実際に描かれる」ことを保証する。
+const Prog=(()=>{
+  const el=document.getElementById('loading'),txt=document.getElementById('load-text'),
+        fill=document.getElementById('load-fill'),sub=document.getElementById('load-sub'),
+        res=document.getElementById('load-result'),closeBtn=document.getElementById('load-close');
+  let running=false;
+  function reset(){el.classList.remove('done','err');res.classList.remove('show','err');res.textContent='';closeBtn.style.display='none';}
+  function hide(){running=false;reset();el.classList.remove('show');}
+  function open(title){
+    running=true;reset();
+    txt.textContent=title||'処理中...';sub.textContent='';fill.style.width='0%';
+    el.classList.add('show');
+    // 押したボタンにフォーカスが残っていると Enter/Space で再実行できてしまう
+    try{document.activeElement&&document.activeElement.blur();}catch(_){}
+  }
+  // cur/total 両方あれば「N / M ページ」、cur だけなら % 指定
+  function step(title,cur,total){
+    if(title)txt.textContent=title;
+    if(typeof cur==='number'&&typeof total==='number'&&total>0){
+      sub.textContent=cur+' / '+total+' ページ';
+      fill.style.width=Math.round(cur/total*100)+'%';
+    }else if(typeof cur==='number'){
+      fill.style.width=Math.max(0,Math.min(100,cur))+'%';
+    }
+  }
+  function note(s){sub.textContent=s||'';}
+  function done(title,detail){
+    running=false;el.classList.remove('err');el.classList.add('show','done');
+    txt.textContent=title;fill.style.width='100%';sub.textContent='';
+    if(detail){res.textContent=detail;res.classList.add('show');res.classList.remove('err');}
+    closeBtn.style.display='block';closeBtn.focus();
+  }
+  function fail(title,err){
+    running=false;el.classList.remove('done');el.classList.add('show','err');
+    txt.textContent=title;sub.textContent='';
+    // 画面にはメッセージだけ出す（stack はノイズなので console 側に残す）
+    let msg='';
+    try{msg=(err&&(err.message||String(err)))||'原因不明のエラー';}catch(_){msg='原因不明のエラー';}
+    res.textContent=msg;res.classList.add('show','err');
+    closeBtn.style.display='block';closeBtn.focus();
+  }
+  // rAF→setTimeout(0) で「描画が済んでから次へ」を担保する
+  const yieldUI=()=>new Promise(r=>requestAnimationFrame(()=>setTimeout(r,0)));
+  closeBtn.onclick=hide;
+  return{open,step,note,done,fail,hide,yieldUI,
+    get running(){return running;},
+    visible(){return el.classList.contains('show');},
+    canClose(){return el.classList.contains('show')&&closeBtn.style.display==='block';}};
+})();
 let vPages=[],vPageIdx=0,vScale=1.0,fitMode='width',srcFileName='document';
 let annotations={},undoStack=[],pageUndoStack=[],tool='select',color='#ff5c5c',selSet=new Set();
 let drawing=false,drawStart={x:0,y:0},freePts=[],panning=false,panStart={},marquee=null;
@@ -227,22 +296,23 @@ mainFile.addEventListener('change',e=>{loadFiles([...e.target.files]);e.target.v
 
 async function loadFiles(files){
   if(!files.length)return;
-  const loadEl=document.getElementById('loading'),loadText=document.getElementById('load-text'),loadFill=document.getElementById('load-fill');
-  loadEl.classList.add('show');loadFill.style.width='0%';loadText.textContent='PDFを読み込み中...';
+  if(Prog.running)return;
+  Prog.open('PDFを読み込み中...');
+  await Prog.yieldUI();
   try{
   srcFileName=files[0].name.replace(/\.pdf$/i,'');
   let totalPages=0;
   for(let fi=0;fi<files.length;fi++){
     const f=files[fi];
-    loadText.textContent=`${f.name} を読み込み中...`;
+    Prog.step(`${f.name} を読み込み中...`);
+    await Prog.yieldUI();
     const ab=await f.arrayBuffer();const abC=ab.slice(0);
     const jsDoc=await pdfjsLib.getDocument({data:new Uint8Array(ab)}).promise;
     const libDoc=await PDFDocument.load(abC);
     for(let i=0;i<jsDoc.numPages;i++){
       vPages.push({jsDoc,jsPageNum:i+1,libDoc,libPageIdx:i});
       totalPages++;
-      loadText.textContent=`${f.name} — ${i+1}/${jsDoc.numPages} ページ`;
-      loadFill.style.width=Math.round((fi/files.length + (i+1)/jsDoc.numPages/files.length)*80)+'%';
+      Prog.step(`${f.name} を読み込み中...`,i+1,jsDoc.numPages);
       await new Promise(r=>setTimeout(r,0));
     }
   }
@@ -251,24 +321,32 @@ async function loadFiles(files){
   document.getElementById('toolbar').style.display='flex';
   document.getElementById('main-layout').style.display='flex';
   await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-  loadText.textContent='サムネイル生成中...';loadFill.style.width='85%';
+  Prog.step('サムネイル生成中...',85);Prog.note(`${totalPages} ページ`);
+  await Prog.yieldUI();
   await renderThumbs();
-  loadText.textContent='表示準備中...';loadFill.style.width='95%';
+  Prog.step('表示準備中...',95);
+  await Prog.yieldUI();
   await doFitWidth();await renderPage(0);
-  loadFill.style.width='100%';
-  }catch(err){console.error(err);alert('読み込みエラー: '+err.message);}
-  loadEl.classList.remove('show');
+  Prog.step(null,100);
+  Prog.hide();
+  }catch(err){console.error(err);Prog.fail('⚠ 読み込みに失敗しました',err);}
 }
 async function addFiles(files){
-  const loadEl=document.getElementById('loading'),loadText=document.getElementById('load-text'),loadFill=document.getElementById('load-fill');
-  loadEl.classList.add('show');loadFill.style.width='0%';
-  for(let fi=0;fi<files.length;fi++){const f=files[fi];loadText.textContent=`${f.name} 追加中...`;const ab=await f.arrayBuffer();const abC=ab.slice(0);
+  if(!files.length)return;
+  if(Prog.running)return;
+  Prog.open('PDFを追加中...');
+  await Prog.yieldUI();
+  try{
+  for(let fi=0;fi<files.length;fi++){const f=files[fi];Prog.step(`${f.name} を追加中...`);await Prog.yieldUI();
+  const ab=await f.arrayBuffer();const abC=ab.slice(0);
   const jsDoc=await pdfjsLib.getDocument({data:new Uint8Array(ab)}).promise;
   const libDoc=await PDFDocument.load(abC);
-  for(let i=0;i<jsDoc.numPages;i++){vPages.push({jsDoc,jsPageNum:i+1,libDoc,libPageIdx:i});loadFill.style.width=Math.round((fi+i/jsDoc.numPages)/files.length*80)+'%';await new Promise(r=>setTimeout(r,0));}}
-  loadText.textContent='サムネイル生成中...';loadFill.style.width='90%';
+  for(let i=0;i<jsDoc.numPages;i++){vPages.push({jsDoc,jsPageNum:i+1,libDoc,libPageIdx:i});Prog.step(`${f.name} を追加中...`,i+1,jsDoc.numPages);await new Promise(r=>setTimeout(r,0));}}
+  Prog.step('サムネイル生成中...',90);
+  await Prog.yieldUI();
   await renderThumbs();await renderPage(vPageIdx);
-  loadEl.classList.remove('show');
+  Prog.hide();
+  }catch(err){console.error(err);Prog.fail('⚠ PDFの追加に失敗しました',err);}
 }
 
 // ═══ THUMBNAILS (cached) ═══
@@ -419,14 +497,70 @@ function savePageUndo(){pageUndoStack.push({pages:[...vPages],annos:JSON.parse(J
 function doPageUndo(){if(!pageUndoStack.length)return;const u=pageUndoStack.pop();vPages=u.pages;annotations=u.annos;vPageIdx=Math.min(u.idx,vPages.length-1);refreshSB();renderPage(vPageIdx);}
 function deletePages(indices){if(!indices.length)return;const rem=vPages.filter((_,i)=>!indices.includes(i));if(!rem.length)return;savePageUndo();const na={};let ni=0;for(let i=0;i<vPages.length;i++){if(!indices.includes(i)){if(annotations[i])na[ni]=annotations[i];ni++;}}const wasDel=indices.includes(vPageIdx);annotations=na;vPages=rem;if(wasDel)vPageIdx=Math.min(vPageIdx,vPages.length-1);else{let s=0;for(const d of indices)if(d<vPageIdx)s++;vPageIdx-=s;}refreshSB();if(wasDel)renderPage(vPageIdx);}
 document.getElementById('tb-pgdel').onclick=()=>{const s=getSelPgIdx();if(s.length)deletePages(s);else deletePages([vPageIdx]);};
-async function buildPdf(indices){const out=await PDFDocument.create();for(const i of indices){const pg=vPages[i];const[c]=await out.copyPages(pg.libDoc,[pg.libPageIdx]);out.addPage(c);}return out.save();}
+// onProg(cur,total,phase) — phase: 'page' | 'save'。await されるので進捗描画の待ちに使える。
+// copyPages は1ページが速いので、毎ページ再描画を待つと固定費(約16ms/頁)の方が大きくなる。
+// 10ページごと＋最終ページだけ通知する。
+async function buildPdf(indices,onProg){
+  const out=await PDFDocument.create();
+  for(let k=0;k<indices.length;k++){
+    const pg=vPages[indices[k]];
+    const[c]=await out.copyPages(pg.libDoc,[pg.libPageIdx]);out.addPage(c);
+    if(onProg&&((k+1)%10===0||k+1===indices.length))await onProg(k+1,indices.length,'page');
+  }
+  if(onProg)await onProg(indices.length,indices.length,'save');
+  return out.save();
+}
 wrap.addEventListener('dragover',e=>e.preventDefault());
 wrap.addEventListener('drop',async e=>{e.preventDefault();const f=[...e.dataTransfer.files].filter(f=>f.name.endsWith('.pdf'));if(f.length)await addFiles(f);});
 
 // ═══ SAVE ACTIONS ═══
-document.getElementById('sv-sel').onclick=async()=>{document.getElementById('save-menu').classList.remove('show');const s=getExplicitSel();if(!s.length)return alert('Ctrl/Shiftクリックでページ選択');dlBlob(new Blob([await buildPdf(s)],{type:'application/pdf'}),srcFileName+'+.pdf');};
+document.getElementById('sv-sel').onclick=async()=>{
+  document.getElementById('save-menu').classList.remove('show');
+  if(Prog.running)return;
+  const s=getExplicitSel();if(!s.length)return alert('Ctrl/Shiftクリックでページ選択');
+  Prog.open(`📄 選択ページを保存中... (${s.length}ページ)`);
+  await Prog.yieldUI();
+  try{
+    const bytes=await buildPdf(s,async(c,t,ph)=>{
+      if(ph==='save'){Prog.step('PDFを書き出し中...',c,t);Prog.note('ファイル生成中 — しばらくお待ちください');}
+      else Prog.step('ページを複製中...',c,t);
+      await Prog.yieldUI();
+    });
+    dlBlob(new Blob([bytes],{type:'application/pdf'}),srcFileName+'+.pdf');
+    Prog.done('✅ 保存しました',`${s.length}ページ / ${fmtSz(bytes.length)}`);
+  }catch(err){console.error(err);Prog.fail('⚠ 保存に失敗しました',err);}
+};
 document.getElementById('sv-anno').onclick=async()=>{document.getElementById('save-menu').classList.remove('show');await exportAnno();};
-document.getElementById('sv-opt').onclick=async()=>{document.getElementById('save-menu').classList.remove('show');const s=getExplicitSel();const idx=s.length?s:vPages.map((_,i)=>i);const origB=await buildPdf(idx);const opt=await rasterizePages(idx);const pct=((1-opt.length/origB.length)*100).toFixed(1);alert(`${idx.length}p (${document.getElementById('opt-dpi').value}dpi, Q${document.getElementById('opt-quality').value}%)\n${fmtSz(origB.length)} → ${fmtSz(opt.length)} (-${pct}%)`);dlBlob(new Blob([opt],{type:'application/pdf'}),srcFileName+'+.pdf');};
+document.getElementById('sv-opt').onclick=async()=>{
+  document.getElementById('save-menu').classList.remove('show');
+  if(Prog.running)return;
+  if(!vPages.length)return;
+  const s=getExplicitSel();const idx=s.length?s:vPages.map((_,i)=>i);
+  const dpi=document.getElementById('opt-dpi').value,q=document.getElementById('opt-quality').value;
+  Prog.open(`⚡ 軽量化して保存 — 準備中...`);
+  Prog.note(`${idx.length}ページ / ${dpi}dpi / Q${q}%`);
+  await Prog.yieldUI();
+  try{
+    const origB=await buildPdf(idx,async(c,t,ph)=>{
+      Prog.step(ph==='save'?'元PDFを書き出し中...(サイズ比較用)':'元PDFを組み立て中...',c,t);
+      await Prog.yieldUI();
+    });
+    Prog.step('ページを画像化中...',0,idx.length);
+    await Prog.yieldUI();
+    const opt=await rasterizePages(idx,async(c,t,ph)=>{
+      if(ph==='save'){Prog.step('軽量化PDFを書き出し中...',c,t);Prog.note('ファイル生成中 — しばらくお待ちください');}
+      else Prog.step('ページを画像化中...',c,t);
+      await Prog.yieldUI();
+    });
+    const pct=(1-opt.length/origB.length)*100;
+    // pct が負＝画像化でむしろ増えたケース。"--12%" のような二重マイナスを出さない
+    const delta=pct>=0?`-${pct.toFixed(1)}%`:`+${(-pct).toFixed(1)}% 増加`;
+    dlBlob(new Blob([opt],{type:'application/pdf'}),srcFileName+'+.pdf');
+    Prog.done('✅ 軽量化して保存しました',
+      `${idx.length}ページ (${dpi}dpi, Q${q}%)\n${fmtSz(origB.length)} → ${fmtSz(opt.length)} (${delta})`
+      +(pct<0?'\n※ 元が文字主体のPDFです。DPI/品質を下げると小さくなります':''));
+  }catch(err){console.error(err);Prog.fail('⚠ 軽量化に失敗しました',err);}
+};
 
 // ═══ GRID ═══
 const gridEl=document.getElementById('grid-overlay');let gridLastShift=-1;
@@ -456,6 +590,9 @@ async function openGrid(){
 
 // ═══ KEYBOARD ═══
 document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&Prog.canClose()){Prog.hide();return;}
+  // オーバーレイ表示中（処理中・完了/エラー表示中とも）は背後の編集操作を通さない
+  if(Prog.visible())return;
   if(e.key==='Escape'){setTool('select');gridEl.classList.remove('show');return;}
   const inInp=['TEXTAREA','INPUT'].includes(document.activeElement.tagName);
   if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();
@@ -588,20 +725,32 @@ wrap.addEventListener('mouseup',()=>{panning=false;});
 
 // ═══ RASTERIZE ═══
 const renderCv=document.getElementById('renderCv'),renderCtx=renderCv.getContext('2d');
-async function rasterizePages(pageIndices){
+async function rasterizePages(pageIndices,onProg){
   const dpi=parseInt(document.getElementById('opt-dpi').value),quality=parseInt(document.getElementById('opt-quality').value)/100;
   const newPdf=await PDFDocument.create();
-  for(const i of pageIndices){const pg=vPages[i];const p=await pg.jsDoc.getPage(pg.jsPageNum);const vpO=p.getViewport({scale:1}),vpR=p.getViewport({scale:dpi/72});renderCv.width=Math.floor(vpR.width);renderCv.height=Math.floor(vpR.height);renderCtx.fillStyle='#fff';renderCtx.fillRect(0,0,renderCv.width,renderCv.height);await p.render({canvasContext:renderCtx,viewport:vpR}).promise;const blob=await new Promise(r=>renderCv.toBlob(r,'image/jpeg',quality));const jb=new Uint8Array(await blob.arrayBuffer());const ji=await newPdf.embedJpg(jb);const np=newPdf.addPage([vpO.width,vpO.height]);np.drawImage(ji,{x:0,y:0,width:vpO.width,height:vpO.height});await new Promise(r=>setTimeout(r,5));}
+  for(let k=0;k<pageIndices.length;k++){const i=pageIndices[k];const pg=vPages[i];const p=await pg.jsDoc.getPage(pg.jsPageNum);const vpO=p.getViewport({scale:1}),vpR=p.getViewport({scale:dpi/72});renderCv.width=Math.floor(vpR.width);renderCv.height=Math.floor(vpR.height);renderCtx.fillStyle='#fff';renderCtx.fillRect(0,0,renderCv.width,renderCv.height);await p.render({canvasContext:renderCtx,viewport:vpR}).promise;const blob=await new Promise(r=>renderCv.toBlob(r,'image/jpeg',quality));if(!blob)throw new Error(`ページ ${i+1} の画像化に失敗しました (canvas.toBlob が空。DPIを下げて再試行してください)`);const jb=new Uint8Array(await blob.arrayBuffer());const ji=await newPdf.embedJpg(jb);const np=newPdf.addPage([vpO.width,vpO.height]);np.drawImage(ji,{x:0,y:0,width:vpO.width,height:vpO.height});
+    if(onProg)await onProg(k+1,pageIndices.length,'page');else await new Promise(r=>setTimeout(r,5));}
+  if(onProg)await onProg(pageIndices.length,pageIndices.length,'save');
   return newPdf.save();
 }
 
 // ═══ EXPORT ANNOTATED (fixed offset) ═══
 async function exportAnno(){
   if(!vPages.length)return;
+  if(Prog.running)return;
+  Prog.open('✏️ 注釈付きで保存 — 準備中...');
+  Prog.note(`${vPages.length}ページ`);
+  await Prog.yieldUI();
+  try{
   const expDoc=await PDFDocument.create();
-  for(const pg of vPages){const[c]=await expDoc.copyPages(pg.libDoc,[pg.libPageIdx]);expDoc.addPage(c);}
-  for(const[ps,annos]of Object.entries(annotations)){
-    if(!annos?.length)continue;const pi=parseInt(ps);if(pi>=expDoc.getPageCount())continue;
+  for(let k=0;k<vPages.length;k++){const pg=vPages[k];const[c]=await expDoc.copyPages(pg.libDoc,[pg.libPageIdx]);expDoc.addPage(c);
+    if((k+1)%10===0||k+1===vPages.length){Prog.step('ページを複製中...',k+1,vPages.length);await Prog.yieldUI();}}
+  const annoEntries=Object.entries(annotations).filter(([,a])=>a&&a.length);
+  let burned=0;
+  Prog.step('注釈を焼き込み中...',0,annoEntries.length||1);await Prog.yieldUI();
+  for(const[ps,annos]of annoEntries){
+    const pi=parseInt(ps);
+    if(pi>=expDoc.getPageCount()){burned++;continue;}
     const page=expDoc.getPage(pi);const{width:pw,height:ph}=page.getSize();
     // Annotations are in vScale pixel coords. Convert to PDF point coords.
     const s=1/vScale;// scale factor: annotation px -> PDF points
@@ -613,8 +762,14 @@ async function exportAnno(){
       const pb=await new Promise(r=>tmpCv.toBlob(r,'image/png'));const pi2=await expDoc.embedPng(new Uint8Array(await pb.arrayBuffer()));
       page.drawImage(pi2,{x:0,y:0,width:pw,height:ph,opacity:1});
     }catch(err){console.warn(err);URL.revokeObjectURL(url);}
+    burned++;Prog.step('注釈を焼き込み中...',burned,annoEntries.length);await Prog.yieldUI();
   }
-  dlBlob(new Blob([await expDoc.save()],{type:'application/pdf'}),srcFileName+'+.pdf');
+  Prog.step('PDFを書き出し中...',100);Prog.note('ファイル生成中 — しばらくお待ちください');
+  await Prog.yieldUI();
+  const bytes=await expDoc.save();
+  dlBlob(new Blob([bytes],{type:'application/pdf'}),srcFileName+'+.pdf');
+  Prog.done('✅ 注釈付きで保存しました',`${vPages.length}ページ / ${fmtSz(bytes.length)}`);
+  }catch(err){console.error(err);Prog.fail('⚠ 注釈付き保存に失敗しました',err);}
 }
 
 function buildExpSvg(annos,w,h,ratio){
