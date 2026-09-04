@@ -64,7 +64,7 @@
 <div id="title">
   <h1>ハリノアナ</h1>
   <p>針の穴を通すパスのゲーム</p>
-  <p>味方（赤）は1人。黒ユニの守備が両手を広げて立ち塞がる。<br><b>両手の親指でボールを持って、前へ押し出す。</b>離した瞬間に飛ぶ。<br>押し出す速さ＝強さ／片方を強く押す＝その手で切れて曲がる／沈めてから押す＝バウンズ。<br>親指1本でも投げられる。守備の指先をかすめるほど点が高い。審査員はバグっている。ターンオーバー3回で終了。</p>
+  <p>味方（赤）は1人。黒ユニの守備が両手を広げて立ち塞がる。<br><b>ボールを掴んで、味方へ弾く。</b>指を離した瞬間に飛ぶ。<br>引いた深さ＝山なり＋沈む回転／ぐるぐる回す＝カーブ／弾く速さ＝強さ。<br>守備の指先をかすめるほど点が高い。審査員はバグっている。ターンオーバー3回で終了。</p>
 </div>
 <div id="result" class="hidden"><img id="card" alt="result"></div>
 <button id="bStart" class="btn" style="top:74%">はじめる</button>
@@ -188,7 +188,7 @@ const reachEdge=new THREE.LineSegments(new THREE.EdgesGeometry(reach.geometry), 
 const tapRing=new THREE.Mesh(new THREE.RingGeometry(0.1,0.14,32), new THREE.MeshBasicMaterial({color:0x2b6cb0,side:THREE.DoubleSide,transparent:true,opacity:0.9})); tapRing.visible=false; scene.add(tapRing);
 const grabRing=new THREE.Mesh(new THREE.RingGeometry(0.17,0.21,28), new THREE.MeshBasicMaterial({color:0x222222,side:THREE.DoubleSide,transparent:true,opacity:0.85})); grabRing.visible=false; scene.add(grabRing);
 // ゴム紐（掴んだ点 → 指の位置）
-const bandGeo=new THREE.BufferGeometry(); bandGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3*3),3));
+const bandGeo=new THREE.BufferGeometry(); bandGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(2*3),3));
 const band=new THREE.Line(bandGeo, new THREE.LineBasicMaterial({color:0x222222,transparent:true,opacity:0.55})); band.visible=false; scene.add(band);
 // 予定軌道（点線・回転込み）
 const PRE_N=40;
@@ -199,9 +199,6 @@ const aimDot=new THREE.Mesh(new THREE.RingGeometry(0.12,0.17,20), new THREE.Mesh
 // 回転の渦（ボールの周り・ビルボード）
 function swirlGeo(turns,pts){ const g=new THREE.BufferGeometry(); const a=[]; for(let i=0;i<pts;i++){ const u=i/(pts-1); const th=u*Math.PI*2*turns; const r=0.105+0.055*u; a.push(Math.cos(th)*r, Math.sin(th)*r, 0);} g.setAttribute('position', new THREE.Float32BufferAttribute(a,3)); return g; }
 const swirl=new THREE.Points(swirlGeo(1.5,40), new THREE.PointsMaterial({color:0x2b6cb0,size:0.042,sizeAttenuation:true,transparent:true,opacity:0.9})); swirl.visible=false; scene.add(swirl);
-// 両手の親指で持っている手（2本指モードのみ表示）
-function makeHand(){ const g=box(0.10,0.17,0.06,SKIN); g.visible=false; scene.add(g); return g; }
-const handL=makeHand(), handR=makeHand();
 // 沈み（トップスピン）インジケータ＝ボール下の弧
 const dipMark=new THREE.Line(new THREE.BufferGeometry().setFromPoints([...Array(14)].map((_,i)=>{const u=i/13; return V((u-0.5)*0.44, -0.26-0.10*Math.sin(u*Math.PI), 0);})), new THREE.LineBasicMaterial({color:0xe0552b,transparent:true,opacity:0.9})); dipMark.visible=false; scene.add(dipMark);
 
@@ -230,7 +227,7 @@ function makeLevel(L){
   const fr= sp.defenders===1? [0.5] : sp.defenders===2? [0.36,0.64] : [0.3,0.5,0.72];
   figs.defs=fr.map((f,i)=>{ const d=makePlayer(0x1a1a1a,0x111111,0x222222); const z=P.z - sp.mateDist*f; const bx = lerp(P.x,mx,f) + (i%2?1:-1)*rnd(0.15,0.55);
     d.spec={baseX:bx, x:bx, z, amp:sp.amp, w:sp.w*rnd(0.85,1.15), ph:rnd(0,6.28), vmax:sp.vmax, wa:sp.wa*rnd(0.8,1.2), rt:sp.rt}; return d; });
-  S.timeLimit=sp.time; S.levelStart=performance.now(); S.flight=null; S.cam='player'; S.timeScale=1; S.fakes=0; S.rel=null; SK.clear(); pending=null; twoHand=false;
+  S.timeLimit=sp.time; S.levelStart=performance.now(); S.flight=null; S.cam='player'; S.timeScale=1; S.fakes=0; S.rel=null; S.stroke=null;
   S.yaw=0; S.pitch=0; S.power=0; S.spin={side:0,top:0};
   S.judges=judgesForLevel(); renderJudges(); setPhase('ready'); showMsg('Lv'+L,'',true,900);
 }
@@ -241,9 +238,9 @@ function setLead(big,sm){ $('leadBig').textContent=big; $('leadSm').textContent=
 function setPhase(p){
   S.phase=p;
   lead.classList.toggle('hidden', p==='flight');
-  if(p==='ready'){ setLead('両手の親指でボールを持って、押し出せ','親指1本でも投げられる'); pg.style.display='none'; band.visible=false; swirl.visible=false; dipMark.visible=false; grabRing.visible=false; handL.visible=handR.visible=false; }
-  else if(p==='drag'){ setLead('そのまま前へ押し出して離せ','片方を強く押すとその手で切れて曲がる'); pg.style.display='block'; }
-  else { pg.style.display='none'; band.visible=false; swirl.visible=false; dipMark.visible=false; grabRing.visible=false; handL.visible=handR.visible=false; }
+  if(p==='ready'){ setLead('ボールを掴んで、味方へ弾け','どこを掴むかで出どころが決まる'); pg.style.display='none'; band.visible=false; swirl.visible=false; dipMark.visible=false; grabRing.visible=false; }
+  else if(p==='drag'){ setLead('そのまま払って離せ','ぐるぐる＝カーブ／深く沈める＝山なりで沈む'); pg.style.display='block'; }
+  else { pg.style.display='none'; band.visible=false; swirl.visible=false; dipMark.visible=false; grabRing.visible=false; }
   reach.visible = (p==='ready'||p==='drag'); arrow.visible = arrowLine.visible = aimDot.visible = (p==='ready'||p==='drag');
   if(p!=='flight' && figs.mate){ S.need = powerNeeded(releasePoint().distanceTo(figs.mate.chest())); }
 }
@@ -257,12 +254,7 @@ function camPlayer(){ camera.position.set(P.x,1.62,P.z); const m=figs.mate? figs
 // ---------------- 1ストローク入力 ----------------
 // 押す＝掴む / 引く・払う＝角度と強さ / ぐるぐる＝回転 / 離す＝投げる / トン＝フェイク
 const TAP_MS=200, TAP_PX=14, FLICK_MS=140, STALE_MS=150, MIN_DIR_PX=18, SPIN_MIN_R=26, SPIN_KEEP_R=20, BELOW_BAND=8, DOWN_UY=-0.5;
-const RELEASE_GAP=160;        // 先に離した親指を待つ猶予。超えたら片手パスに落とす
-const HAND_DIFF_K=150;        // 左右差[px] → サイドスピン
-const NEAT_DIFF=35;           // これ未満なら「両手で綺麗に押し出した」
-const SK=new Map();           // pointerId -> stroke（最大2本＝両手の親指）
-let twoHand=false;            // このターンに2本同時に置かれたか
-let pending=null;             // {st,t} 先に離した親指
+let pid=null;
 const ray=new THREE.Raycaster();
 function screenToPlane(px,py,clampIt){
   const nd=new THREE.Vector2((px/window.innerWidth)*2-1, -(py/window.innerHeight)*2+1); ray.setFromCamera(nd,camera);
@@ -270,10 +262,7 @@ function screenToPlane(px,py,clampIt){
   if(clampIt){ hit.x=clamp(hit.x,P.x-0.4,P.x+0.6); hit.y=clamp(hit.y,0.75,1.85); }
   return hit;
 }
-function newStroke(x,y,t){ return {ax:x, ay:y, x, y, t0:t, t, hist:[{x,y,t}], maxPull:0, dip:0, spinAcc:0, lastAng:null, deep:{x,y}, moved:0, frozen:null}; }
-// 2本目の親指が着いた瞬間に基準を引き直す＝チェストパスは「両手が乗った時」から始まる
-function rebaseStroke(st,t){ st.ax=st.x; st.ay=st.y; st.t0=t; st.t=t; st.hist=[{x:st.x,y:st.y,t}];
-  st.maxPull=0; st.dip=0; st.spinAcc=0; st.lastAng=null; st.deep={x:st.x,y:st.y}; st.moved=0; st.frozen=null; }
+function newStroke(x,y,t){ return {ax:x, ay:y, x, y, t0:t, t, hist:[{x,y,t}], maxPull:0, dip:0, spinAcc:0, lastAng:null, deep:{x,y}, moved:0}; }
 function feedStroke(st,x,y,t){
   st.x=x; st.y=y; st.t=t;
   const lastH=st.hist[st.hist.length-1];
@@ -289,7 +278,6 @@ function feedStroke(st,x,y,t){
     st.lastAng=a; } else st.lastAng=null;
 }
 function flickVec(st,now){ // 直近 FLICK_MS の変位（＝向き）と速度（＝強さ）
-  if(st.frozen) return st.frozen;   // 離した瞬間に確定済み（2本目を待つ間に減衰させない）
   const h=st.hist; let i=h.length-1; const tEnd=h[i]; while(i>0 && tEnd.t-h[i-1].t < FLICK_MS) i--;
   if(i===h.length-1) i=Math.max(0,h.length-2);   // 低FPS端末でも最低2点は使う
   const a=h[i], dx=tEnd.x-a.x, dy=tEnd.y-a.y, dt=Math.max(1,tEnd.t-a.t);
@@ -298,33 +286,10 @@ function flickVec(st,now){ // 直近 FLICK_MS の変位（＝向き）と速度�
   const decay = clamp(1-stale/STALE_MS,0,1);
   return {dx: live?dx:0, dy: live?dy:0, sp:(Math.hypot(dx,dy)/dt)*1000*decay};
 }
-// ストローク配列 → 発射パラメータ（プレビューと実射で同じ関数／1本ならv6と同一挙動）
-function computeShot(sts,now){
-  if(!Array.isArray(sts)) sts=[sts];
-  const n=Math.max(1,sts.length);
-  const fs=sts.map(st=>flickVec(st,now));
-  // 2本なら平均ベクトルで向きと強さを決める（＝両手で押し出した合力）
-  let fdx=0,fdy=0,fsp=0,px=0,py=0,mPull=0,mDip=0,mSpin=0;
-  for(let i=0;i<n;i++){ const st=sts[i], f0=fs[i];
-    fdx+=f0.dx; fdy+=f0.dy; fsp+=f0.sp; px+=st.x-st.ax; py+=st.y-st.ay; mPull+=st.maxPull; mDip+=st.dip; mSpin+=st.spinAcc; }
-  fdx/=n; fdy/=n; fsp/=n; px/=n; py/=n; mPull/=n; mSpin/=n;
-  // トップスピンは「両方とも沈めた」時だけ（片方だけ沈めても付かない）
-  mDip = n>=2 ? Math.min.apply(null,sts.map(x=>x.dip)) : mDip/n;
-  // 2本の向きが揃っているか。ピンチイン/アウト・左右に開く・逆方向は「チェストパスではない」
-  if(n>=2){
-    const vec=i=>{ const g=fs[i]; const gl=Math.hypot(g.dx,g.dy);
-      return gl>=MIN_DIR_PX? {x:g.dx,y:g.dy,l:gl} : (()=>{const ax=sts[i].x-sts[i].ax, ay=sts[i].y-sts[i].ay; return {x:ax,y:ay,l:Math.hypot(ax,ay)};})(); };
-    const v0=vec(0), v1=vec(1);
-    if(v0.l>=MIN_DIR_PX && v1.l>=MIN_DIR_PX){
-      const dot=(v0.x*v1.x+v0.y*v1.y)/(v0.l*v1.l);
-      if(dot<0.2){                                  // 揃っていない＝押し出しの合力が偽物になる
-        const push=i=>-(sts[i].y-sts[i].ay);
-        const dom = push(0)>=push(1)? 0:1;          // よく押した方の親指だけで投げる
-        const r=computeShot([sts[dom]],now); r.split=true; r.twoHand=false; return r;
-      }
-    }
-  }
-  const f={dx:fdx,dy:fdy,sp:fsp}, fl=Math.hypot(fdx,fdy), pl=Math.hypot(px,py);
+// ストローク状態 → 発射パラメータ（プレビューと実射で同じ関数を使う）
+function computeShot(st,now){
+  const f=flickVec(st,now), fl=Math.hypot(f.dx,f.dy);
+  const px=st.x-st.ax, py=st.y-st.ay, pl=Math.hypot(px,py);   // 指を置いた点からの変位（引き）
   let dx,dy,src;
   // 味方は常に画面の上側にいる＝「上へ払う」が前、「下へ引く」が引き。この非対称で向きを一意に決める
   const below = py>BELOW_BAND;                                   // 指がアンカーより下＝引いている状態
@@ -332,95 +297,50 @@ function computeShot(sts,now){
   const downish = fl>=MIN_DIR_PX && uyOf(f.dx,f.dy) < DOWN_UY;   // 水平より30度以上下を向いた払い＝「まだ引いている」
   if(fl>=MIN_DIR_PX && !(below&&downish)){ dx=f.dx; dy=f.dy; src='flick'; }  // ①払っている＝払った向きへ飛ぶ（横でも上でも）
   else if(below && pl>=MIN_DIR_PX){ dx=-px; dy=-py; src='sling'; }           // ②引いたまま止めた/引き続けた＝パチンコ（引いた逆へ）
-  else if(pl>=MIN_DIR_PX && py<-8){ dx=px; dy=py; src='push'; }              // ③前へ押し出した所で離した（低FPS端末で直近速度が拾えない時の受け皿）
-  else if(fl>=MIN_DIR_PX){ dx=f.dx; dy=f.dy; src='flick'; }                  // ④それ以外の払い
-  else { dx=0; dy=-1; src='none'; }                                          // ⑤無操作＝味方の胸へ
+  else if(fl>=MIN_DIR_PX){ dx=f.dx; dy=f.dy; src='flick'; }                  // ③それ以外の払い
+  else { dx=0; dy=-1; src='none'; }                                          // ④無操作＝味方の胸へ
   const L=Math.max(1e-6,Math.hypot(dx,dy)); const ux=dx/L, uy=-dy/L;   // ux:右が+ / uy:上が+
-  const dipN=clamp((mDip-40)/180,0,1);
+  const dipN=clamp((st.dip-40)/180,0,1);
   const yaw = clamp(-ux*0.70, -0.70, 0.70);
   const pitch = clamp(0.12 + dipN*0.45 + (uy-0.9)*0.35, -0.30, 0.60);
-  const pv=clamp(f.sp/2600,0,1), dl=clamp(mPull/240,0,1);
-  let power = clamp(0.60*pv + 0.40*dl, 0.05, 1);
-  if(src==='none') power=Math.min(power,0.28);   // 向きが出ていないのに強く飛ばさない
-  // 回転：1本＝ぐるぐる回した角度／2本＝左右の押し出し量の差（手首を切る感覚）
-  let side=0, handDiff=0;
-  if(n>=2){
-    const iL = sts[0].ax<=sts[1].ax? 0:1, iR = 1-iL;
-    const adv=i=>(-(sts[i].y-sts[i].ay)) + fs[i].sp*0.05;   // 押し出した距離[px] + 速さ
-    handDiff = adv(iR)-adv(iL);                            // +なら右の親指が強い
-    side = clamp(-handDiff/HAND_DIFF_K,-1,1);              // 右が強い＝左へ曲がる
-  } else side = clamp(mSpin/5.5,-1,1);
-  const spin = { side, top: (uy>0.15? dipN : 0) };
-  return {yaw,pitch,power,spin,src,dipN,pv,dl,handDiff,twoHand:n>=2,n};
-}
-function shotStrokes(){ const a=[]; if(pending) a.push(pending.st); for(const st of SK.values()) a.push(st); return a; }
-// ボールは「2本の親指の中点」に吸い付く（＝離した高さがそのまま出どころになる）
-function updateGrab(){
-  const a=shotStrokes(); if(!a.length) return;
-  let x=0,y=0; for(const st of a){ x+=st.x; y+=st.y; } x/=a.length; y/=a.length;
-  const g = a.length>=2 ? screenToPlane(x,y,true) : screenToPlane(a[0].ax,a[0].ay,true);
-  if(g){ S.rel=g; grabRing.position.copy(g); grabRing.visible=true; }
+  const pv=clamp(f.sp/2600,0,1), dl=clamp(st.maxPull/240,0,1);
+  const power = clamp(0.60*pv + 0.40*dl, 0.05, 1);
+  const spin = { side: clamp(st.spinAcc/5.5,-1,1), top: (uy>0.15? dipN : 0) };
+  return {yaw,pitch,power,spin,src,dipN,pv,dl};
 }
 function applyShot(s){ S.yaw=s.yaw; S.pitch=s.pitch; S.power=s.power; S.spin={side:s.spin.side, top:s.spin.top}; S.shot=s; }
 cv.addEventListener('pointerdown',ev=>{
-  ac(); if(S.mode!=='play'||S.flight) return;
-  if(SK.size>=2 || pending) return;                       // 3本目・片方離した後の追加は無視
-  if(!screenToPlane(ev.clientX,ev.clientY,true)) return;
-  try{ cv.setPointerCapture(ev.pointerId); }catch(e){}
-  const tnow=performance.now();
-  SK.set(ev.pointerId, newStroke(ev.clientX,ev.clientY,tnow));
-  if(SK.size===2){ twoHand=true; for(const st of SK.values()) rebaseStroke(st,tnow); }
-  updateGrab();
-  applyShot(computeShot(shotStrokes(),performance.now()));
+  ac(); if(S.mode!=='play'||S.flight||pid!==null) return;
+  pid=ev.pointerId; try{ cv.setPointerCapture(pid); }catch(e){}
+  const g=screenToPlane(ev.clientX,ev.clientY,true); if(!g){ pid=null; return; }
+  S.rel=g; grabRing.position.copy(g); grabRing.visible=true;
+  S.stroke=newStroke(ev.clientX,ev.clientY,performance.now());
+  applyShot(computeShot(S.stroke,performance.now()));
   SFX.grab(); setPhase('drag');
 });
-function onMove(ev){ const st=SK.get(ev.pointerId); if(!st) return; const t=performance.now();
-  const prevTurns=Math.floor(Math.abs(st.spinAcc)/(Math.PI/2));
+function onMove(ev){ if(ev.pointerId!==pid||!S.stroke) return; const t=performance.now();
+  const prevTurns=Math.floor(Math.abs(S.stroke.spinAcc)/(Math.PI/2));
   // 間引かれた中間点も拾う（低FPS端末でフリック方向と回転を取りこぼさない）
   let co=null; try{ co=ev.getCoalescedEvents? ev.getCoalescedEvents() : null; }catch(e){}
-  if(co && co.length>1){ const m=co.length; co.forEach((c,i)=>feedStroke(st,c.clientX,c.clientY, t-(m-1-i)*(1000/120))); }
-  feedStroke(st,ev.clientX,ev.clientY,t);
-  if(SK.size<2 && !pending && Math.floor(Math.abs(st.spinAcc)/(Math.PI/2))>prevTurns) SFX.spin();
-  updateGrab();
-  applyShot(computeShot(shotStrokes(),t));
+  if(co && co.length>1){ const n=co.length; co.forEach((c,i)=>feedStroke(S.stroke,c.clientX,c.clientY, t-(n-1-i)*(1000/120))); }
+  feedStroke(S.stroke,ev.clientX,ev.clientY,t);
+  if(Math.floor(Math.abs(S.stroke.spinAcc)/(Math.PI/2))>prevTurns) SFX.spin();
+  applyShot(computeShot(S.stroke,t));
 }
-function isTap(st){ return (st.t-st.t0) < TAP_MS && st.moved < TAP_PX; }   // 自分が離れた時刻で見る
-function doFake(){ S.fakes++; SK.clear(); pending=null; twoHand=false; S.rel=null; SFX.tap(); showMsg('フェイク','審査員Cが見ている',true,800); setPhase('ready'); }
 function onUp(ev){
-  const st=SK.get(ev.pointerId); if(!st) return; const now=performance.now();
-  SK.delete(ev.pointerId); try{ cv.releasePointerCapture(ev.pointerId); }catch(e){}
+  if(ev.pointerId!==pid||!S.stroke) return; const st=S.stroke; const now=performance.now(); pid=null;
+  try{ cv.releasePointerCapture(ev.pointerId); }catch(e){}
   feedStroke(st,ev.clientX,ev.clientY,now);
-  st.frozen=flickVec(st,now);          // この瞬間の速度・向きを確定（2本目待ちで劣化させない）
-  if(S.flight){ if(!SK.size){ pending=null; twoHand=false; } return; }   // 投げ終わった後に離れた指の後始末
-  if(twoHand && SK.size===1 && !pending){ pending={st,t:now}; return; }   // 2本目の親指を待つ（RELEASE_GAPまで）
-  const sts = pending? [pending.st, st] : [st];
-  const gap = pending? now-pending.t : 0;
-  const late = gap>RELEASE_GAP;                                          // 猶予超え＝片手だけ先に離した
-  pending=null; SK.clear(); twoHand=false;
-  if(sts.every(isTap)){ doFake(); return; }
-  const use = late? [sts[0]] : sts;                                      // 猶予超えなら先に離した親指だけで投げる
-  applyShot(computeShot(use,now));
-  throwBall(use,{gap,late});
+  if(now-st.t0 < TAP_MS && st.moved < TAP_PX){   // トン＝フェイク（投げない）
+    S.fakes++; S.stroke=null; S.rel=null; SFX.tap(); showMsg('フェイク','審査員Cが見ている',true,800); setPhase('ready'); return;
+  }
+  applyShot(computeShot(st,now)); S.stroke=null; throwBall(st);
 }
-// 猶予を過ぎても2本目が離れない＝片手パスに落とす（loopから呼ぶ）
-function checkPending(now){
-  if(!pending || S.flight) return;
-  const gap=now-pending.t; if(gap<=RELEASE_GAP) return;
-  const st=pending.st; pending=null; SK.clear(); twoHand=false;
-  applyShot(computeShot([st],now));
-  throwBall([st],{gap,late:true});
-}
-function abortStroke(ev){
-  if(ev && ev.pointerId!==undefined){ if(!SK.has(ev.pointerId)) return; SK.delete(ev.pointerId); }
-  else { SK.clear(); }
-  if(SK.size===1){ twoHand=false;                      // 片方が消えたら片手として続行
-    const t=performance.now(); updateGrab(); applyShot(computeShot(shotStrokes(),t)); }
-  if(SK.size===0){ pending=null; twoHand=false; S.rel=null; if(S.mode==='play'&&!S.flight) setPhase('ready'); }
-}
+function abortStroke(ev){ if(ev && ev.pointerId!==undefined && ev.pointerId!==pid) return; // 2本目の指のcancelで有効なストロークを消さない
+  if(pid===null && !S.stroke) return; pid=null; S.stroke=null; S.rel=null; if(S.mode==='play'&&!S.flight) setPhase('ready'); }
 window.addEventListener('pointermove',onMove,{passive:true});
 window.addEventListener('pointerup',onUp);
 window.addEventListener('pointercancel',abortStroke);
-window.addEventListener('lostpointercapture',ev=>{ if(SK.has(ev.pointerId)) abortStroke(ev); });
 window.addEventListener('blur',()=>abortStroke(null));
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) abortStroke(null); });
 
@@ -444,18 +364,12 @@ function shotVelocity(R,yaw,pitch,power){
   const speed=5.5+power*12.5;
   return V(Math.sin(y2)*Math.cos(p2), Math.sin(p2), Math.cos(y2)*Math.cos(p2)).multiplyScalar(speed);
 }
-function throwBall(sts,opt){
-  if(!Array.isArray(sts)) sts=[sts]; opt=opt||{};
+function throwBall(st){
   const R=releasePoint(); const v=shotVelocity(R,S.yaw,S.pitch,S.power);
-  const n=sts.length||1;
-  const hold=Math.max.apply(null,sts.map(x=>x.t-x.t0))/1000;
-  const turns=n>=2? 0 : Math.abs(sts[0].spinAcc)/(2*Math.PI);
-  const pullN=sts.reduce((a,x)=>a+clamp(x.maxPull/230,0,1.6),0)/n;
-  try{ if(navigator.vibrate) navigator.vibrate(n>=2? [12,18,12] : 16); }catch(e){}   // 離した瞬間の手応え
+  const hold=(st? (st.t-st.t0):0)/1000, turns=st? Math.abs(st.spinAcc)/(2*Math.PI):0, pullN=st? clamp(st.maxPull/230,0,1.6):0;
   S.flight={pos:R.clone(), vel:v, t:0, minD:Infinity, holes:0, closeStreak:false, done:false, bounces:0, spin:{...S.spin},
     meta:{hesitation:(performance.now()-S.levelStart)/1000, power:S.power, off:Math.hypot(S.yaw,S.pitch), relOff:Math.hypot(R.x-(P.x+0.25), R.y-1.3),
-          turns, pullN, hold, fakes:S.fakes,
-          twoHand:n>=2, handDiff:(S.shot&&S.shot.handDiff)||0, gap:opt.gap||0, late:!!opt.late}, trail:[]};
+          turns, pullN, hold, fakes:S.fakes}, trail:[]};
   trailPts.length=0; trail.visible=true; S.cam='ball'; S.slowShown=false; S.timeScale=1; setPhase('flight'); SFX.throw();
   S.camPos.copy(camera.position); S.camLook.copy(figs.mate.chest());
 }
@@ -491,21 +405,17 @@ function passName(f,ok){ let noun;
   else if(tp>0.4 && f.bounces>=1) noun='沈むバウンズ'; else if(f.bounces>=2) noun='二段バウンズ';
   else if(m.power>0.85) noun='剛速球チェスト'; else if(ok && f.minD<0.04) noun='針の穴'; else if(f.holes>=2) noun='二重穴通し';
   else if(m.relOff>0.6) noun='変な所から出したパス'; else if(f.minD>0.6) noun='安全運転チェスト'; else noun='チェストパス';
-  if(m.late) noun='片手だけ先に離した'+noun;
-  else if(m.twoHand && Math.abs(m.handDiff)<NEAT_DIFF) noun='両手でビシッと決めた'+noun;
-  else if(m.turns>=1.5) noun='こねくり回した'+noun;
+  if(m.turns>=1.5) noun='こねくり回した'+noun;
   else if(m.fakes>=2) noun='フェイク2回入れた'+noun;
   else if(m.hesitation>S.timeLimit*0.8) noun='ギリギリまで悩んだ'+noun;
   const name=pick(ADJ)+noun+pick(SUF); return {name,bonus:(hashStr(name)%7)*15}; }
 function scorePass(ok,f){ const parts={}; const m=f.meta;
   parts.hole = ok ? Math.round(clamp(0.6-f.minD,0,0.6)*420 + Math.min(f.holes,4)*35) : Math.round(clamp(0.3-f.minD,0,0.3)*120);
-  parts.art = Math.round( Math.abs(f.spin.side)*140 + Math.max(0,f.spin.top)*60 + Math.min(f.bounces,2)*45 + Math.min(f.holes,4)*30 + (m.power>0.85?25:0)
-                        + (m.twoHand && Math.abs(m.handDiff)<NEAT_DIFF ? 80 : 0) );   // 両手で綺麗に押し出した
+  parts.art = Math.round( Math.abs(f.spin.side)*140 + Math.max(0,f.spin.top)*60 + Math.min(f.bounces,2)*45 + Math.min(f.holes,4)*30 + (m.power>0.85?25:0) );
   const hes=clamp(m.hesitation/S.timeLimit,0,1);
   // 審査員C「ムダ」：迷い・変な出どころ・大きくズラす・ぐるぐる回しすぎ・引きすぎ・長押し・フェイク
   parts.muda = Math.round( hes*60 + m.relOff*50 + m.off*55 + (f.bounces>=2?25:0)
-                         + Math.min(m.turns,4)*55 + Math.max(0,m.pullN-0.7)*90 + clamp(m.hold-0.9,0,3)*45 + Math.min(m.fakes,4)*40
-                         + (m.late?70:0) + clamp(m.gap,0,300)/300*40 );   // 片手だけ先に離した
+                         + Math.min(m.turns,4)*55 + Math.max(0,m.pullN-0.7)*90 + clamp(m.hold-0.9,0,3)*45 + Math.min(m.fakes,4)*40 );
   if(!ok){ parts.art=Math.round(parts.art*0.5); parts.muda=Math.round(parts.muda*0.5); }
   const nm=passName(f,ok); let total=0; const lines=[]; for(const j of S.judges){ const v=Math.round(parts[j.key]*j.w); total+=v; lines.push({j,raw:parts[j.key],v}); }
   const base= ok? 100*S.level : 0; total+=base+(ok?nm.bonus:0); return {total,base,lines,name:nm.name,bonus:nm.bonus}; }
@@ -520,7 +430,7 @@ function endFlight(ok,why){ const f=S.flight; if(f.done) return; f.done=true; co
 
 // ---------------- flow ----------------
 const bStart=$('bStart'), bShare=$('bShare'), bRetry=$('bRetry');
-function startGame(){ ac(); S.mode='play'; S.level=1; S.score=0; S.turnovers=0; S.best=null; S.history=[]; S.cleared=false; S.rel=null; SK.clear(); pending=null; twoHand=false;
+function startGame(){ ac(); S.mode='play'; S.level=1; S.score=0; S.turnovers=0; S.best=null; S.history=[]; S.cleared=false; S.rel=null; pid=null; S.stroke=null;
   title.classList.add('hidden'); resultEl.classList.add('hidden'); bStart.classList.add('hidden'); bShare.classList.add('hidden'); bRetry.classList.add('hidden'); hud.classList.remove('hidden'); muteBtn.classList.remove('hidden');
   makeLevel(1); updateHud(); }
 function gameOver(cleared){ S.mode='result'; S.cleared=cleared; S.flight=null; SFX.over(); setPhase('flight'); lead.classList.add('hidden'); reach.visible=false; arrow.visible=arrowLine.visible=aimDot.visible=false; tapRing.visible=false;
@@ -562,33 +472,13 @@ function updateAimUI(now){
   arrow.material.opacity = S.phase==='drag'? 0.95 : 0.45; arrowLine.material.opacity = S.phase==='drag'? 0.4 : 0.2;
   const land=pts[PRE_N-1]; aimDot.visible=true; aimDot.position.set(land.x, 0.02, land.z); aimDot.rotation.x=-Math.PI/2;
   aimDot.material.opacity = S.phase==='drag'? 0.95:0.45;
-  if(S.phase!=='drag') return;
-  const sts=shotStrokes(); if(!sts.length) return;
-  const two = sts.length>=2;
-  // 左右の親指（anchorのxで左右を決める）
-  const iL = two ? (sts[0].ax<=sts[1].ax?0:1) : 0, iR = 1-iL;
-  // ゴム紐＝左親指→ボール→右親指（1本なら ボール→指）
-  const ba=bandGeo.attributes.position.array;
-  if(two){
-    const a0=screenToPlane(sts[iL].x,sts[iL].y,false), a1=screenToPlane(sts[iR].x,sts[iR].y,false);
-    if(a0&&a1){ ba[0]=a0.x;ba[1]=a0.y;ba[2]=a0.z; ba[3]=R.x;ba[4]=R.y;ba[5]=R.z; ba[6]=a1.x;ba[7]=a1.y;ba[8]=a1.z;
-      bandGeo.attributes.position.needsUpdate=true; bandGeo.setDrawRange(0,3); band.visible=true;
-      // 手をボールの左右に置く（押し出した分だけ前に出る＝手首を切ったのが見える）
-      const pushL=-(sts[iL].y-sts[iL].ay), pushR=-(sts[iR].y-sts[iR].ay), avg=(pushL+pushR)/2;
-      // 上下位置はボールと同じ高さが基準。左右で押し出しに差が出た分だけ、その手が前に出る
-      const offL=clamp((pushL-avg)*0.0018,-0.13,0.13), offR=clamp((pushR-avg)*0.0018,-0.13,0.13);
-      handL.visible=handR.visible=true;
-      handL.position.set(R.x-0.17, R.y+offL, R.z+0.03); handL.lookAt(camera.position); handL.rotateZ(0.22);   // 手のひらでボールを挟む角度
-      handR.position.set(R.x+0.17, R.y+offR, R.z+0.03); handR.lookAt(camera.position); handR.rotateZ(-0.22);
-    }
-  } else {
-    const fp=screenToPlane(sts[0].x,sts[0].y,false);
-    if(fp){ ba[0]=R.x;ba[1]=R.y;ba[2]=R.z; ba[3]=fp.x;ba[4]=fp.y;ba[5]=fp.z; bandGeo.attributes.position.needsUpdate=true; bandGeo.setDrawRange(0,2); band.visible=true; }
-    handL.visible=handR.visible=false;
-  }
-  // 強さの弧（1本＝その指／2本＝中点）
-  let gx=0,gy=0; for(const q of sts){ gx+=q.x; gy+=q.y; } gx/=sts.length; gy/=sts.length;
-  pg.style.transform='translate('+gx+'px,'+gy+'px)';
+  if(S.phase!=='drag' || !S.stroke) return;
+  const st=S.stroke;
+  // ゴム紐
+  const fp=screenToPlane(st.x,st.y,false);
+  if(fp){ const ba=bandGeo.attributes.position.array; ba[0]=R.x; ba[1]=R.y; ba[2]=R.z; ba[3]=fp.x; ba[4]=fp.y; ba[5]=fp.z; bandGeo.attributes.position.needsUpdate=true; band.visible=true; }
+  // 強さの弧（指の周り）
+  pg.style.transform='translate('+st.x+'px,'+st.y+'px)';
   const good=Math.abs(S.power-S.need)<=GOOD_BAND;
   pgFg.setAttribute('stroke-dashoffset', String(PG_C*(1-clamp(S.power,0,1))));
   const lo=clamp(S.need-GOOD_BAND,0,1), hi=clamp(S.need+GOOD_BAND,0,1);
@@ -601,13 +491,9 @@ function updateAimUI(now){
     swirl.material.opacity=clamp(0.3+Math.abs(sside),0,1); } else swirl.visible=false;
   if(S.spin.top>0.05){ dipMark.visible=true; dipMark.position.copy(R); dipMark.lookAt(camera.position); dipMark.scale.setScalar(0.8+S.spin.top*0.7); } else dipMark.visible=false;
   // 上部1行のサブ
-  const bits=[];
-  const hd=(S.shot&&S.shot.handDiff)||0;
-  if(two && Math.abs(hd)<NEAT_DIFF) bits.push('両手が揃ってる');
-  if(Math.abs(sside)>0.15) bits.push(sside>0?'右カーブ':'左カーブ');
-  if(S.spin.top>0.15) bits.push('沈む');
+  const bits=[]; if(Math.abs(sside)>0.15) bits.push(sside>0?'右カーブ':'左カーブ'); if(S.spin.top>0.15) bits.push('沈む');
   bits.push(good?'強さちょうどいい':(S.power<lo?'まだ弱い':'強すぎ'));
-  setLead(two?'両手でまっすぐ押し出せ':'そのまま押し出して離せ', bits.join(' / '));
+  setLead('そのまま払って離せ', bits.join(' / '));
 }
 
 // ---------------- loop ----------------
@@ -629,10 +515,10 @@ function loop(now){
     else {
       const remain=clamp(1-(now-S.levelStart)/1000/S.timeLimit,0,1);
       $('tbarFill').style.width=(remain*100)+'%'; $('tbarFill').classList.toggle('warn', remain<0.25);
-      if(remain<=0){ SK.clear(); pending=null; twoHand=false;
+      if(remain<=0){ pid=null; S.stroke=null;
         S.flight={pos:releasePoint(),vel:V(0,0,0),t:9,minD:9,holes:0,done:false,bounces:0,spin:{side:0,top:0},meta:{hesitation:S.timeLimit,power:0,off:0,relOff:0,turns:0,pullN:0,hold:0,fakes:S.fakes},trail:[]};
         setPhase('flight'); endFlight(false,'時間切れ'); }
-      else { checkPending(now); if(!S.flight) updateAimUI(now); }
+      else updateAimUI(now);
     }
     if(S.cam==='player'){ camPlayer(); }
     else if(S.cam==='ball'){ const f=S.flight; const dir=f.vel.clone().normalize(); const want=f.pos.clone().sub(dir.clone().multiplyScalar(1.7)).add(V(0,0.55,0)); want.y=Math.max(0.35,want.y);
@@ -646,7 +532,7 @@ function loop(now){
   renderer.render(scene,camera); requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-window.__H={S,figs,computeShot,levelSpec,newStroke,feedStroke,scorePass,passName,get SK(){return SK;},get pending(){return pending;},get twoHand(){return twoHand;}}; // 検証用フック（headlessテストから参照）
+window.__H={S,figs,computeShot,levelSpec,newStroke,feedStroke}; // 検証用フック（headlessテストから参照）
 </script>
 </body>
 </html>
