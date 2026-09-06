@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#f3efe6">
+<meta name="description" content="両手の親指で、ディフェンスの隙間を縫う。ちょっと変な審査員つきバスケゲーム。">
+<link rel="icon" href="data:,">
+<title>ハリノアナ — そのパス、通すの？</title>
+<style>
+  :root{color-scheme:light;--paper:#f3efe6;--ink:#242b25;--green:#234d3c;--lime:#dded82;--red:#e75d49;--blue:#328cb8}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;touch-action:none;background:#d9d8cc;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-weight:800;color:var(--ink)}
+  button,a{font:inherit}button{cursor:pointer;touch-action:manipulation}button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offset:4px}[hidden]{display:none!important}
+  #app{position:relative;width:100%;max-width:520px;height:100%;height:100dvh;margin:auto;overflow:hidden;background:var(--paper);isolation:isolate}
+  #court,#gesture{position:absolute;inset:0;width:100%;height:100%;display:block}#gesture{z-index:8;pointer-events:none}#court{touch-action:none}
+  .top{position:absolute;top:0;left:0;right:0;z-index:10;padding:calc(14px + env(safe-area-inset-top)) 20px 0;background:linear-gradient(var(--paper) 72%,transparent);pointer-events:none}
+  .brand{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wordmark{font-size:20px;letter-spacing:-1px}.wordmark span{font-size:9px;letter-spacing:1.4px;border-left:1px solid #b7b9a8;margin-left:10px;padding-left:10px;vertical-align:middle}
+  #mute{pointer-events:auto;border:1px solid #c4c5b7;border-radius:50%;background:var(--paper);width:35px;height:35px;font-size:16px;padding:0}
+  .stats{display:grid;grid-template-columns:1fr 1.25fr 1fr;border-top:2px solid var(--ink);border-bottom:1px solid #bfc1b2;padding:9px 0}.stat+.stat{border-left:1px solid #c6c8b9;padding-left:16px}.label{display:block;font-size:9px;letter-spacing:1.7px;margin-bottom:2px;color:#617063}.value{font-variant-numeric:tabular-nums;font-size:26px;line-height:1.1;letter-spacing:-1px}.value small{font-size:12px;letter-spacing:0;color:#697568}#outs{font-size:20px;letter-spacing:3px;color:var(--red)}
+  #judges{display:flex;gap:5px;margin-top:10px;justify-content:space-between}.mood{font-size:9px;white-space:nowrap}.mood b{display:inline-grid;place-items:center;width:17px;height:17px;margin-right:3px;border:1px solid #798572;border-radius:50%;font-size:10px}.mood em{font-style:normal;color:#46624b}
+  #guide{font-size:clamp(13px,4.5vw,19px);white-space:nowrap;line-height:1.5;letter-spacing:-.6px;text-align:center;margin:15px -12px 0;min-height:29px;text-shadow:0 1px var(--paper)}
+  #clock{height:3px;background:#cbd1bf;margin:9px 0 0;border-radius:2px;overflow:hidden}#clockFill{height:100%;background:var(--green);transform-origin:left}#seconds{text-align:right;font-size:10px;letter-spacing:1px;margin-top:4px;color:#697564}
+  .bottom{position:absolute;z-index:5;left:20px;right:20px;bottom:calc(19px + env(safe-area-inset-bottom));pointer-events:none;display:flex;align-items:center;justify-content:space-between;font-size:9px;letter-spacing:1.2px;color:#66735c}.bottom .tag{padding:5px 8px;border:1px solid #8c997c;border-radius:4px;background:#f3efe6ba}.bottom strong{color:var(--green)}
+  #thumbHints{position:absolute;z-index:5;left:0;right:0;bottom:calc(80px + env(safe-area-inset-bottom));display:flex;justify-content:space-around;pointer-events:none}.thumb{width:77px;height:77px;display:grid;place-items:center;border:1px dashed #5e735c99;border-radius:50%;color:#52694d;background:#f3efe647;position:relative;font-size:11px}.thumb::before{content:'↑';position:absolute;top:-40px;font-size:29px;font-weight:400}.thumb small{font-size:9px;position:absolute;bottom:10px}
+  #vignette{position:absolute;inset:0;z-index:6;background:radial-gradient(ellipse,transparent 24%,#101912ae 100%);opacity:0;transition:opacity .14s;pointer-events:none}#needle{position:absolute;top:34%;left:0;right:0;text-align:center;color:var(--lime);font-size:58px;letter-spacing:10px;text-shadow:3px 4px 0 #23362b;opacity:0;transform:scale(.95);transition:opacity .1s,transform .2s;z-index:7;pointer-events:none}#app.slow #vignette{opacity:1}#app.slow #needle{opacity:1;transform:scale(1)}
+  #flash{position:absolute;inset:0;z-index:9;background:#ef473c;opacity:0;pointer-events:none}#flash.hit{animation:flash .55s ease-out}@keyframes flash{0%{opacity:.62}100%{opacity:0}}
+  #toast{position:absolute;z-index:12;top:49%;left:24px;right:24px;padding:18px 16px;background:var(--paper);border:2px solid var(--ink);box-shadow:5px 5px 0 #252d24;transform:rotate(-2deg);text-align:center;pointer-events:none}#toastStatus{font-size:12px;letter-spacing:3px;color:var(--green)}#toastName{font-size:23px;margin:8px 0;line-height:1.35}#toastScore{font-size:13px;color:#66705b}
+  .overlay{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;padding:25px;background:linear-gradient(#f3efe6ed,#f3efe6a6 45%,#f3efe6fa 84%)}
+  #intro{padding-top:calc(33px + env(safe-area-inset-top));justify-content:space-between}.edition{font-size:10px;letter-spacing:2px;display:flex;justify-content:space-between;border-bottom:1px solid #7c876f;padding-bottom:12px}.introTitle{margin-top:22px}.eyebrow{font-size:11px;letter-spacing:4px}.introTitle h1{font-size:clamp(48px,15vw,74px);line-height:1.02;letter-spacing:-5px;margin:13px 0 10px;transform:rotate(-3deg)}.introTitle h1 span{color:var(--green)}.introTitle p{font-size:13px;letter-spacing:1px;line-height:1.8}.seal{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--green);color:var(--green);border-radius:50%;width:75px;height:75px;font-size:10px;line-height:1.6;transform:rotate(12deg);position:absolute;right:28px;top:225px;background:var(--lime)}
+  .instructions{margin-top:auto;padding-top:12px}.instructionRow{display:flex;gap:12px;align-items:center;font-size:12px;margin:13px 0}.instructionRow b{border:1px solid var(--green);border-radius:50%;width:24px;height:24px;display:grid;place-items:center;font-size:10px}.instructionRow small{display:block;color:#65745f;font-size:10px;margin-top:3px;font-weight:600}
+  .primary{width:100%;border:0;background:var(--green);color:var(--paper);padding:17px 18px;border-radius:7px;font-size:17px;text-align:center;box-shadow:0 4px 0 #112f23;display:flex;justify-content:space-between;align-items:center;min-height:55px}.primary:active{transform:translateY(2px);box-shadow:0 2px 0 #112f23}.primary:disabled{opacity:.6;cursor:wait}.introFoot{text-align:center;font-size:9px;letter-spacing:1px;color:#6e7866;margin:13px 0 0}.introFoot b{color:var(--red)}
+  #results{background:var(--paper);padding:calc(16px + env(safe-area-inset-top)) 22px calc(14px + env(safe-area-inset-bottom));align-items:center;justify-content:center;gap:12px;overflow:auto;touch-action:pan-y}#results .edition{width:100%}#resultImage{display:block;width:auto;max-width:100%;height:auto;max-height:calc(100dvh - 210px - env(safe-area-inset-top) - env(safe-area-inset-bottom));border-radius:3px;box-shadow:0 5px 20px #23362719;object-fit:contain}#results .actions{width:100%;display:grid;gap:10px}.secondary{border:1px solid #87937c;border-radius:7px;background:transparent;color:var(--green);padding:12px;font-size:13px}#shareFallback{font-size:12px;color:var(--green);text-align:center}#shareStatus{font-size:10px;margin:0;text-align:center;color:#6c755f;min-height:14px}
+  #error{position:absolute;z-index:40;inset:20px;background:var(--paper);display:flex;justify-content:center;flex-direction:column;gap:15px;text-align:center;padding:25px;line-height:1.8}#error strong{font-size:22px}#error p{font-size:13px}
+  @media(max-height:700px){.introTitle h1{font-size:49px}.introTitle{margin-top:9px}.introTitle p{font-size:11px}.seal{top:160px}.instructionRow{margin:8px 0}.top{padding-top:8px}.brand{margin-bottom:7px}#guide{margin-top:9px;font-size:17px}}
+  @media(prefers-reduced-motion:reduce){#needle{transition:none}#flash.hit{animation-duration:.25s}}
+</style>
+</head>
+<body>
+<main id="app" aria-label="ハリノアナ ゲーム">
+  <canvas id="court" aria-label="画面下を両手の親指でつかみ、上へ押して離します。"></canvas>
+  <div class="top">
+    <div class="brand"><div class="wordmark">ハリノアナ<span>PASS / PLAY</span></div><button id="mute" aria-label="音をミュート" aria-pressed="false">🔊</button></div>
+    <div class="stats">
+      <div class="stat"><span class="label">LEVEL</span><span class="value"><span id="level">01</span><small> / 10</small></span></div>
+      <div class="stat"><span class="label">SCORE</span><span class="value" id="score">0</span></div>
+      <div class="stat"><span class="label">TURNOVER</span><span class="value" id="outs">○○○</span></div>
+    </div>
+    <div id="judges" aria-label="審査員のご機嫌"></div>
+    <div id="guide" aria-live="polite">両手の親指でボールを持って、押し出せ</div>
+    <div id="clock"><div id="clockFill"></div></div><div id="seconds">9.0 SEC</div>
+  </div>
+  <div id="thumbHints"><div class="thumb">左の親指<small>ここから</small></div><div class="thumb">右の親指<small>ここから</small></div></div>
+  <div class="bottom"><span class="tag">2 THUMBS → 1 PASS</span><span>その隙間、<strong>通せる。</strong></span></div>
+  <div id="vignette"></div><div id="needle">針の穴</div><div id="flash"></div><canvas id="gesture"></canvas>
+  <div id="toast" hidden><div id="toastStatus"></div><div id="toastName"></div><div id="toastScore"></div></div>
+  <section id="intro" class="overlay" aria-label="遊び方">
+    <div><div class="edition"><span>THE NEEDLE'S EYE</span><span>VOL. 01 / STREET COURT</span></div>
+      <div class="introTitle"><div class="eyebrow">そのパス、通すの？</div><h1>ハリノ<span>アナ</span></h1><p>狙うのは、ほんの数センチ。<br>評価するのは、ちょっと変な3人。</p></div><div class="seal">うまいより<br>おかしいが<br>えらい。</div>
+    </div>
+    <div class="instructions">
+      <div class="instructionRow"><b>01</b><span>両手の親指で、ボールを持つ。<small>画面下の左右に、指を1本ずつ。</small></span></div>
+      <div class="instructionRow"><b>02</b><span>一緒に上へ押して、離す。<small>青い帯がちょうどいい強さ。赤い味方へ。</small></span></div>
+      <div class="instructionRow"><b>03</b><span>ズラせばカーブ。トン、でフェイク。<small>大きく上へ＝ロブ ／ 沈めて押す＝バウンド。</small></span></div>
+      <button id="start" class="primary" disabled><span>コートを準備中…</span><span>↗</span></button>
+      <p class="introFoot">全10レベル · <b>3回ターンオーバーで終了</b> · 片手でも遊べます</p>
+    </div>
+  </section>
+  <section id="results" class="overlay" hidden aria-label="ゲーム結果">
+    <div class="edition"><span>OFFICIAL / UNOFFICIAL RECORD</span><span>ハリノアナ</span></div>
+    <img id="resultImage" alt="ハリノアナのスコアカード" width="900" height="1200">
+    <div class="actions"><button id="share" class="primary"><span>スコアをシェア</span><span>↗</span></button><button id="restart" class="secondary">もう一回、通す。</button><a id="shareFallback" target="_blank" rel="noopener noreferrer" hidden>X に投稿する ↗</a><p id="shareStatus" aria-live="polite"></p></div>
+  </section>
+  <section id="error" hidden role="alert"><strong>コートを開けませんでした</strong><p id="errorMessage"></p><button class="primary" id="reload">もう一度読み込む ↻</button></section>
+</main>
+<script type="module">
+  const $ = (id) => document.getElementById(id);
+  const app = $('app');
+  const showError = (message) => { $('errorMessage').textContent = message; $('error').hidden = false; };
+  $('reload').addEventListener('click', () => location.reload());
+  try {
+    const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
+    boot(THREE);
+  } catch (error) {
+    showError('Three.js または WebGL を初期化できません。ネット接続とブラウザの WebGL 設定を確認して再読み込みしてください。');
+    console.error('Game initialization failed:', error);
+  }
+
+  function boot(T) {
+    'use strict';
+    const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const vec = (x = 0, y = 0, z = 0) => new T.Vector3(x, y, z);
+    const BALL_R = .16, STEP = 1 / 120, GRAVITY = 9.81;
+    const MOODS = [
+      { label: 'やる気なし', weight: .5 }, { label: '普通', weight: 1 },
+      { label: '今日は甘い', weight: 1.5 }, { label: '二倍換算', weight: 2 },
+      { label: '寝ている', weight: 0 }, { label: '老眼', weight: .8 }
+    ];
+    let seed = Number(new URLSearchParams(location.search).get('seed')) || (Date.now() >>> 0);
+    const random = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    const choose = (list) => list[Math.floor(random() * list.length)];
+    let width = 390, height = 844, muted = false, audio = null;
+    try { muted = localStorage.getItem('harinoana.muted') === '1'; } catch (_) { /* Optional storage. */ }
+    function updateMute() {
+      $('mute').textContent = muted ? '🔇' : '🔊';
+      $('mute').setAttribute('aria-label', muted ? '音をオンにする' : '音をミュート');
+      $('mute').setAttribute('aria-pressed', String(muted));
+    }
+    function unlockAudio() {
+      try {
+        const Audio = window.AudioContext || window.webkitAudioContext;
+        if (!audio && Audio) { audio = new Audio(); }
+        if (audio?.state === 'suspended') { audio.resume().catch(() => {}); }
+      } catch (_) { /* Audio is optional. */ }
+    }
+    const sounds = {
+      throw: [260, 100, .12, 'triangle'], catch: [580, 900, .16, 'sine'],
+      cut: [110, 38, .24, 'sawtooth'], fake: [350, 210, .075, 'sine'],
+      bounce: [150, 55, .09, 'triangle'], slow: [330, 65, .4, 'sine'],
+      level: [540, 1080, .28, 'triangle'], end: [420, 130, .65, 'triangle']
+    };
+    function sound(name) {
+      if (muted || !audio || audio.state !== 'running') { return; }
+      try {
+        const [from, to, duration, type] = sounds[name], now = audio.currentTime;
+        const oscillator = audio.createOscillator(), gain = audio.createGain();
+        oscillator.type = type; oscillator.frequency.setValueAtTime(from, now); oscillator.frequency.exponentialRampToValueAtTime(to, now + duration);
+        gain.gain.setValueAtTime(.0001, now); gain.gain.exponentialRampToValueAtTime(.085, now + .01); gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
+        oscillator.connect(gain); gain.connect(audio.destination); oscillator.start(now); oscillator.stop(now + duration + .02);
+        oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+      } catch (_) { /* Never interrupt gameplay for audio. */ }
+    }
+    $('mute').addEventListener('click', () => {
+      muted = !muted; updateMute(); unlockAudio();
+      try { localStorage.setItem('harinoana.muted', muted ? '1' : '0'); } catch (_) { /* Optional. */ }
+    });
+    updateMute();
+
+    const renderer = new T.WebGLRenderer({ canvas: $('court'), antialias: true, alpha: false, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.outputColorSpace = T.SRGBColorSpace;
+    const scene = new T.Scene();
+    scene.background = new T.Color(0xf3efe6); scene.fog = new T.Fog(0xf3efe6, 13, 30);
+    const camera = new T.PerspectiveCamera(63, width / height, .06, 60);
+    const eye = vec(0, 1.65, 1.1);
+    camera.position.copy(eye); camera.lookAt(0, 1.4, -6);
+    scene.add(new T.HemisphereLight(0xfff8df, 0xa4a480, 2.4));
+    const sun = new T.DirectionalLight(0xfff8e9, 2.3); sun.position.set(-3, 9, 5); scene.add(sun);
+    const outlineMat = new T.MeshBasicMaterial({ color: 0x222c25, side: T.BackSide });
+    const materials = {}, unitBox = new T.BoxGeometry(1, 1, 1);
+    function material(color) { if (!materials[color]) { materials[color] = new T.MeshToonMaterial({ color }); } return materials[color]; }
+    function box(parent, x, y, z, sx, sy, sz, color, outlined = true) {
+      const mesh = new T.Mesh(unitBox, material(color));
+      mesh.position.set(x, y, z); mesh.scale.set(sx, sy, sz); parent.add(mesh);
+      if (outlined) { const outline = new T.Mesh(unitBox, outlineMat); outline.scale.set(1.045, 1.035, 1.045); mesh.add(outline); }
+      return mesh;
+    }
+    function canvasTexture(w, h, draw) {
+      const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+      draw(canvas.getContext('2d'), w, h);
+      const texture = new T.CanvasTexture(canvas); texture.colorSpace = T.SRGBColorSpace; return texture;
+    }
+    const wood = canvasTexture(512, 512, (c, w, h) => {
+      c.fillStyle = '#d2bd91'; c.fillRect(0, 0, w, h);
+      for (let y = 0; y < h; y += 64) {
+        c.fillStyle = y % 128 ? '#cfb789' : '#dcc69e'; c.fillRect(0, y, w, 63);
+        c.strokeStyle = '#b69d733d'; c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke();
+        for (let j = 0; j < 7; j++) { c.strokeStyle = '#927e5620'; c.beginPath(); c.moveTo(0, y + j * 8 + 5); c.bezierCurveTo(160, y + j * 8, 300, y + j * 8 + 9, 512, y + j * 8 + 3); c.stroke(); }
+        c.fillStyle = '#b69d7350'; c.fillRect(y % 128 ? 140 : 370, y, 1, 64);
+      }
+    });
+    wood.wrapS = wood.wrapT = T.RepeatWrapping; wood.repeat.set(5, 7);
+    const floor = new T.Mesh(new T.PlaneGeometry(18, 30), new T.MeshToonMaterial({ map: wood })); floor.rotation.x = -Math.PI / 2; floor.position.set(0, -.015, -8); scene.add(floor);
+    const courtMat = new T.LineBasicMaterial({ color: 0xf6f1d9 });
+    function line(points, mat = courtMat) { const obj = new T.Line(new T.BufferGeometry().setFromPoints(points), mat); scene.add(obj); return obj; }
+    line([vec(-3, .006, 2), vec(-3, .006, -15), vec(3, .006, -15), vec(3, .006, 2)]);
+    line([vec(-2.2, .008, -12.5), vec(-2.2, .008, -8.5), vec(2.2, .008, -8.5), vec(2.2, .008, -12.5)]);
+    line(Array.from({ length: 65 }, (_, i) => vec(Math.cos(i / 64 * Math.PI * 2) * 1.65, .009, -8.5 + Math.sin(i / 64 * Math.PI * 2) * 1.65)));
+    line([vec(-3, .008, -2), vec(3, .008, -2)]);
+    box(scene, 0, .22, -15, 18, .45, .4, 0xa7b296, false);
+    box(scene, 0, 1.5, -13.5, .13, 3, .13, 0x667d63);
+    box(scene, 0, 3, -13.3, 1.75, 1, .09, 0xf6f0dc);
+    const hoop = new T.Mesh(new T.TorusGeometry(.32, .028, 5, 24), material(0xe46448)); hoop.rotation.x = Math.PI / 2; hoop.position.set(0, 2.72, -12.9); scene.add(hoop);
+    const bannerTexture = canvasTexture(1024, 256, (c) => { c.fillStyle = '#234d3c'; c.fillRect(0, 0, 1024, 256); c.fillStyle = '#dded82'; c.font = '900 102px sans-serif'; c.textAlign = 'center'; c.fillText('MAKE IT WEIRD.', 512, 160); });
+    const banner = new T.Mesh(new T.PlaneGeometry(4.5, 1.12), new T.MeshBasicMaterial({ map: bannerTexture })); banner.position.set(-4.2, 1.85, -14.6); scene.add(banner);
+    box(scene, 3.7, .8, -10.5, 2.5, .12, .7, 0x385740);
+    for (let i = 0; i < 3; i++) {
+      box(scene, 2.9 + i * .8, 1.07, -10.7, .42, .5, .28, [0xd7cc89, 0xa6bca8, 0xdbab96][i]);
+      box(scene, 2.9 + i * .8, 1.52, -10.7, .34, .36, .34, 0xe8c3a0);
+      [-.07, .07].forEach((dx) => box(scene, 2.9 + i * .8 + dx, 1.55, -10.52, .035, .045, .02, 0x25332c, false));
+    }
+    const up = vec(0, 1, 0);
+    function segment(mesh, a, b) { mesh.position.copy(a).add(b).multiplyScalar(.5); mesh.scale.y = a.distanceTo(b); mesh.quaternion.setFromUnitVectors(up, b.clone().sub(a).normalize()); }
+    function posePlayer(p, time, tracking) {
+      if (p.defender) { p.group.position.x = p.baseX + Math.sin(time * 2.1 + p.phase) * (.22 + p.index * .035); }
+      for (const side of [-1, 1]) {
+        const shoulder = vec(side * .29, 1.37, .035);
+        let elbow = vec(side * .65, p.defender ? 1.34 : 1.8, .06);
+        let hand = vec(side * .99, p.defender ? 1.30 : 2.14 + Math.sin(time * 3) * .055, .11);
+        if (p.defender && tracking) {
+          const relative = tracking.clone().sub(p.group.position);
+          if (Math.sign(relative.x) === side && Math.abs(relative.z) < 2.5) {
+            hand = vec(side * clamp(Math.abs(relative.x), .66, 1.08), lerp(1.30, clamp(relative.y, .65, 2.25), .86), clamp(relative.z, -.25, .42));
+            elbow = shoulder.clone().lerp(hand, .52); elbow.y -= .035;
+          }
+        }
+        segment(p.limbs['upper' + side], shoulder, elbow);
+        segment(p.limbs['fore' + side], elbow, hand);
+        segment(p.limbs['hand' + side], hand, hand.clone().add(vec(side * .11, p.defender ? 0 : .12, 0)));
+        const hip = vec(side * .19, .86, -.03), knee = vec(side * .35, .48, p.defender ? .22 : .04), ankle = vec(side * .42, .16, .04);
+        segment(p.limbs['thigh' + side], hip, knee); segment(p.limbs['shin' + side], knee, ankle);
+      }
+      p.group.updateMatrixWorld(true);
+      for (const part of p.parts) { part.inverse.copy(part.mesh.matrixWorld).invert(); }
+    }
+    function makePlayer(defender, index) {
+      const group = new T.Group(); scene.add(group);
+      const parts = [], skin = defender ? 0xc8a281 : 0xe2b495;
+      function part(name, x, y, z, sx, sy, sz, color) { const mesh = box(group, x, y, z, sx, sy, sz, color); parts.push({ name, mesh, inverse: new T.Matrix4() }); return mesh; }
+      const torso = part('胴', 0, 1.13, 0, .55, .59, .31, defender ? 0x27302c : 0xe25543); torso.rotation.x = defender ? .17 : 0;
+      const head = part('頭', 0, 1.65, defender ? .1 : 0, .35, .38, .34, skin);
+      box(group, 0, 1.85, defender ? .08 : -.015, .36, .075, .34, defender ? 0x292d28 : 0x3d3228);
+      [-.075, .075].forEach((dx) => box(group, dx, 1.67, defender ? .277 : .177, .043, .043, .015, 0x252b25, false));
+      if (!defender) { box(group, 0, 1.18, .165, .13, .23, .012, 0xfff1d5, false); }
+      const limbs = {};
+      for (const side of [-1, 1]) {
+        for (const [name, thick, color] of [['upper', .18, defender ? 0x27302c : 0xe25543], ['fore', .145, skin], ['hand', .19, skin], ['thigh', .23, defender ? 0x27302c : 0xe25543], ['shin', .16, skin]]) {
+          limbs[name + side] = part(name, 0, 0, 0, thick, .4, thick, color);
+        }
+        part('足', side * .42, .085, .14, .25, .16, .4, defender ? 0xebe8d7 : 0xf8f0dc);
+      }
+      const shadow = new T.Mesh(new T.CircleGeometry(.65, 24), new T.MeshBasicMaterial({ color: 0x56664a, transparent: true, opacity: .15, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .012; shadow.scale.y = .55; group.add(shadow);
+      const p = { group, parts, limbs, torso, head, defender, index, baseX: 0, phase: index * 1.7, delay: .3, crossed: false, near: 20 };
+      posePlayer(p, 0, null); return p;
+    }
+    const receiver = makePlayer(false, 0), defenders = [makePlayer(true, 0), makePlayer(true, 1), makePlayer(true, 2)];
+    const targetRing = new T.Mesh(new T.RingGeometry(.6, .66, 48), new T.MeshBasicMaterial({ color: 0xe25543, side: T.DoubleSide, transparent: true, opacity: .8 })); targetRing.rotation.x = -Math.PI / 2; targetRing.position.y = .02; scene.add(targetRing);
+    const ball = new T.Group(); scene.add(ball);
+    const ballMesh = new T.Mesh(new T.SphereGeometry(BALL_R, 20, 14), material(0xe47a38)); ball.add(ballMesh);
+    const ballOutline = new T.Mesh(ballMesh.geometry, outlineMat); ballOutline.scale.setScalar(1.045); ballMesh.add(ballOutline);
+    const seamMat = new T.LineBasicMaterial({ color: 0x352f24 });
+    for (let axis = 0; axis < 3; axis++) {
+      const points = Array.from({ length: 65 }, (_, i) => { const a = i / 64 * Math.PI * 2, r = BALL_R * 1.01; return axis === 0 ? vec(Math.cos(a) * r, Math.sin(a) * r, 0) : axis === 1 ? vec(0, Math.cos(a) * r, Math.sin(a) * r) : vec(Math.cos(a) * r, 0, Math.sin(a) * r); });
+      ballMesh.add(new T.Line(new T.BufferGeometry().setFromPoints(points), seamMat));
+    }
+    const hands = new T.Group(); scene.add(hands);
+    for (const side of [-1, 1]) {
+      box(hands, side * .225, -.015, .03, .15, .24, .18, 0xe2b495).rotation.z = side * -.33;
+      box(hands, side * .31, -.18, .13, .17, .29, .18, 0xe2b495).rotation.z = side * -.36;
+      box(hands, side * .17, .065, .125, .07, .12, .09, 0xe2b495);
+    }
+    const previewPositions = new Float32Array(48 * 3), previewGeometry = new T.BufferGeometry();
+    previewGeometry.setAttribute('position', new T.BufferAttribute(previewPositions, 3));
+    const preview = new T.Points(previewGeometry, new T.PointsMaterial({ color: 0x315e48, size: .056, transparent: true, opacity: .75, depthTest: false })); preview.frustumCulled = false; scene.add(preview);
+    const landingRing = new T.Mesh(new T.RingGeometry(.23, .28, 40), new T.MeshBasicMaterial({ color: 0x328cb8, side: T.DoubleSide, depthTest: false, transparent: true, opacity: .85 })); landingRing.rotation.x = -Math.PI / 2; scene.add(landingRing);
+    const trailPositions = new Float32Array(240 * 3), trailGeometry = new T.BufferGeometry(); trailGeometry.setAttribute('position', new T.BufferAttribute(trailPositions, 3));
+    const trail = new T.Line(trailGeometry, new T.LineBasicMaterial({ color: 0xfdf6dd, transparent: true, opacity: .9 })); trail.frustumCulled = false; trailGeometry.setDrawRange(0, 0); scene.add(trail);
+    let trailCount = 0;
+    const gctx = $('gesture').getContext('2d');
+    const state = {
+      phase: 'intro', level: 1, score: 0, turnovers: 0, distance: 6, limit: 9, remaining: 9,
+      mood: [], moodLevel: 0, age: 0, levelTime: 0, fakeCount: 0, shot: null, freeze: 0, next: '',
+      attempts: [], best: null, slow: false, result: null, gesture: null, lastInput: null,
+      metrics: { launches: 0, twoHand: 0, oneHand: 0, fakes: 0, catches: 0, cuts: 0, bounces: 0, slowEntries: 0, results: 0, canceled: 0 }
+    };
+    function configureLevel() {
+      state.distance = 6 + (state.level - 1) * 4 / 9; state.limit = 9 - (state.level - 1) / 3;
+      const count = state.level >= 7 ? 3 : state.level >= 4 ? 2 : 1;
+      receiver.group.position.set(0, 0, -state.distance); posePlayer(receiver, 0, null); targetRing.position.z = -state.distance;
+      defenders.forEach((p, i) => {
+        p.group.visible = i < count; p.baseX = (i % 2 ? .8 : -.78) + (i === 2 ? .25 : 0);
+        p.group.position.set(p.baseX, 0, -state.distance * (.46 + i * .17));
+        p.delay = .3 - (state.level - 1) * .12 / 9; p.crossed = false; p.near = 20; posePlayer(p, 0, null);
+      });
+      if (state.moodLevel !== state.level) {
+        state.mood = [choose(MOODS), choose(MOODS), choose(MOODS)].map((m) => ({ ...m }));
+        if (state.mood.every((m) => m.weight === 0)) { state.mood[1] = { ...MOODS[1] }; }
+        state.moodLevel = state.level;
+      }
+      $('judges').replaceChildren(...state.mood.map((m, i) => {
+        const item = document.createElement('span'); item.className = 'mood';
+        const badge = document.createElement('b'); badge.textContent = 'ABC'[i];
+        const weight = document.createElement('em'); weight.textContent = '×' + m.weight;
+        item.append(badge, document.createTextNode(m.label + ' '), weight); return item;
+      }));
+      $('level').textContent = String(state.level).padStart(2, '0');
+    }
+    function setGuide(text) { if ($('guide').textContent !== text) { $('guide').textContent = text; } }
+    function setSlow(slow) { if (slow && !state.slow) { state.metrics.slowEntries++; sound('slow'); } state.slow = slow; app.classList.toggle('slow', slow); }
+    const pointers = new Map();
+    function clearGesture() {
+      if (state.gesture?.timer) { clearTimeout(state.gesture.timer); }
+      const ids = [...pointers.keys()]; pointers.clear(); state.gesture = null;
+      for (const id of ids) { try { $('court').releasePointerCapture(id); } catch (_) { /* Already released. */ } }
+      preview.visible = landingRing.visible = false; gctx.clearRect(0, 0, width, height);
+    }
+    function ready() {
+      clearGesture(); state.phase = 'ready'; state.remaining = state.limit; state.levelTime = 0; state.fakeCount = 0;
+      state.shot = null; state.age = 0; setSlow(false); $('toast').hidden = true; $('thumbHints').hidden = false;
+      defenders.forEach((d) => { d.crossed = false; d.near = 20; });
+      ball.visible = hands.visible = true; ball.position.set(0, .95, -.55); hands.position.copy(ball.position);
+      camera.position.copy(eye); camera.lookAt(0, 1.4, -state.distance); camera.updateMatrixWorld(true);
+      trailCount = 0; trailGeometry.setDrawRange(0, 0);
+      setGuide('両手の親指でボールを持って、押し出せ');
+    }
+    function updateHud() {
+      $('score').textContent = state.score.toLocaleString('ja-JP');
+      $('outs').textContent = '●'.repeat(state.turnovers) + '○'.repeat(3 - state.turnovers);
+      $('clockFill').style.transform = 'scaleX(' + clamp(state.remaining / state.limit, 0, 1) + ')';
+      $('clockFill').style.background = state.remaining < 2 ? 'var(--red)' : 'var(--green)';
+      $('seconds').textContent = state.remaining.toFixed(1) + ' SEC';
+    }
+    function startGame() {
+      unlockAudio(); clearGesture();
+      state.level = 1; state.score = 0; state.turnovers = 0; state.attempts = []; state.best = null; state.result = null; state.moodLevel = 0;
+      $('intro').hidden = $('results').hidden = true; $('shareFallback').hidden = true; $('shareStatus').textContent = '';
+      configureLevel(); ready(); updateHud();
+    }
+    $('start').addEventListener('click', startGame); $('restart').addEventListener('click', startGame);
+
+    // Use physical event timestamps, not the time the GPU finishes a frame.
+    function localPoint(event) {
+      const rect = $('court').getBoundingClientRect();
+      const stamp = event.timeStamp > 1e12 ? event.timeStamp - performance.timeOrigin : event.timeStamp;
+      return { x: event.clientX - rect.left, y: event.clientY - rect.top, t: stamp > 0 ? stamp : performance.now() };
+    }
+    function sample(finger, point) {
+      finger.x = point.x; finger.y = point.y; finger.maxY = Math.max(finger.maxY, point.y);
+      finger.maxTravel = Math.max(finger.maxTravel, Math.hypot(point.x - finger.startX, point.y - finger.startY));
+      finger.samples.push(point); if (finger.samples.length > 48) { finger.samples.shift(); }
+    }
+    function fingerStats(finger) {
+      const end = finger.samples.at(-1);
+      let anchor = finger.samples[0];
+      for (const p of finger.samples) { if (end.t - p.t >= 75) { anchor = p; } }
+      const elapsed = Math.max(16, end.t - anchor.t) / 1000;
+      const vx = clamp((end.x - anchor.x) / elapsed, -2000, 2000), vy = clamp((end.y - anchor.y) / elapsed, -2000, 2000);
+      let winding = 0;
+      for (let i = 2; i < finger.samples.length; i++) {
+        const a = finger.samples[i - 1], b = finger.samples[i], o = finger.samples[i - 2];
+        const ax = a.x - o.x, ay = a.y - o.y, bx = b.x - a.x, by = b.y - a.y;
+        if (Math.hypot(ax, ay) > 2 && Math.hypot(bx, by) > 2) { winding += Math.atan2(ax * by - ay * bx, ax * bx + ay * by); }
+      }
+      return { vx, vy, speed: Math.hypot(vx, vy), push: Math.max(0, finger.startY - finger.y), dx: finger.x - finger.startX, dy: finger.y - finger.startY, dip: finger.maxY - finger.startY, winding, x: finger.x, y: finger.y };
+    }
+    function holdPosition(midpoint) {
+      const ndc = vec(midpoint.x / width * 2 - 1, 1 - midpoint.y / height * 2, .5).unproject(camera);
+      const ray = ndc.sub(camera.position).normalize();
+      const p = camera.position.clone().addScaledVector(ray, (-.55 - camera.position.z) / ray.z);
+      return vec(clamp(p.x, -.9, .9), clamp(p.y, .35, 1.85), -.55);
+    }
+    function describeGesture(gesture, oneHand = false) {
+      let fingers = [...gesture.fingers.values()].sort((a, b) => a.startX - b.startX);
+      if (oneHand && fingers.length > 1) { fingers = [fingers.find((f) => f.released) || fingers[0]]; }
+      const data = fingers.map((f) => f.frozen || fingerStats(f));
+      const mean = (key) => data.reduce((sum, d) => sum + d[key], 0) / data.length;
+      const distance = Math.hypot(mean('dx'), mean('dy')), ideal = 8.5 + state.distance * .28;
+      const speed = clamp(3.2 + mean('speed') * .0065 + distance * .022, 3.5, 20.5);
+      const right = data[1], left = data[0];
+      const spin = right ? clamp((right.push - left.push) * .055 + (-right.vy + left.vy) * .005, -11, 11) : clamp(mean('winding') * 2.1, -11, 11);
+      const dip = mean('dip'), top = dip > 22 && mean('push') > 35 ? clamp((dip - 15) / 65, 0, 1) : 0;
+      const lob = top > .2 ? 0 : clamp((mean('push') - 195) / 125, 0, 1);
+      const pos = holdPosition({ x: mean('x'), y: mean('y') });
+      const aimX = clamp(mean('dx') / Math.max(65, Math.abs(mean('dy'))) * 1.55, -1.65, 1.65);
+      const target = vec(aimX, 1.5, -state.distance), delta = target.clone().sub(pos); delta.y = 0;
+      const range = delta.length(), planar = speed / (1 + lob * .72);
+      const time = range / (ideal / (1 + lob * .72)) * 1.045, velocity = delta.normalize().multiplyScalar(planar);
+      velocity.y = ((target.y - pos.y) / time + GRAVITY * time / 2) * Math.pow(speed / ideal, 1.8);
+      if (top > .2) { velocity.y = lerp(velocity.y, -4.2, top); }
+      const aligned = right ? clamp(1 - (Math.abs(right.push - left.push) / 110 + Math.abs(right.speed - left.speed) / 1100) / 2, 0, 1) : 0;
+      return { pos, velocity, omega: vec(-top * 15, spin, 0), speed, ideal, ratio: speed / ideal, distance, spin, top, lob, aimX, aligned, hands: data.length, dip, releaseY: mean('y'), hesitation: state.levelTime, fakes: state.fakeCount, stagger: gesture.firstRelease === null ? 0 : Math.max(0, (gesture.completedAt ?? performance.now()) - gesture.firstRelease), tooMuch: Math.max(0, distance - 170) };
+    }
+    function onDown(event) {
+      if (state.phase !== 'ready' || (event.pointerType === 'mouse' && event.button !== 0)) { return; }
+      const p = localPoint(event);
+      if (p.y < height * .48 || pointers.size >= 2 || (state.gesture && state.gesture.firstRelease !== null)) { return; }
+      event.preventDefault(); unlockAudio();
+      if (!state.gesture) { state.gesture = { fingers: new Map(), started: p.t, firstRelease: null, completedAt: null, timer: null }; }
+      if (state.gesture.fingers.size >= 2) { return; }
+      const finger = { id: event.pointerId, startX: p.x, startY: p.y, x: p.x, y: p.y, maxY: p.y, maxTravel: 0, samples: [p], released: false, frozen: null };
+      pointers.set(event.pointerId, finger); state.gesture.fingers.set(event.pointerId, finger);
+      try { $('court').setPointerCapture(event.pointerId); } catch (_) { /* Document listeners are the fallback. */ }
+      $('thumbHints').hidden = true;
+    }
+    function onMove(event) {
+      const finger = pointers.get(event.pointerId); if (!finger || state.phase !== 'ready') { return; }
+      event.preventDefault();
+      const events = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
+      for (const e of events.length ? events : [event]) { sample(finger, localPoint(e)); }
+    }
+    function onUp(event) {
+      const finger = pointers.get(event.pointerId), gesture = state.gesture;
+      if (!finger || !gesture || state.phase !== 'ready') { return; }
+      event.preventDefault();
+      const point = localPoint(event), last = finger.samples.at(-1);
+      if (Math.hypot(point.x - last.x, point.y - last.y) > .1 || point.t - last.t > 100) { sample(finger, point); }
+      finger.frozen = fingerStats(finger); finger.released = true; finger.releasedAt = point.t; pointers.delete(event.pointerId);
+      if (gesture.firstRelease === null) { gesture.firstRelease = point.t; }
+      if (pointers.size === 0) { gesture.completedAt = point.t; finalizeGesture(point.t - gesture.firstRelease > 160); }
+      else {
+        gesture.timer = setTimeout(() => {
+          if (state.gesture === gesture && state.phase === 'ready') { gesture.completedAt = Math.max(performance.now(), gesture.firstRelease + 160); finalizeGesture(true); }
+        }, 160);
+      }
+    }
+    function cancelGesture() {
+      if (!state.gesture) { return; } state.metrics.canceled++; clearGesture();
+      $('thumbHints').hidden = state.phase !== 'ready'; setGuide('もう一度、親指を置いてみよう');
+    }
+    function finalizeGesture(oneHand) {
+      const gesture = state.gesture; if (!gesture) { return; }
+      const duration = (gesture.completedAt ?? performance.now()) - gesture.started;
+      if (duration < 200 && [...gesture.fingers.values()].every((f) => f.maxTravel < 14)) {
+        state.fakeCount++; state.metrics.fakes++; sound('fake'); clearGesture();
+        setGuide('フェイク。審査員Cだけがうなずいた'); $('thumbHints').hidden = false; return;
+      }
+      const description = describeGesture(gesture, oneHand); clearGesture(); launch(description);
+    }
+    $('court').addEventListener('pointerdown', onDown);
+    document.addEventListener('pointermove', onMove, { passive: false });
+    document.addEventListener('pointerup', onUp, { passive: false });
+    document.addEventListener('pointercancel', (event) => { if (pointers.has(event.pointerId)) { cancelGesture(); } });
+    $('court').addEventListener('lostpointercapture', (event) => { if (pointers.has(event.pointerId)) { cancelGesture(); } });
+    $('court').addEventListener('contextmenu', (event) => event.preventDefault());
+    document.addEventListener('visibilitychange', () => {
+      previous = performance.now(); accumulator = 0;
+      if (document.hidden) { cancelGesture(); if (audio?.state === 'running') { audio.suspend().catch(() => {}); } }
+    });
+    window.addEventListener('blur', cancelGesture);
+
+    // One fixed-step integrator for preview and live flight.
+    function integrate(p, v, omega, dt) {
+      v.addScaledVector(omega.clone().cross(v).multiplyScalar(.032), dt); v.y -= GRAVITY * dt;
+      v.multiplyScalar(Math.exp(-.105 * dt)); p.addScaledVector(v, dt);
+      let bounced = false;
+      if (p.y < BALL_R) {
+        p.y = BALL_R;
+        if (v.y < -.45) { v.y *= -.6; v.x *= .79; v.z *= .79; v.y /= 1 + Math.abs(omega.x) * .035; bounced = true; }
+        else { v.y = 0; v.x *= Math.exp(-2.5 * dt); v.z *= Math.exp(-2.5 * dt); }
+        omega.multiplyScalar(.83);
+      }
+      omega.multiplyScalar(Math.exp(-.18 * dt)); return bounced;
+    }
+    function makePreview(d) {
+      const p = d.pos.clone(), v = d.velocity.clone(), omega = d.omega.clone(); let count = 0;
+      for (let i = 0; i < 240; i++) {
+        integrate(p, v, omega, STEP);
+        if (i % 5 === 0) { p.toArray(previewPositions, count++ * 3); }
+        if (p.z < -state.distance - .7 || p.y <= BALL_R + .001) { break; }
+      }
+      previewGeometry.attributes.position.needsUpdate = true; previewGeometry.setDrawRange(0, count);
+      landingRing.position.set(p.x, .027, p.z); preview.visible = landingRing.visible = true;
+    }
+    function drawGesture(d) {
+      gctx.clearRect(0, 0, width, height); if (!state.gesture) { return; }
+      const fingers = [...state.gesture.fingers.values()];
+      for (const f of fingers) {
+        const x = f.x, y = f.y;
+        gctx.lineCap = 'round'; gctx.lineWidth = 5;
+        gctx.strokeStyle = '#234d3c24'; gctx.beginPath(); gctx.arc(x, y, 34, .75 * Math.PI, 2.25 * Math.PI); gctx.stroke();
+        gctx.strokeStyle = '#328cb8'; gctx.lineWidth = 8; gctx.beginPath(); gctx.arc(x, y, 34, .75 * Math.PI + .88 / 2 * 1.5 * Math.PI, .75 * Math.PI + 1.14 / 2 * 1.5 * Math.PI); gctx.stroke();
+        gctx.strokeStyle = d.ratio > 1.2 ? '#df6046' : '#234d3c'; gctx.lineWidth = 4; gctx.beginPath(); gctx.arc(x, y, 34, .75 * Math.PI, .75 * Math.PI + clamp(d.ratio / 2, 0, 1) * 1.5 * Math.PI); gctx.stroke();
+        gctx.fillStyle = '#234d3c'; gctx.font = '800 10px sans-serif'; gctx.textAlign = 'center'; gctx.fillText(d.ratio > 1.2 ? '強すぎ' : d.ratio < .88 ? 'もう少し' : 'ちょうどいい', x, y + 55);
+        if (f.released) { gctx.fillStyle = '#328cb8'; gctx.fillText('待つ…', x, y - 46); }
+      }
+      if (Math.abs(d.spin) > 1 || d.top > .2) {
+        const x = fingers.reduce((s, f) => s + f.x, 0) / fingers.length, y = fingers.reduce((s, f) => s + f.y, 0) / fingers.length;
+        gctx.strokeStyle = '#e46448'; gctx.lineWidth = 2; gctx.beginPath();
+        for (let i = 0; i < 70; i++) { const a = i / 10 * (d.spin < 0 ? -1 : 1) + state.age * 7, r = 10 + i * .55, px = x + Math.cos(a) * r, py = y + Math.sin(a) * r * .5; if (!i) { gctx.moveTo(px, py); } else { gctx.lineTo(px, py); } }
+        gctx.stroke();
+      }
+    }
+    let previewTick = 0;
+    function updateHolding(dt) {
+      const gesture = state.gesture;
+      if (!gesture) { ball.position.y = .95 + Math.sin(state.age * 2) * .012; hands.position.copy(ball.position); return; }
+      const d = describeGesture(gesture); ball.position.copy(d.pos); hands.position.copy(d.pos); ballMesh.rotation.y += d.spin * dt * .3;
+      previewTick += dt; if (previewTick > .045) { makePreview(d); previewTick = 0; } drawGesture(d);
+      setGuide(d.ratio > 1.24 ? '強すぎ！ 味方の上を抜ける' : d.top > .2 ? '沈めて押す、トップスピン' : d.lob > .2 ? '頭上を越す、ロブ' : d.spin > 1.4 ? '左カーブ、そのまま離せ' : d.spin < -1.4 ? '右カーブ、そのまま離せ' : gesture.fingers.size === 1 ? '片手でもOK。もう片方を添えても' : 'そのまま払って離せ');
+    }
+    function launch(d) {
+      state.phase = 'flight'; state.metrics.launches++; state.metrics[d.hands === 2 ? 'twoHand' : 'oneHand']++;
+      state.lastInput = { hands: d.hands, speed: d.speed, spin: d.spin, top: d.top, lob: d.lob, aligned: d.aligned, stagger: d.stagger, releaseY: d.releaseY, aimX: d.aimX };
+      state.shot = { ...d, p: d.pos.clone(), v: d.velocity.clone(), omega: d.omega.clone(), time: 0, realTime: 0, bounces: 0, closest: 20, holes: 0, history: [], collisionPart: null };
+      ball.position.copy(d.pos); hands.visible = false; $('thumbHints').hidden = true;
+      trailCount = 0; setGuide('届け。そこ、空いてる。'); sound('throw');
+      try { navigator.vibrate?.(18); } catch (_) { /* Optional. */ }
+      camera.position.copy(d.pos).add(vec(0, .57, 1.9)); camera.lookAt(d.pos.clone().add(vec(0, .12, -1)));
+    }
+    const localA = vec(), localB = vec();
+    function boxClearance(point, part) {
+      const q = point.clone().applyMatrix4(part.inverse), scale = part.mesh.scale;
+      return Math.hypot(Math.max(Math.abs(q.x) - .5, 0) * scale.x, Math.max(Math.abs(q.y) - .5, 0) * scale.y, Math.max(Math.abs(q.z) - .5, 0) * scale.z) - BALL_R;
+    }
+    // Swept sphere against each oriented block, using a conservative expanded box.
+    function sweptBox(a, b, part) {
+      localA.copy(a).applyMatrix4(part.inverse); localB.copy(b).applyMatrix4(part.inverse);
+      let enter = 0, exit = 1;
+      for (const axis of ['x', 'y', 'z']) {
+        const bound = .5 + BALL_R / part.mesh.scale[axis], origin = localA[axis], delta = localB[axis] - origin;
+        if (Math.abs(delta) < 1e-9) { if (origin < -bound || origin > bound) { return false; } continue; }
+        let near = (-bound - origin) / delta, far = (bound - origin) / delta;
+        if (near > far) { [near, far] = [far, near]; }
+        enter = Math.max(enter, near); exit = Math.min(exit, far); if (enter > exit) { return false; }
+      }
+      return true;
+    }
+    function segmentDistance(a, b, p) { const delta = b.clone().sub(a), t = clamp(p.clone().sub(a).dot(delta) / Math.max(1e-9, delta.lengthSq()), 0, 1); return a.clone().addScaledVector(delta, t).distanceTo(p); }
+    function stepFlight(dt) {
+      const shot = state.shot, old = shot.p.clone(); shot.time += dt;
+      if (integrate(shot.p, shot.v, shot.omega, dt)) { shot.bounces++; state.metrics.bounces++; sound('bounce'); }
+      shot.history.push({ time: shot.time, p: shot.p.clone() }); while (shot.history.length > 65) { shot.history.shift(); }
+      let near = 20;
+      for (const defender of defenders.filter((d) => d.group.visible)) {
+        const history = shot.history.findLast((h) => h.time <= shot.time - defender.delay);
+        posePlayer(defender, state.age, history ? history.p : null);
+        for (const part of defender.parts) {
+          const clearance = boxClearance(shot.p, part);
+          shot.closest = Math.min(shot.closest, clearance); defender.near = Math.min(defender.near, clearance);
+          if (shot.p.z > defender.group.position.z - .5) { near = Math.min(near, clearance); }
+          if (sweptBox(old, shot.p, part)) { shot.collisionPart = part.name; ball.position.copy(shot.p); finishAttempt(false, 'カット！'); return; }
+        }
+        if (!defender.crossed && shot.p.z < defender.group.position.z - .45) { defender.crossed = true; if (defender.near < .7) { shot.holes++; } }
+      }
+      setSlow(near < .40 && shot.p.z > -state.distance + .5);
+      const chest = receiver.group.position.clone().add(vec(0, 1.48, .08));
+      const targets = [chest, receiver.limbs['hand-1'].getWorldPosition(vec()), receiver.limbs.hand1.getWorldPosition(vec())];
+      if (targets.some((target) => segmentDistance(old, shot.p, target) <= .55)) { ball.position.copy(shot.p); finishAttempt(true, 'キャッチ！'); return; }
+      if (shot.p.z < -state.distance - 1.6 || Math.abs(shot.p.x) > 5 || shot.p.y > 8) { finishAttempt(false, '誰もいない所へ'); return; }
+      if (shot.time > 5.5 || (shot.time > 1.7 && shot.p.y < .19 && shot.v.length() < 2.2)) { finishAttempt(false, 'ころころ、届かず'); }
+    }
+    const adjectives = ['逆ギレ', 'ノールック', '湿度高めの', 'なぜか', '月面', '裏口からの', '無音の', '二度見', '時空を超えた', '誰も頼んでない', '税込', '半信半疑の', '伝説の（自称）', 'とりあえずの', '逆走', '深夜テンションの', '見えてた風の', '背面（だと思う）', '指先の', '息を止めた'];
+    const suffixes = ['・改', '・弐', '（公式非認可）', '・完全版', '（審査員Bが命名）', '（本人談）', '（味方も驚く）'];
+    function passName(shot, success) {
+      const noun = !shot ? '時間切れチェスト' : shot.bounces ? shot.top > .3 ? '股下バウンズ' : '床経由の裏口' : Math.abs(shot.spin) > 2 ? shot.closest < .3 ? 'バナナ針通し' : 'バナナカーブ' : shot.lob > .2 ? shot.closest < .4 ? '頭上スレスレロブ' : '月面ロブ' : shot.holes >= 2 ? '二重穴通し' : shot.closest < .4 ? '針の穴' : shot.ratio > 1.3 ? '剛速球チェスト' : shot.hands === 2 && shot.aligned > .8 ? '阿吽のチェストパス' : '安全運転チェスト';
+      return choose(adjectives) + noun + (success ? choose(suffixes) : '（未遂）');
+    }
+    function nameBonus(name) { let hash = 2166136261; for (const char of name) { hash = Math.imul(hash ^ char.charCodeAt(0), 16777619); } return (hash >>> 0) % 91; }
+    function scoreAttempt(shot, success, name) {
+      const raw = [
+        success && shot ? Math.round(300 * Math.exp(-Math.max(0, shot.closest) * 3.7)) : 0,
+        shot ? Math.round(Math.abs(shot.spin) * 12 + shot.bounces * 45 + shot.holes * 65 + shot.aligned * 70 + shot.lob * 35) : 0,
+        Math.round((shot?.hesitation ?? state.levelTime) * 8 + (shot?.tooMuch ?? 0) * .4 + (shot?.fakes ?? state.fakeCount) * 35 + (shot?.stagger ?? 0) * .15)
+      ];
+      if (!success) { raw[1] = Math.round(raw[1] * .5); raw[2] = Math.round(raw[2] * .5); }
+      const weighted = raw.map((value, i) => Math.round(value * state.mood[i].weight));
+      const base = success ? state.level * 100 : 0, bonus = nameBonus(name);
+      return { raw, weighted, base, bonus, total: weighted.reduce((a, b) => a + b, 0) + base + bonus };
+    }
+    function finishAttempt(success, reason) {
+      if (!['ready', 'flight'].includes(state.phase)) { return; }
+      const shot = state.shot; clearGesture(); setSlow(false);
+      const name = passName(shot, success), points = scoreAttempt(shot, success, name);
+      const record = { level: state.level, success, reason, name, ...points, moods: state.mood.map((m) => ({ ...m })), closest: shot ? Math.max(0, shot.closest) : null, bounces: shot?.bounces ?? 0, holes: shot?.holes ?? 0, collisionPart: shot?.collisionPart ?? null, input: shot ? { hands: shot.hands, spin: shot.spin, top: shot.top, lob: shot.lob } : null };
+      state.attempts.push(record); state.score += points.total;
+      if (!state.best || (success && !state.best.success) || (success === state.best.success && points.total > state.best.total)) { state.best = record; }
+      if (success) { state.metrics.catches++; sound('catch'); state.next = state.level === 10 ? 'result' : 'level'; }
+      else { state.turnovers++; state.metrics.cuts++; sound('cut'); state.next = state.turnovers === 3 ? 'result' : 'retry'; $('flash').classList.remove('hit'); void $('flash').offsetWidth; $('flash').classList.add('hit'); }
+      state.phase = 'freeze'; state.freeze = 0; hands.visible = false; $('thumbHints').hidden = true;
+      $('toastStatus').textContent = (success ? 'NICE PASS / ' : 'TURNOVER / ') + reason;
+      $('toastName').textContent = name;
+      $('toastScore').textContent = '+' + points.total + ' pt  ·  A ' + points.weighted[0] + ' / B ' + points.weighted[1] + ' / C ' + points.weighted[2];
+      $('toast').hidden = false; setGuide(success ? '今の、通した。' : reason); updateHud();
+    }
+    function finishGame() {
+      state.phase = 'result'; state.metrics.results++; clearGesture(); setSlow(false); $('toast').hidden = true;
+      const breakdown = [0, 1, 2].map((i) => state.attempts.reduce((sum, attempt) => sum + attempt.weighted[i], 0));
+      state.result = { score: state.score, level: state.level, cleared: state.level === 10 && state.attempts.at(-1)?.success, best: state.best, breakdown, attempts: state.attempts.length, turnovers: state.turnovers };
+      drawResultCard(); $('results').hidden = false; sound('end');
+    }
+    function textWrap(ctx, text, x, y, maxWidth, lineHeight) {
+      let line = '';
+      for (const char of text) { if (ctx.measureText(line + char).width > maxWidth && line) { ctx.fillText(line, x, y); line = char; y += lineHeight; } else { line += char; } }
+      ctx.fillText(line, x, y); return y + lineHeight;
+    }
+    let resultCanvas = null;
+    function drawResultCard() {
+      const result = state.result, best = result.best;
+      const canvas = document.createElement('canvas'); canvas.width = 900; canvas.height = 1200;
+      const c = canvas.getContext('2d'); resultCanvas = canvas;
+      c.fillStyle = '#f3efe6'; c.fillRect(0, 0, 900, 1200); c.fillStyle = '#234d3c'; c.fillRect(0, 0, 900, 14);
+      c.strokeStyle = '#d9dcce'; c.lineWidth = 1;
+      for (let y = 40; y < 1200; y += 40) { c.beginPath(); c.moveTo(0, y); c.lineTo(900, y); c.stroke(); }
+      c.fillStyle = '#234d3c'; c.font = '900 60px sans-serif'; c.fillText('ハリノアナ', 60, 110);
+      c.font = 'bold 18px sans-serif'; c.fillText('OFFICIAL / UNOFFICIAL SCORE CARD', 60, 151);
+      c.fillStyle = '#dded82'; c.fillRect(664, 59, 174, 89); c.fillStyle = '#234d3c'; c.font = '900 19px sans-serif'; c.textAlign = 'center'; c.fillText(result.cleared ? '全 穴 制 覇' : 'そのパス、記録。', 751, 98); c.font = 'bold 15px sans-serif'; c.fillText('VOL. 01', 751, 126); c.textAlign = 'left';
+      c.fillStyle = '#66745e'; c.font = 'bold 19px sans-serif'; c.fillText('TOTAL SCORE', 60, 216);
+      c.fillStyle = '#234d3c'; c.font = '900 138px sans-serif'; c.fillText(result.score.toLocaleString('ja-JP'), 53, 351);
+      c.font = '900 27px sans-serif'; c.fillText('到達 Lv ' + String(result.level).padStart(2, '0') + ' / 10', 62, 412);
+      c.fillStyle = '#e25543'; c.textAlign = 'right'; c.fillText('●'.repeat(result.turnovers) + '○'.repeat(3 - result.turnovers), 839, 412); c.textAlign = 'left';
+      c.fillStyle = '#234d3c'; c.fillRect(60, 449, 780, 208); c.fillStyle = '#dded82'; c.font = 'bold 17px sans-serif'; c.fillText(best?.success ? 'BEST PASS / 本日の最高傑作' : 'BEST ATTEMPT / 本日の惜しいやつ', 84, 484);
+      c.fillStyle = '#f3efe6'; c.font = '900 34px sans-serif'; textWrap(c, best?.name || 'まだ名もなきパス', 84, 535, 730, 44);
+      c.font = 'bold 18px sans-serif'; c.fillText('Lv ' + (best?.level || 1) + ' · ' + (best?.total || 0) + ' pt', 84, 637);
+      c.fillStyle = '#234d3c'; c.font = '900 23px sans-serif'; c.fillText('審査員の内訳', 60, 705); c.font = 'bold 14px sans-serif'; c.fillStyle = '#66745e'; c.fillText('累計 / ご機嫌と倍率は最高パス時', 60, 733);
+      const comments = [['「近い。近すぎる。加点。」', '「通ってないけど、気持ちは見た。」'], ['「曲がってる。私の採点も。」', '「失敗作という芸術ですね。」'], ['「その無駄、嫌いじゃない。」', '「もっとためらってもよかった。」']];
+      for (let i = 0; i < 3; i++) {
+        const y = 783 + i * 95, mood = best?.moods[i] || state.mood[i];
+        c.fillStyle = '#234d3c'; c.font = '900 25px sans-serif'; c.fillText('ABC'[i] + '  ' + ['針の穴', 'コース芸術', 'ムダ'][i], 60, y);
+        c.fillStyle = '#66745e'; c.font = 'bold 17px sans-serif'; c.fillText(mood.label + ' ×' + mood.weight, 329, y);
+        c.fillStyle = '#234d3c'; c.font = '900 30px sans-serif'; c.textAlign = 'right'; c.fillText(result.breakdown[i] + ' pt', 838, y); c.textAlign = 'left';
+        c.fillStyle = '#66745e'; c.font = 'bold 17px sans-serif'; c.fillText(mood.weight === 0 ? '「……すや。」' : comments[i][best?.success ? 0 : 1], 60, y + 31);
+      }
+      const base = state.attempts.reduce((sum, a) => sum + a.base, 0), bonus = state.attempts.reduce((sum, a) => sum + a.bonus, 0);
+      c.fillStyle = '#66745e'; c.font = 'bold 16px sans-serif'; c.fillText('クリア基礎点 ' + base + '  ＋  命名ボーナス ' + bonus + '  ／  ' + result.attempts + ' パス', 60, 1070);
+      c.fillStyle = '#234d3c'; c.fillRect(60, 1100, 780, 2); c.font = '900 23px sans-serif'; c.fillText('うまいより、おかしいがえらい。', 60, 1146);
+      c.font = 'bold 12px sans-serif'; c.fillText('2 THUMBS. 1 PASS. ABSOLUTELY QUESTIONABLE JUDGES.', 60, 1176);
+      $('resultImage').src = canvas.toDataURL('image/png');
+      $('resultImage').alt = '合計 ' + result.score + ' 点、到達レベル ' + result.level + '。最高のパス：' + best?.name + '。審査員 A/B/C ' + result.breakdown.join(' / ') + ' 点。';
+    }
+    $('share').addEventListener('click', async () => {
+      if (!state.result || !resultCanvas) { return; }
+      const text = 'ハリノアナで ' + state.score + ' 点 / Lv ' + state.level + '。「' + state.best?.name + '」 #ハリノアナ';
+      const fallback = () => { $('shareFallback').href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text); $('shareFallback').hidden = false; $('shareStatus').textContent = '画像は長押しで保存できます。X への投稿はこちら。'; };
+      try {
+        const blob = await new Promise((resolve) => resultCanvas.toBlob(resolve, 'image/png'));
+        if (!blob) { fallback(); return; }
+        const file = new File([blob], 'harinoana-score.png', { type: 'image/png' });
+        if (navigator.share && navigator.canShare?.({ files: [file] })) { await navigator.share({ title: 'ハリノアナ', text, files: [file] }); $('shareStatus').textContent = 'シェアしました。'; }
+        else { fallback(); }
+      } catch (error) { if (error.name !== 'AbortError') { fallback(); } }
+    });
+    function resize() {
+      width = app.clientWidth; height = app.clientHeight; renderer.setSize(width, height, false);
+      camera.aspect = width / height; camera.updateProjectionMatrix();
+      const ratio = Math.min(devicePixelRatio || 1, 2);
+      $('gesture').width = Math.round(width * ratio); $('gesture').height = Math.round(height * ratio); gctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      if (state.gesture) { cancelGesture(); }
+    }
+    window.addEventListener('resize', resize);
+    $('court').addEventListener('webglcontextlost', (event) => { event.preventDefault(); cancelGesture(); state.phase = 'error'; showError('描画が一時停止しました。もう一度読み込むと再開できます。'); });
+    let previous = performance.now(), accumulator = 0;
+    function frame(now) {
+      const wallDt = document.hidden ? 0 : Math.max(0, (now - previous) / 1000), realDt = Math.min(wallDt, .08); previous = now;
+      if (state.phase !== 'freeze' && state.phase !== 'result') { state.age += realDt * (state.slow ? .22 : 1); }
+      if (state.phase === 'ready' || state.phase === 'intro') {
+        posePlayer(receiver, state.age, null); defenders.filter((d) => d.group.visible).forEach((d) => posePlayer(d, state.age, null));
+        updateHolding(realDt);
+        if (state.phase === 'ready') {
+          state.remaining = Math.max(0, state.remaining - wallDt); state.levelTime += wallDt; updateHud();
+          if (state.remaining <= 0) { finishAttempt(false, '時間切れ'); }
+        }
+      } else if (state.phase === 'flight') {
+        const shot = state.shot; shot.realTime += wallDt; accumulator += realDt * (state.slow ? .22 : 1);
+        while (accumulator >= STEP && state.phase === 'flight') { stepFlight(STEP); accumulator -= STEP; }
+        ball.position.copy(shot.p); ballMesh.rotation.x += shot.v.length() * realDt * 2; ballMesh.rotation.y += shot.spin * realDt;
+        if (trailCount < 240) { shot.p.toArray(trailPositions, trailCount++ * 3); } else { trailPositions.copyWithin(0, 3); shot.p.toArray(trailPositions, 239 * 3); }
+        trailGeometry.attributes.position.needsUpdate = true; trailGeometry.setDrawRange(0, trailCount);
+        if (state.phase === 'flight') {
+          camera.position.lerp(shot.p.clone().add(vec(-shot.v.x * .035, .62, 1.95)), 1 - Math.exp(-realDt * 11)); camera.lookAt(shot.p.clone().add(vec(0, .12, -.8)));
+          if (shot.realTime > 12) { finishAttempt(false, 'ころころ、届かず'); }
+        }
+      } else if (state.phase === 'freeze') {
+        state.freeze += wallDt;
+        const angle = state.freeze * .7, center = ball.position;
+        camera.position.lerp(center.clone().add(vec(Math.sin(angle) * 2.25, .65, Math.cos(angle) * 2.25)), 1 - Math.exp(-realDt * 7)); camera.lookAt(center);
+        if (state.freeze > 1.9) {
+          accumulator = 0;
+          if (state.next === 'result') { finishGame(); }
+          else { if (state.next === 'level') { state.level++; configureLevel(); sound('level'); } ready(); }
+        }
+      }
+      if (state.phase !== 'result' && state.phase !== 'error') { renderer.render(scene, camera); }
+      requestAnimationFrame(frame);
+    }
+    // Read-only observation. No testing bypasses, setters, auto-win or timer skips.
+    Object.defineProperty(window, '__harinoana', { value: Object.freeze({ snapshot: () => JSON.parse(JSON.stringify({
+      phase: state.phase, level: state.level, score: state.score, turnovers: state.turnovers,
+      distance: state.distance, limit: state.limit, remaining: state.remaining,
+      defenders: defenders.filter((d) => d.group.visible).map((d) => ({ x: d.group.position.x, z: d.group.position.z, delay: d.delay, parts: d.parts.length })),
+      moods: state.mood, metrics: state.metrics, lastInput: state.lastInput,
+      touches: pointers.size, gestureFingers: state.gesture?.fingers.size || 0,
+      ball: { x: ball.position.x, y: ball.position.y, z: ball.position.z },
+      shot: state.shot ? { time: state.shot.time, bounces: state.shot.bounces, holes: state.shot.holes, closest: state.shot.closest } : null,
+      attempts: state.attempts, result: state.result, muted, dpr: renderer.getPixelRatio()
+    })) }), writable: false });
+    configureLevel(); resize(); ball.position.set(0, .95, -.55); hands.position.copy(ball.position);
+    preview.visible = landingRing.visible = false;
+    $('start').disabled = false; $('start').firstElementChild.textContent = 'コートに立つ';
+    requestAnimationFrame(frame);
+  }
+</script>
+</body>
+</html>
+
