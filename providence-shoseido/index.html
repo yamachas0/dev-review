@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>【たたき】都市開発諸制度シミュレーション｜PROVIDENCE 開発事例ページ構成イメージ</title>
+<style>
+/* =========================================================
+   Providence 風トークン（2026-09-07 実測 https://providence.spacedata.jp/uservoice/ より）
+   bg #000 / card #111 / accent #3097D6 / heading 34px,24px bold / body 14px lh1.9
+   ========================================================= */
+:root{
+  --bg:#000;
+  --card:#111;
+  --line:#333;
+  --line-soft:#262626;
+  --txt:#c9c9c9;
+  --txt-strong:#fff;
+  --muted:#8f8f8f;
+  --accent:#3097D6;
+  --light-bg:#f2f2f2;
+  --light-txt:#333;
+  --font: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--txt);font-family:var(--font);
+  font-size:14px;line-height:1.9;-webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+img{max-width:100%;display:block}
+
+/* ---- たたき用の注記バー（本番では削除） ---- */
+.draftbar{
+  background:#2b1d00;border-bottom:1px solid #5a3d00;color:#f0c674;
+  font-size:12px;line-height:1.7;padding:10px 20px;text-align:center;letter-spacing:.02em;
+}
+
+/* ---------------- header ---------------- */
+.gnav{
+  position:sticky;top:0;z-index:50;background:#000;border-bottom:1px solid #1c1c1c;
+  height:60px;display:flex;align-items:center;padding:0 24px;gap:28px;
+}
+.gnav .logo{
+  color:#fff;font-weight:700;letter-spacing:.16em;font-size:15px;
+  border-right:1px solid #2a2a2a;padding-right:24px;height:60px;display:flex;align-items:center;
+}
+.gnav ul{display:flex;gap:24px;list-style:none;margin:0;padding:0}
+.gnav ul a{color:#fff;font-size:12px;letter-spacing:.12em}
+.gnav ul a:hover{color:var(--accent);text-decoration:none}
+.gnav .burger{margin-left:auto;color:#fff;font-size:18px;letter-spacing:.1em}
+@media(max-width:900px){ .gnav ul{display:none} }
+
+/* ---------------- article ---------------- */
+.wrap{max-width:1080px;margin:70px auto 0;background:var(--card);padding:56px 50px 70px}
+@media(max-width:900px){ .wrap{margin-top:0;padding:28px 18px 44px} }
+
+.cat{color:var(--accent);font-size:12px;letter-spacing:.08em;margin-bottom:18px}
+h1{
+  color:var(--txt-strong);font-size:34px;line-height:1.62;font-weight:700;
+  letter-spacing:.01em;margin:0 0 22px;
+}
+@media(max-width:900px){ h1{font-size:22px;line-height:1.6} }
+.meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.meta .tag{color:#fff;border-left:1px solid var(--line);padding-left:14px}
+.rule{border:0;border-top:1px solid var(--line);margin:32px 0 34px}
+
+h2{
+  color:var(--txt-strong);font-size:24px;font-weight:700;line-height:1.6;
+  margin:70px 0 0;padding-bottom:14px;border-bottom:1px solid var(--line);
+}
+@media(max-width:900px){ h2{font-size:18px;margin-top:48px} }
+h2 + .lead, h2 ~ .sub:first-of-type{margin-top:26px}
+.sub{color:#fff;font-weight:700;font-size:14px;margin:32px 0 14px;letter-spacing:.02em}
+p{margin:0 0 18px}
+ul.body,ol.body{margin:0 0 18px;padding-left:1.3em}
+ul.body li,ol.body li{margin-bottom:10px}
+strong{color:#fff;font-weight:700}
+
+/* 表（Providence の仕様表と同型） */
+table.spec{border-collapse:collapse;margin:26px 0 8px;width:100%;max-width:640px;font-size:13px}
+table.spec th,table.spec td{border:1px solid var(--line);padding:12px 14px;vertical-align:top;line-height:1.75}
+table.spec th{background:#1b1b1b;color:#fff;font-weight:700;text-align:left;width:150px;white-space:nowrap}
+@media(max-width:700px){
+  table.spec th{width:104px;white-space:normal;font-size:12px}
+  table.spec td{font-size:12px}
+}
+
+/* 図版（プレースホルダ／実スクショ共通） */
+figure{margin:34px 0}
+figure figcaption{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.7}
+.ph{
+  border:1px dashed #4a4a4a;background:
+    repeating-linear-gradient(135deg,#141414 0 12px,#181818 12px 24px);
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:28px 22px;color:#9d9d9d;font-size:12.5px;line-height:1.85;
+}
+.ph b{display:block;color:#dcdcdc;font-size:13.5px;margin-bottom:8px;letter-spacing:.03em}
+.ph .h240{min-height:240px}
+.ph.tall{min-height:380px}
+.ph.mid{min-height:280px}
+.ph.low{min-height:180px}
+
+/* 適用範囲ボックス */
+.scope{
+  margin:30px 0 8px;border:1px solid var(--line);background:#0d0d0d;
+}
+.scope .col{padding:22px 24px}
+.scope .col + .col{border-top:1px solid var(--line-soft)}
+.scope h4{margin:0 0 12px;font-size:13px;letter-spacing:.06em;color:#fff}
+.scope h4 span{font-size:11px;color:var(--muted);letter-spacing:0;margin-left:8px;font-weight:400}
+.scope ul{margin:0;padding-left:1.2em;font-size:13px}
+.scope ul li{margin-bottom:8px}
+.scope .no h4{color:#e0a3a3}
+@media(min-width:760px){
+  .scope{display:flex}
+  .scope .col{flex:1}
+  .scope .col + .col{border-top:0;border-left:1px solid var(--line-soft)}
+}
+.disclaimer{
+  margin-top:24px;border-left:3px solid var(--accent);background:#0d0d0d;
+  padding:18px 20px;font-size:12.5px;color:#b6b6b6;line-height:1.9;
+}
+.disclaimer b{color:#fff}
+
+/* ステップ */
+ol.steps{list-style:none;counter-reset:s;margin:28px 0 8px;padding:0}
+ol.steps li{counter-increment:s;position:relative;padding:0 0 22px 52px;border-left:1px solid var(--line-soft);margin-left:14px}
+ol.steps li:last-child{border-left-color:transparent;padding-bottom:0}
+ol.steps li::before{
+  content:counter(s);position:absolute;left:-15px;top:-2px;width:30px;height:30px;border-radius:50%;
+  background:#000;border:1px solid var(--accent);color:var(--accent);
+  font-size:12px;display:flex;align-items:center;justify-content:center;
+}
+ol.steps .st{display:block;color:#fff;font-weight:700;margin-bottom:6px}
+
+/* ---------------- CONTACT band（Providence は明るい帯） ---------------- */
+.contact{background:var(--light-bg);color:var(--light-txt);margin-top:90px;padding:74px 24px;text-align:center}
+.contact h2{color:var(--light-txt);border:0;font-size:30px;margin:0 0 6px;padding:0}
+.contact .en{font-size:12px;letter-spacing:.22em;color:#666;margin-bottom:26px}
+.contact p{max-width:640px;margin:0 auto 30px;font-size:13.5px;color:#555}
+.btn{
+  display:inline-block;border:1px solid var(--light-txt);color:var(--light-txt);
+  padding:16px 54px;font-size:13px;letter-spacing:.18em;background:#fff;
+}
+.btn:hover{background:var(--light-txt);color:#fff;text-decoration:none}
+
+/* ---------------- footer ---------------- */
+footer{background:#000;padding:52px 24px 30px;border-top:1px solid #1c1c1c}
+footer .fin{max-width:1080px;margin:0 auto;display:flex;flex-wrap:wrap;gap:40px 70px}
+footer h5{margin:0 0 14px;font-size:11px;letter-spacing:.18em;color:var(--muted);font-weight:700}
+footer ul{list-style:none;margin:0;padding:0}
+footer li{margin-bottom:10px}
+footer a{color:#ddd;font-size:12.5px}
+footer .copy{max-width:1080px;margin:44px auto 0;font-size:11px;color:#5c5c5c;letter-spacing:.08em}
+
+/* 判断メモ（たたき用・本番では削除） */
+.note{
+  margin:16px 0 0;border:1px dashed #6b5a1d;background:#161206;color:#c8b475;
+  padding:12px 16px;font-size:12px;line-height:1.8;
+}
+.note b{color:#f0c674}
+</style>
+</head>
+<body>
+
+<div class="draftbar">
+  【たたき／社内検討用】PROVIDENCE「開発事例（USECASE）」ページの構成イメージ。デザインは providence.spacedata.jp の実測トークンに寄せた模擬。<b>黄色の枠＝施主判断が要る箇所</b>・点線枠＝図版のプレースホルダ。
+</div>
+
+<nav class="gnav">
+  <div class="logo">PROVIDENCE</div>
+  <ul>
+    <li><a href="#">HOME</a></li>
+    <li><a href="#">DEFENSE</a></li>
+    <li><a href="#">DISASTER</a></li>
+    <li><a href="#">SMARTCITY</a></li>
+    <li><a href="#">USECASE</a></li>
+    <li><a href="#">BLOG</a></li>
+    <li><a href="#">MEETUP</a></li>
+    <li><a href="#">CAREER</a></li>
+  </ul>
+  <div class="burger">☰</div>
+</nav>
+
+<main class="wrap">
+
+  <div class="cat">開発事例</div>
+
+  <h1>候補地の「当たり付け」に3週間はもう要らない：ブラウザ上の敷地トレースだけで特定街区・高度利用地区・再開発等促進区・総合設計・都市再生特別地区の容積率と建築ボリュームを制度横断で自動比較する、都市開発諸制度シミュレーション</h1>
+
+  <div class="meta">
+    <span>2026/○/○ 00:00</span>
+    <span class="tag">デベロッパー・建設会社・設計事務所</span>
+  </div>
+
+  <div class="note"><b>判断①：H1</b>　長尺SEO型（Providence既存記事の温度感）に寄せた案。短尺にするなら「候補地の当たり付けを3週間から数分へ：都市開発諸制度シミュレーションが変える用地検討の初動」。<b>判断②：プロダクト名称</b>　社内資料では「大規模都市開発シミュレーター（β版）」／SD側資料では「ボリュームスタディツール」／本たたきでは会議宿題の呼称「都市開発諸制度シミュレーション」を仮採用。対外名称の確定が必要。</div>
+
+  <hr class="rule">
+
+  <figure>
+    <div class="ph tall">
+      <div><b>【ヒーロー図】制度別ボリューム4案の並置ビュー</b>
+      同一敷地に対して、特定街区／高度利用地区／再開発等促進区／総合設計の<br>
+      建築ボリュームを横並びにした3Dキャプチャ（敷地は匿名化した練習用敷地）。<br>
+      ※実物のスクショ流用可：site-trace-mvp/docs/jre_trial/img/u6_1_screen.png（要トリミング）</div>
+    </div>
+    <figcaption>同一敷地・制度違いで建てられる形がどう変わるかを、1画面で並べて確認できる。</figcaption>
+  </figure>
+
+  <!-- ============ 1. ユースケース概要 ============ -->
+  <h2>ユースケース概要</h2>
+  <p>都市開発諸制度（特定街区・高度利用地区・再開発等促進区・総合設計制度）と都市再生特別地区について、「この敷地でどの制度を使うと、どこまで容積を積めて、どんな建物の形になるか」をブラウザ上で自動試算するシミュレーション基盤を構築しました。利用者が地図上で敷地を囲むと、公的オープンデータから用途地域・指定容積率・前面道路幅員などの敷地条件を自動で読み取り、制度ごとの計画容積率・配棟・基準階・3Dボリュームを一括で生成します。1件あたりの試算は数分。結果はA3横1枚のPowerPoint／PDFとして書き出せます。</p>
+  <p>従来、この「候補地の当たり付け」は設計事務所へのボリュームスタディ外注に依存しており、1件あたり数週間の待ち時間が発生していました。本ユースケースは、外注の前段にある<strong>一次スクリーニング</strong>を機械化し、検討の回数と比較の幅を取り戻すことを狙いとしています。</p>
+
+  <table class="spec">
+    <tr><th>対象業界</th><td>不動産開発（デベロッパー）、建設、建築設計、都市開発、用地取得</td></tr>
+    <tr><th>導入技術</th><td>Webブラウザ完結のGIS／自動ボリューム生成エンジン／公的オープンデータ（都市計画GIS・PLATEAU・国土地理院ベクトルタイル 等）</td></tr>
+    <tr><th>現状の課題</th><td>候補地の初期ボリューム検討が外部委託前提で、待ち時間とコストが「捨てる候補地」にも等しく発生する。制度ごとの比較検討がそもそも回数的に不可能</td></tr>
+    <tr><th>得られた成果</th><td>敷地トレースから制度別の容積率・ボリューム・A3提案シートまでを数分で自動生成。大手デベロッパーにてβトライアルを実施中</td></tr>
+  </table>
+
+  <div class="note"><b>判断③：導入技術の書き方</b>　データソース名の列挙は、ライセンス点検で照会未了の項目（日影規制区域データ 等）を含めないこと。上記は緑判定のもののみ記載。<b>判断④：トライアル先</b>　現状は「大手デベロッパーにてβトライアルを実施中」の匿名表記。社名解禁の可否・時期は先方合意（クロージング会議で意向確認予定）に依存。</div>
+
+  <!-- ============ 2. 目的 ============ -->
+  <h2>目的（プロジェクトの背景と課題）</h2>
+
+  <div class="sub">【課題】「捨てる9件」にも、本番と同じ時間と費用を払っている</div>
+  <p>用地取得や事業企画の現場では、1件の開発が成立するまでに多数の候補地を検討し、そのほとんどを見送ります。ところが、見送る判断をするためにも「その敷地でどこまで建てられるのか」を知る必要があり、設計事務所へのボリュームスタディ外注が発生します。結果として、最終的に捨てる候補地にも、採用する候補地と同じ待ち時間と費用がかかっているのが実情です。</p>
+  <p>さらに深刻なのは<strong>比較の断念</strong>です。都市開発諸制度は複数あり、どの制度を選ぶかで積める容積も建物の形も変わります。しかし外注の初期検討で複数制度を並行して出してもらうことは現実的でなく、多くの場合は経験則で1つの制度に絞り込んでから検討が始まります。「本当にその制度が最適だったのか」を確かめる機会は、事業の初動では失われがちでした。</p>
+
+  <figure>
+    <div class="ph mid">
+      <div><b>【図1】初期検討フローの比較（従来 / 本ツール）</b>
+      上段＝外注フロー（依頼→条件整理→作図→修正→受領）を時間軸で。<br>
+      下段＝本ツール（敷地トレース→自動計算→A3出力）を同一スケールで。<br>
+      同じ時間軸に置くことで、下段がほぼ点になる。</div>
+    </div>
+    <figcaption>初期検討フローの比較。従来は1案・数週間、本ツールは複数制度・数分。</figcaption>
+  </figure>
+
+  <div class="note"><b>判断⑤：数値の出し方</b>　「約3週間・数万円/件」はβトライアル先の想定値として社内資料に記載があるが、<strong>先方への確認は未完了（プレキックオフのヒアリング項目）</strong>。対外ページに数値として書くなら裏取りが必要。裏取り前は「数週間単位の待ち時間」など定性表現に留める。</div>
+
+  <!-- ============ 3. 対象 ============ -->
+  <h2>対象（対象者と適用領域）</h2>
+
+  <div class="sub">【対象】用地取得・事業企画の「絞り込む前」の意思決定</div>
+  <p>本ユースケースは、以下のような立場の方に適しています。</p>
+  <ul class="body">
+    <li><strong>デベロッパーの用地取得・開発企画部門</strong>　持ち込み案件や取得候補地について、社内会議に上げる前の一次判断を短時間で行いたい</li>
+    <li><strong>建設会社の開発提案・営業部門</strong>　地権者・事業者への提案時に、制度活用の可能性を早い段階で示したい</li>
+    <li><strong>建築設計事務所の企画担当</strong>　本格的なボリュームスタディに入る前に、制度選択の当たりを付けて手戻りを減らしたい</li>
+    <li><strong>都市開発のプロジェクトリーダー</strong>　複数候補地・複数制度の比較を、同じ条件・同じ出力形式で並べて議論したい</li>
+  </ul>
+  <p>適用領域は東京都心13区（千代田・中央・港・新宿・文京・墨田・江東・品川・目黒・渋谷・中野・豊島・北）です。オフィス系のボリューム検討を前提としています。</p>
+
+  <!-- ============ 4. 革新性 ============ -->
+  <h2>革新性（ソリューションと技術的優位性）</h2>
+
+  <div class="sub">【解決策】制度の解釈と敷地条件の読み取りを、地図の操作だけに落とし込む</div>
+  <p>本ユースケースの革新性は、都市開発諸制度の運用基準という「専門家が読み解くもの」を、地図上で敷地を囲むという単一の操作に接続した点にあります。CADも都市計画図の読解も要求せず、利用者が行うのは「敷地を描く」「道路に合わせる」「実行する」の3ステップのみです。</p>
+
+  <ol class="steps">
+    <li><span class="st">敷地を描く</span>地図上で検討したい敷地を囲みます。用途地域・指定容積率・建蔽率・前面道路幅員・高度地区などは、公的オープンデータから自動で読み取られ、敷地カルテとして提示されます。</li>
+    <li><span class="st">道路に合わせる</span>敷地の各辺と前面道路の対応関係を調整します。ここが容積率の算定に効くため、機械任せにせず利用者が確認する設計としています。</li>
+    <li><span class="st">計算する</span>5つの制度それぞれについて、計画容積率・容積緩和の内訳・配棟・基準階・3Dボリュームを自動生成します。制度ごとの結果はシートで横並びに比較でき、最も容積が積める案には「本命」の目印が付きます。</li>
+  </ol>
+
+  <figure>
+    <div class="ph mid">
+      <div><b>【図2】操作画面（P1 敷地）</b>
+      地図・敷地カルテ・作図パネルが1画面に収まっている状態のキャプチャ。<br>
+      ※実物のスクショ流用可：site-trace-mvp/docs/jre_trial/img/u6_1_screen.png<br>
+      （※要修正：現行キャプチャには「P3.5 日影」タブが写り込んでいるが、βでは提供対象外）</div>
+    </div>
+    <figcaption>地図上で敷地を囲むと、用途地域・指定容積率・前面道路幅員などが自動で敷地カルテに埋まる。</figcaption>
+  </figure>
+
+  <p>また、機械が断定してよい範囲と、人が確かめるべき範囲を明確に分けています。区域の境界に敷地が部分的にしか掛かっていない場合は、数値を断定せず<strong>「⚠要確認（該当度N%）」</strong>と表示し、「何を確認するか」「どこで確認するか（該当地区の都市計画図書、または区の窓口）」までを画面上で案内します。対応範囲の外の敷地に対しては、誤った数値を出さないために計算そのものを実行前に停止します。</p>
+
+  <figure>
+    <div class="ph low">
+      <div><b>【図3】「要確認」表示と確認先の案内</b>
+      ※実物のスクショ流用可：site-trace-mvp/docs/jre_trial/img/u7_chkhelp.png</div>
+    </div>
+    <figcaption>断定できないものは断定しない。確認すべき先までを画面上で案内する。</figcaption>
+  </figure>
+
+  <p>検討結果はA3横1枚のPowerPoint／PDFとして出力できます。案件名・敷地概要・計画規模・3Dボリューム・敷地図・配棟イメージ・基準階イメージ、そして免責・出典・データ基準日が1枚に収まった形式で、社内会議の資料としてそのまま持ち込めます。</p>
+
+  <figure>
+    <div class="ph mid">
+      <div><b>【図4】A3横1枚の出力サンプル</b>
+      匿名化した練習用敷地で生成した実出力（pptx/PDF）の縮小図。<br>
+      ※実物のスクショ流用可：site-trace-mvp/docs/jre_trial/img/pdf_print_look_a4.png</div>
+    </div>
+    <figcaption>計算結果はA3横1枚に集約して出力できる。免責・出典・データ基準日も同一紙面に記載される。</figcaption>
+  </figure>
+
+  <!-- ============ 5. 適用範囲（テンプレ外の追加節） ============ -->
+  <h2>適用範囲（できること／できないこと）</h2>
+
+  <div class="sub">【前提】確認申請には使えません。だから、その手前で何度でも試せます</div>
+  <p>本ツールは<strong>机上検討の一次スクリーニング専用</strong>です。精度を追い込むことではなく、検討の回数と比較の幅を確保することに設計の重心を置いています。適用範囲は次のとおりです。</p>
+
+  <div class="scope">
+    <div class="col">
+      <h4>できること <span>β版時点</span></h4>
+      <ul>
+        <li>都心13区の敷地に対する、5制度（特定街区／高度利用地区／再開発等促進区／総合設計制度／都市再生特別地区）の計画容積率の試算と横並び比較</li>
+        <li>容積緩和の内訳の提示</li>
+        <li>用意された型からの配棟・基準階の比較</li>
+        <li>3Dボリューム外形の生成と斜線制限の参照表示</li>
+        <li>A3横1枚のPowerPoint／PDF出力、案件名付きの履歴管理</li>
+      </ul>
+    </div>
+    <div class="col no">
+      <h4>できないこと <span>β版時点／恒久</span></h4>
+      <ul>
+        <li>確認申請・重要事項説明・近隣説明など法的手続きの根拠としての利用</li>
+        <li>日影規制のシミュレーション、天空率の計算、地区計画の個別規定（壁面後退等）の形態制限への反映</li>
+        <li>市街地再開発事業ほか、上記5制度以外の制度</li>
+        <li>敷地分割・合筆・複数敷地の同時比較、生成後ボリュームの手編集</li>
+        <li>オフィス系以外（ホテル・住宅・商業）に固有の検討、東京都外の敷地</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    <b>免責</b>　出力される数値は、公的資料から定数化した緩和量と簡略計算による概算です。事業判断や対外提出の前には、一次資料の確認と専門家によるチェックが前提となります。データは特定時点の公開データに基づくため、以後の都市計画決定・変更は反映されていない場合があります。
+  </div>
+
+  <div class="note"><b>判断⑥：この節を置くか</b>　Providence既存記事のテンプレートにはない追加節。だが本プロダクトは<strong>誇張・精度の確約がNG</strong>であり、期待値コントロールを対外ページの段階から効かせる方が事故が少ないと判断して追加した。畳んで「導入フロー」の中の注記に落とす案もある。<b>判断⑦：「できないこと」の粒度</b>　現在は制約一覧35件から代表項目のみ抜粋。対外ページでどこまで開示するかは要判断（開示しすぎると導入検討の心理的ハードルになる／隠すと後段でトラブルになる）。</div>
+
+  <!-- ============ 6. 導入フロー ============ -->
+  <h2>導入フロー（プロセスと体制）</h2>
+
+  <div class="sub">【プロセス】1ヶ月のβトライアルで、実案件に通してから判断する</div>
+  <p>本ユースケースは、実際の検討案件に通して評価いただくトライアル形式で進めています。</p>
+  <ol class="steps">
+    <li><span class="st">プレキックオフ</span>対象エリア・用途構成・現在の初期検討フロー・利用者と利用タイミングを確認し、検証範囲を設計します。提供方式（認証付き限定URL・ブラウザ完結）とセキュリティ要件の確認もここで行います。</li>
+    <li><span class="st">キックオフ</span>スコープとスコープ外、検証期間、検証対象件数、評価の観点を合意します。あわせて、既に設計事務所の成果物が手元にある敷地を検証対象として選定いただきます。</li>
+    <li><span class="st">ワークショップ</span>操作マニュアル・FAQをもとに、練習用の敷地（標準的な敷地と、あえて条件の厳しい小規模・細長の敷地）を全員に体験いただき、できること／できないことの認識を揃えます。</li>
+    <li><span class="st">実用検証（1ヶ月）</span>実案件を投入し、設計事務所の成果物と比較いただきます。週次のチェックインで利用状況・課題・要望を回収し、不具合は期間中に修正します。</li>
+    <li><span class="st">クロージング</span>検証結果・利用ログ・課題と対応方針をまとめて報告し、本格導入時の提供形態・対象エリア拡大・サポート体制・料金の考え方をご提案します。</li>
+  </ol>
+
+  <div class="note"><b>判断⑧：料金の出し方</b>　このページで価格に触れるか。現状は「本格導入時にご提案」と含みを持たせる書き方（＝上記のまま）。PROVIDENCEサイトのトップには「PRICING／ご検討のご相談」節があり、価格非開示・問い合わせ誘導が既定路線なので整合はする。</div>
+
+  <!-- ============ 7. 目指すゴール ============ -->
+  <h2>目指すゴール（得られた成果と今後の展望）</h2>
+
+  <div class="sub">【成果と展望】検討の入口を機械化し、専門家の時間を「決める仕事」に戻す</div>
+  <p>一次スクリーニングが数分で回るようになることで、初期検討のあり方そのものが変わります。1案を待つのではなく複数制度を並べて比べる、1敷地を精査するのではなく候補地群をふるいにかける——つまり、これまで時間的制約で断念されていた検討の作法が成立します。設計事務所の専門性は、ふるいを通過した敷地に集中して投下されることになります。</p>
+  <p>今後は、対象エリアの拡大、オフィス以外の用途（ホテル・住宅）への対応、個別協議の結果を利用者側でパラメータとして反映できる仕組み、日影・天空率といった形態規制の取り込みを順次進めていきます。</p>
+  <p>また本シミュレーションは、PROVIDENCEが持つ都市デジタルツイン基盤との接続によって、企画段階のボリューム検討から、周辺環境を含めた可視化・合意形成・その後の運用シミュレーションまでを、同一の空間データ上で連続させることを見据えています。都市開発の「最初の一手」を、デジタルツインの入口として位置づけることが本ユースケースの狙いです。</p>
+
+  <figure>
+    <div class="ph low">
+      <div><b>【図5】展望図：一次スクリーニングからデジタルツインへの接続</b>
+      左＝敷地トレース／中＝制度別ボリューム／右＝PROVIDENCE基盤上での周辺統合・可視化。<br>
+      3コマの横流れで「入口」であることを示す。</div>
+    </div>
+    <figcaption>企画初動のボリューム検討を、都市デジタルツインへの入口として接続していく。</figcaption>
+  </figure>
+
+  <div class="note"><b>判断⑨：クレジット／帰属表記</b>　本ツールの帰属は協議中（出力物には現状「©スペースデータ」が入る実装）。PROVIDENCEサイト掲載時に開発元・提供元をどう並べるか（例：「合同会社MUD-Aiとの共同開発」と書くか、書かないか）は施主判断。<b>判断⑩：デジタルツイン接続の書きぶり</b>　最終段落は「見据えています／狙いです」＝構想の表明に留めており、実装済みの機能とは読ませない文にしてある。実接続の予定が固まっていない段階でこれ以上踏み込むと誇張になる。</div>
+
+</main>
+
+<section class="contact">
+  <h2>お気軽にご相談ください</h2>
+  <div class="en">CONTACT US</div>
+  <p>機能詳細や、あなたのチームへのベストなプランをプロフェッショナルに相談することが可能です。お気軽にお問い合わせください。</p>
+  <a class="btn" href="#">CONTACT</a>
+</section>
+
+<footer>
+  <div class="fin">
+    <div>
+      <h5>サービス</h5>
+      <ul>
+        <li><a href="#">FAQ</a></li>
+        <li><a href="#">ニュース</a></li>
+        <li><a href="#">導入事例</a></li>
+        <li><a href="#">技術ブログ</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>企業情報</h5>
+      <ul>
+        <li><a href="#">運営会社</a></li>
+        <li><a href="#">採用情報</a></li>
+        <li><a href="#">情報セキュリティ方針</a></li>
+        <li><a href="#">SinguLab</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="copy">© 2026 SPACEDATA INC. ALL RIGHTS RESERVED.（※本ページは社内検討用のたたきです）</div>
+</footer>
+
+</body>
+</html>
