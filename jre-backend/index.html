@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JRE βトライアル バックエンドサーバー構成案</title>
+<style>
+:root{--ink:#111827;--g700:#374151;--g500:#6B7280;--g300:#D1D5DB;--g100:#F3F4F6;--g50:#F9FAFB;
+--em:#10B981;--em2:#059669;--line:#E5E7EB;--black:#0A0A0A}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#fff;color:var(--ink);
+font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Yu Gothic",Meiryo,system-ui,-apple-system,sans-serif;
+font-size:16px;line-height:1.85;font-feature-settings:"palt"}
+.wrap{max-width:960px;margin:0 auto;padding:28px 18px 96px}
+header{border-bottom:3px solid var(--ink);padding-bottom:16px;margin-bottom:26px}
+.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--em2);font-weight:700;margin:0 0 8px}
+h1{font-size:23px;line-height:1.5;margin:0 0 12px;font-weight:800;letter-spacing:-.01em}
+.meta{font-size:13px;color:var(--g500);margin:0;line-height:1.9}
+h2{font-size:20px;font-weight:800;margin:52px 0 16px;padding-left:12px;
+border-left:5px solid var(--em);line-height:1.5;scroll-margin-top:14px}
+h2:first-of-type{margin-top:36px}
+h3{font-size:16px;font-weight:700;margin:30px 0 10px;padding-bottom:5px;
+border-bottom:1px solid var(--line);scroll-margin-top:14px}
+h4{font-size:15px;font-weight:700;margin:22px 0 6px;color:var(--g700)}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px;padding-left:1.3em}
+li{margin-bottom:7px}
+li ul,li ol{margin:6px 0 6px}
+code{font-family:"SFMono-Regular",Consolas,monospace;font-size:.86em;
+background:var(--g100);padding:1px 5px;border-radius:2px;color:var(--ink);
+overflow-wrap:anywhere}
+a{color:var(--em2);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+.toc{border:1px solid var(--g300);border-radius:2px;padding:18px 18px 16px;margin:0 0 26px;background:var(--g50)}
+.toc-title{font-size:13px;font-weight:800;letter-spacing:.12em;color:var(--em2);margin:0 0 10px;text-transform:uppercase}
+.toc ul{list-style:none;margin:0;padding:0;column-gap:24px}
+.toc li{margin:0;border-bottom:1px solid var(--line)}
+.toc li:last-child{border-bottom:none}
+.toc a{display:block;padding:9px 2px;font-size:14.5px;font-weight:600;color:var(--ink);text-decoration:none}
+.toc a:active,.toc a:hover{color:var(--em2)}
+.box{border:1px solid var(--g300);border-radius:2px;padding:16px 16px 4px;margin:0 0 20px;background:#fff}
+.box.key{border:2px solid var(--em2);background:#F0FDF9}
+.box.warn{border:2px solid var(--ink);background:var(--g100)}
+.box p{margin:0 0 12px}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 18px;
+border:1px solid var(--line);border-radius:2px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:480px}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--g100);font-weight:700;border-bottom:2px solid var(--ink)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even) td{background:var(--g50)}
+pre{background:var(--g100);border:1px solid var(--line);border-radius:2px;
+padding:12px;overflow-x:auto;font-size:12px;line-height:1.55;margin:0 0 18px;
+font-family:"SFMono-Regular",Consolas,monospace;white-space:pre}
+hr{border:none;border-top:1px solid var(--line);margin:38px 0}
+footer{margin-top:60px;padding-top:18px;border-top:1px solid var(--g300);
+font-size:12.5px;color:var(--g500)}
+footer p{margin:0 0 6px}
+@media(max-width:640px){
+ body{font-size:15.5px}
+ .wrap{padding:20px 14px 72px}
+ h1{font-size:19px} h2{font-size:17.5px;margin-top:42px} h3{font-size:15px}
+ table{font-size:12.5px}
+ .toc ul{column-count:1}
+}
+</style>
+</head>
+<body><div class="wrap">
+<header>
+<p class="eyebrow">CLOUD INFRASTRUCTURE PROPOSAL / 2026-09-01</p>
+<h1>JRE βトライアル用 バックエンドサーバー構成案とコスト整理</h1>
+<p class="meta">作成 2026-09-01 / CTO（Opus 5）／Codex（gpt-5.6-sol）による第三者レビュー反映済み<br>対象＝都市開発諸制度シミュレーション（<code>site-trace-mvp</code>）を、施主の個人PCから外に出して<br>JR東日本（以下 JRE）βトライアル用に SD（スペースデータ）がホスティングする件。</p>
+</header>
+<div class="box warn"><p><b>この文書は提案のみ。</b> サーバーの契約・構築・課金操作は一切行っていない。<br>料金はすべて公開ページで調べた 2026-09-01 時点の値。契約直前に公式ページで再確認すること。</p></div>
+<nav class="toc">
+<p class="toc-title">目次</p>
+<ul><li><a href="#h2-1">0. 1画面サマリ（結論）</a></li>
+<li><a href="#h2-2">1. 現行システムの実態（提案の前提・すべてリポジトリで実測）</a></li>
+<li><a href="#h2-3">2. どれだけの機械が要るか（サイジングの根拠）</a></li>
+<li><a href="#h2-4">3. 構成案 3択</a></li>
+<li><a href="#h2-5">4. 認証・セキュリティ（10アカウントの管理）</a></li>
+<li><a href="#h2-6">5. 運用（デプロイ・監視・データの持ち込み）</a></li>
+<li><a href="#h2-7">6. コスト表</a></li>
+<li><a href="#h2-8">7. 推奨案と、本リリースへの移行段階</a></li>
+<li><a href="#h2-9">8. 施主判断が要る点（まとめ）</a></li>
+<li><a href="#h2-10">付録：この提案書の作り方（検証の透明性）</a></li></ul>
+</nav>
+<hr>
+<h2 id="h2-1">0. 1画面サマリ（結論）</h2>
+<h3>推奨＝<b>Google Cloud の仮想サーバー（VM）1台に丸ごと引っ越す。東京・8vCPU。認証は今使っている Cloudflare のまま。</b></h3>
+<div class="tw"><table>
+<thead><tr><th>項目</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td>構成</td><td>GCE（Google Compute Engine＝Googleクラウドの仮想サーバー）<code>e2-standard-8</code>（8vCPU/32GB）東京 1台＋ディスク100GB。Cloudflare Tunnel＋Cloudflare Access（今と同じ仕組みをそのまま移設）。同時ジョブ3本。</td></tr>
+<tr><td><b>月額</b></td><td><b>約 4.8万円／月</b>（税込・24時間稼働・認証は無料枠内・159.8円/USDで換算）</td></tr>
+<tr><td><b>トライアル3ヶ月 総額</b></td><td><b>約 14.3万円</b>（税込）＋ <b>移植・検証作業 5〜7人日</b></td></tr>
+<tr><td>安くする手</td><td>夜間・週末を自動停止すると <b>約1.9万円／月</b>（3ヶ月 約5.8万円）。国内VPSなら <b>約1.2万円／月</b>（3ヶ月 約3.5万円）。</td></tr>
+</tbody></table></div>
+<h3>理由 3行</h3>
+<ol>
+<li><b>今のコードがほぼそのまま載る。</b> 順番待ちキュー・認証（Cloudflare Access のトークン署名検証）・「自分のジョブしか見えない」所有者分離は<b>すでに実装済み</b>。作り直すのは Linux 用の起動設定・日本語フォント・Windows専用パス数箇所だけ。</li>
+<li><b>重いのはCPUだけ。</b> 1ジョブ＝実測 330〜380秒のCPU計算で、GPUもデータベースも要らない。<b>しかも1ジョブがほぼ1コアしか使わない</b>ので、「コア数＝同時に流せる本数」という単純な設計で足りる。分散させるほうが壊れやすい（§3-B）。</li>
+<li><b>調達ゼロで即日始められて、終われば消すだけで課金が止まる。</b> SD既存のGoogle Cloud に1台足すだけ。VPSは月額固定・最低利用期間つきで、新規契約の手続きぶんトライアル開始が遅れる。</li>
+</ol>
+<h3>先に決めてほしいこと（詳細は §8）</h3>
+<ul>
+<li><b>「10アカウント」と「100人」の関係</b>。10個のIDを100人で使い回すなら「誰がやったか」の記録が取れなくなる（監査上まずい）。<b>100人全員を識別するなら100個のメールアドレス登録が必要で、Cloudflare の無料枠50人を超える</b>（超過分 $7/人/月）。</li>
+<li><b>サービス水準</b>。本提案は<b>1台構成＝単一障害点（SPOF＝そこが壊れると全部止まる箇所）あり</b>。「冗長化された高可用システム」ではない。復旧目標（RTO）・データ復旧点（RPO）を先方と合意する必要がある。</li>
+</ul>
+<hr>
+<h2 id="h2-2">1. 現行システムの実態（提案の前提・すべてリポジトリで実測）</h2>
+<p>調査対象＝<code>C:\Users\user\projects\site-trace-mvp</code>（HEAD <code>8fc4fd6</code>・<b>読み取りのみ</b>）</p>
+<h3>1-1. 何が動いているか</h3>
+<pre><code>   JREの利用者のブラウザ
+        │ https://sim.mud-ai.com
+        ▼
+  [Cloudflare Access]  ← メールアドレス個別許可＋ワンタイムPIN（実装済み・稼働中）
+        │
+  [Cloudflare Tunnel]  ← サーバから外へ出ていく接続。サーバ側にポートを開けていない
+        │
+        ▼
+  施主PC（Windows・Core i7-8750H 6コア12スレッド・RAM 12GB）
+   ├ serve.py       :5600  静的配信＋下図タイル生成＋公開ガード＋:5601への中継
+   └ phase2_relay.py:5601  ジョブ受付・順番待ちキュー・パイプライン実行
+        │
+        └─ 子プロセスで phase25 → phase3 → phase35（日影）を逐次実行
+           出力時のみ Playwright（headless Chromium・--disable-gpu）で
+           pptx用の図キャプチャ／A3横PDF を作る</code></pre>
+<h3>1-2. 実測した数字（これが設計の根拠）</h3>
+<div class="tw"><table>
+<thead><tr><th>項目</th><th>実測値</th><th>出典</th></tr></thead>
+<tbody>
+<tr><td>1ジョブの所要時間</td><td><b>330〜380秒</b>（日影込み・虎ノ門・2026-08-28）</td><td><code>docs/jre_fb33_measure_20260828.md</code></td></tr>
+<tr><td>同時3本を流した時</td><td>各139〜144秒で完走（2026-08-21・当時1本=161秒）</td><td><code>phase2_relay.py</code> L299-305</td></tr>
+<tr><td>＝<b>ジョブはほぼ1コアしか使わない</b></td><td>3本並列でも1本ずつと速度がほぼ変わらない＝コア数がそのまま同時本数になる</td><td>同上</td></tr>
+<tr><td>下図タイルキャッシュ</td><td><b>479MB</b>（<code>basemap</code> 417MB＋生pbf 62MB・2,362ファイル・354/354タイル）</td><td><code>D:\site-trace-mvp_cache</code> 実測</td></tr>
+<tr><td>タイル未生成時の生成時間</td><td>1枚 37〜104秒（生成済みなら0.1秒）。生成には地理院サイトへの外部アクセスが必要</td><td><code>docs/jre_fb39_basemap_cache.md</code></td></tr>
+<tr><td>データ（<code>data/</code>）</td><td><b>264MB</b>（うち <code>_src</code> 75MB・<code>saisei_align</code> 37MB は生成元＝実行時は不要）</td><td>実測</td></tr>
+<tr><td>ジョブ出力（<code>out/</code>）</td><td><b>1.7GB / 57ジョブ ≒ 30MB/ジョブ</b></td><td>実測</td></tr>
+<tr><td>初回ページ読み込み量（概算）</td><td>index.html 594KB＋phase3.html 650KB＋vendor 1.8MB＋rdcl_ui.geojson 3.6MB ≒ <b>6MB</b></td><td>実測</td></tr>
+<tr><td>Pythonプロセスの常駐メモリ</td><td>合計 <b>0.18GB</b>（重いのはジョブ実行中の一時メモリと Chromium）</td><td><code>docs/jre_unverified_ledger.md</code></td></tr>
+</tbody></table></div>
+<h3>1-3. すでに出来ていること（＝作り直さなくていい）</h3>
+<ul>
+<li><b>順番待ちキュー</b>：<code>SIM_MAX_CONCURRENT_JOBS</code>（既定1・コード上限4）でサーバ側FIFO（先着順）。上限を超えたら503＋「混み合っています」表示。推定待ち時間も出す。ジョブが例外・中止・時間切れ・スレッド突然死のどれで終わっても次が走る二重の保険つき。</li>
+<li><b>認証</b>：Cloudflare Access のトークン（<code>Cf-Access-Jwt-Assertion</code>）を<b>RS256署名まで自前で検証</b>（<code>tools/cf_access.py</code>・改竄11系統のテスト付き）。さらに <code>SIM_PUBLIC_OUT=session</code> で「自分が回したジョブの結果しか見えない」所有者分離まで入っている。</li>
+<li><b>公開ガード</b>：内部ツールHTML5本・再配布禁止PDF・<code>/jobs</code> 一覧・保存APIを公開URLからは404/403にする。URL正規化バイパスも塞ぎ済み（<code>docs/security_p0_hotfix.md</code>）。</li>
+<li><b>オフライン耐性</b>：地図ライブラリ（Leaflet/turf/jsts 等 1.8MB）を <code>vendor/</code> に同梱済み＝CDN（外部配信サイト）が社内ネットワークで塞がれていても動く（13/13・17/17 PASS 実測）。</li>
+<li><b>死活監視の型</b>：<code>watchdog_sim.ps1</code> が5分毎に「上がっているか＋正体が serve.py か」まで見て復活させる。<b>Linuxではこれを systemd（Linuxの常駐サービス管理）に置き換える</b>。</li>
+</ul>
+<h3>1-4. Linuxへ移す時に直す必要があるもの（＝移植コスト）</h3>
+<div class="box warn"><p><b>注意</b>：初稿では「Pythonコードに Windows パスの直書きはゼロ」「外部ライブラリは4つ」と書いたが、<b>これは誤りだった</b>（<code>grep</code> のエスケープミス。Codexレビューで発覚し、実コードで再確認して以下に訂正）。</p></div>
+<div class="tw"><table>
+<thead><tr><th>#</th><th>内容</th><th>影響</th><th>工数</th></tr></thead>
+<tbody>
+<tr><td><b>L1</b></td><td><b>日本語フォント</b>。<code>export_pdf.py</code> / <code>build_phase25.py</code> / <code>index.html</code> が <code>Meiryo</code>・<code>Yu Gothic</code>（Windows専用フォント）を指定。Linuxには無い＝別フォントに置き換わって<b>文字幅が変わりA3レイアウトがはみ出す恐れ</b>。FB52-3 で「4カルテ×5制度×4画面サイズ＝76通り 超過0件」に追い込んだ実績があるので、<b>Noto Sans JP を入れて同じ76通りを測り直す＋基準画像との見た目の差分比較</b>。</td><td><b>最大のリスク</b>。出力物の見た目に直結</td><td>1.5人日</td></tr>
+<tr><td><b>L2</b></td><td><b>Windows専用パスの直書き（実コードで確認・7箇所）</b><br>・<code>phase3_engine/build_phase3.py:1544-1545</code> <code>_RAIL_DATA</code> / <code>_RAIL_COLORS</code>（鉄道データ）→ <b><code>if not exists(): return</code> で黙って抜ける＝エラーにならず3Dビューから鉄道が消える。最も危ない</b><br>・同 <code>:1531</code> <code>_CTX_SCENE</code>（周辺ビルのフォールバック）<br>・<code>phase2_relay.py:88</code> <code>BOT_ENV</code>（Discord通知）／<code>:95-96</code> <code>VENV_PY</code>・<code>VIEWSIM_DIR</code>（ViewSim連携）／<code>:1741</code> <code>CLAWD_CONFIG</code><br>→ すべて相対パス or 環境変数へ</td><td><b>黙って機能が欠ける</b>類の事故</td><td>0.5人日</td></tr>
+<tr><td><b>L3</b></td><td><code>phase2_relay.py:679</code> の <code>taskkill</code>（Windows専用のプロセス停止コマンド）。ジョブ中止・時間切れの1箇所。<code>start_new_session=True</code> ＋ プロセスグループへの SIGTERM/SIGKILL に置き換える（<code>/T</code> は子孫まで殺す指定なのでグループkillが等価）。</td><td>中止・時間切れ機能</td><td>0.3人日</td></tr>
+<tr><td><b>L4</b></td><td>起動口が <code>.bat</code> / <code>.vbs</code> / <code>watchdog_sim.ps1</code> の4系統 → <b>systemd ユニット3本</b>（serve / relay / cloudflared）に置き換え。<code>.sim_env</code> を読む仕組みはそのまま使える。<code>Restart=always</code>。</td><td>起動・自動復活</td><td>0.5人日</td></tr>
+<tr><td><b>L5</b></td><td><b><code>requirements.txt</code> が無い</b>（今は <code>parseai2-ecosystem\.venv</code> に相乗り）。<b>実行時に要る外部ライブラリ＝<code>shapely</code> / <code>numpy</code> / <code>python-pptx</code> / <code>playwright</code> / <code>Pillow</code>(pptx出力) / <code>requests</code>(siteplan) / <code>lxml</code></b>。GDAL・geopandas・pyproj は<b>ビルド用ツール（<code>tools/</code>・<code>build_*.py</code>）だけ</b>が使っており、サーバ実行には不要。バージョンを固定する。</td><td>再現性</td><td>0.5人日</td></tr>
+<tr><td><b>L6</b></td><td><code>data/</code> 264MB と <code>cache/</code> 479MB は <b>git管理外</b>（<code>.gitignore</code> に <code>data/*</code> <code>out/</code> <code>cache/</code>）。git clone だけでは動かない＝<b>初回に別途転送</b>する手順を作る。</td><td>初期構築</td><td>0.3人日</td></tr>
+<tr><td><b>L7</b></td><td><b>ジョブ台帳の SQLite 永続化</b>（§2-4・Codexレビューの指摘で Stage 1 に前倒し）。再起動でキューが消える問題の最小限の手当て。</td><td>運用品質</td><td>1.5人日（実装1＋障害試験0.5）</td></tr>
+<tr><td><b>L8</b></td><td>サーバ上で E2E を回し直す（門番45本・<code>tests/verify_jre_ui_e2e.py</code>・<code>verify_jre_cdn_offline.py</code>）＋ <b>生成したPPTXを実際のWindows版PowerPointで開いて確認</b>（python-pptx はファイルを書くだけで、描画するのは相手のPowerPoint）。</td><td>検収</td><td>1.0人日</td></tr>
+<tr><td>—</td><td>その他の確認項目（工数に含む）：Playwright/Chromium のバージョン固定と <code>playwright install --with-deps</code>／<code>TZ=Asia/Tokyo</code> と UTF-8 ロケール／<b>Linuxはファイル名の大文字小文字を区別する</b>（Windowsでは通っていた参照が落ちる）／CRLF・実行権限／shapely・numpy 固定＋代表入力での数値一致テスト</td><td></td><td></td></tr>
+<tr><td></td><td><b>合計</b></td><td></td><td><b>約 5〜7人日</b></td></tr>
+</tbody></table></div>
+<hr>
+<h2 id="h2-3">2. どれだけの機械が要るか（サイジングの根拠）</h2>
+<h3>2-1. 需要の見積り</h3>
+<p>「10アカウント・100人まで」の内訳を、重さで2つに分ける。</p>
+<div class="tw"><table>
+<thead><tr><th>種類</th><th>中身</th><th>重さ</th><th>同時100人でどうなるか</th></tr></thead>
+<tbody>
+<tr><td><b>閲覧・地図操作</b></td><td>HTML/JS/下図タイルの配信。タイルは生成済みならファイルを読んで返すだけ（0.1秒）</td><td><b>軽い</b>。1人あたり初回6MB＋タイル10〜30枚</td><td>1台で余裕。ディスク読み出しと帯域の勝負で、CPUはほぼ使わない</td></tr>
+<tr><td><b>STARTジョブ</b></td><td>phase25→phase3→phase35 のCPU計算</td><td><b>重い</b>。1本 330〜380秒・ほぼ1コア占有</td><td><b>ここだけがボトルネック</b>。同時に流せる本数＝実質コア数</td></tr>
+</tbody></table></div>
+<p>現実的な使われ方＝10アカウントが各自2〜5回/日回す＝<b>1日20〜50ジョブ</b>。<br>最悪ケース＝<b>説明会で10人が一斉にSTARTを押す</b>。</p>
+<h3>2-2. 同時ジョブ数と待ち時間（1ジョブ360秒＝6分として計算）</h3>
+<p>10人が一斉に押したとき、最後の人は <code>(ceil(10/N)-1) × 6分</code> <b>待ってから開始</b>し、そこから6分で完成する。</p>
+<div class="tw"><table>
+<thead><tr><th>同時本数 N</th><th>必要vCPU（web・タイル・出力用に2つ残す）</th><th>最後の人の<b>開始</b>まで</th><th>最後の人の<b>完成</b>まで</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td>1（今の既定）</td><td>4 vCPU</td><td>54分</td><td><b>60分</b></td><td>✕ 説明会で破綻する</td></tr>
+<tr><td><b>3</b></td><td><b>8 vCPU</b></td><td><b>18分</b></td><td><b>24分</b></td><td><b>○ 推奨（通常利用）</b></td></tr>
+<tr><td>4（コード上限）</td><td>10〜12 vCPU</td><td>12分</td><td>18分</td><td>△ 費用対効果が薄い</td></tr>
+<tr><td>6（コード改修要）</td><td>16 vCPU</td><td>6分</td><td>12分</td><td><b>説明会の日だけ一時的に上げる用</b></td></tr>
+</tbody></table></div>
+<ul>
+<li><b>同時3本＝<code>.sim_env</code> に <code>SIM_MAX_CONCURRENT_JOBS=3</code> と書くだけ</b>（コード変更ゼロ。上限4までは実装済み）。</li>
+<li><b>24分をJREが許容できるかは、サーバのスペックではなく先方と合意するサービス水準の問題</b>。「各自が好きな時に回す」なら十分。「10人が画面を見ながら待つ説明会」には長い → <b>その日だけ 16vCPU に変更（停止→マシンタイプ変更→起動で数分）</b>して同時6本にする運用を推奨。</li>
+<li><b>注意</b>：クラウドの「vCPU」は物理コアではなくハードウェアスレッド（1コアを2つに見せている単位）で、E2シリーズは割り当て時にIntel/AMDのどちらになるかが選べない。<b>施主PCでの実測がそのままクラウドで再現する保証はない</b> → §7-3 の技術検証（1〜2日）で同時1・3・4本を実測してから確定する。</li>
+<li><b>メモリ</b>：常駐0.18GB＋ジョブ1本あたり1〜1.5GB＋Chromium出力0.5〜1GB → 同時3本で<b>8GB前後</b>。16GBで足り、<code>e2-custom-8-16384</code>（8vCPU/16GB）にすれば月約7,000円安くなる見込み。ただし単価を公式ページで直接確認できていないため、<b>本提案の金額は確実に裏の取れた <code>e2-standard-8</code>（32GB）で出している</b>（§6-4）。</li>
+<li><b>ディスク</b>：コード＋data 264MB＋cache 479MB＋out 30MB/ジョブ。3ヶ月で500ジョブ回っても約15GB。<b>100GBで十分</b>（スナップショットはVMのディスク内には保存されないので、その分の余裕は不要）。</li>
+</ul>
+<h3>2-3. 可用性の考え方（正直に書く）</h3>
+<p><b>「冗長性がある」とは書かない。本提案は1台構成＝SPOF あり・ベストエフォート運用である。</b></p>
+<p><b>トライアルに「サーバ2台構成」は勧めない。</b> 理由＝今の作りは「順番待ちキューがプロセスのメモリ内」「結果 <code>out/</code> がローカルディスク」「下図キャッシュがローカルディスク」で、<b>状態が1台に貼り付いている</b>。共有キューも排他制御も無いまま2台にすると、<b>壊れ方のパターンが増えるだけ</b>で可用性は上がらない。</p>
+<p>代わりに「1台をしぶとく生かす＋壊れたら確実に戻せる」で組む（＝パイロットライト方式）。</p>
+<div class="tw"><table>
+<thead><tr><th>障害</th><th>復旧手段</th><th>目標時間</th><th>利用者への影響</th></tr></thead>
+<tbody>
+<tr><td>プロセスが落ちた</td><td>systemd <code>Restart=always</code>（自動再起動）</td><td>10秒以内</td><td>実行中ジョブは中断→「もう一度START」</td></tr>
+<tr><td>OSがハングした</td><td>クラウド側の自動再起動</td><td>数分</td><td>同上</td></tr>
+<tr><td>ディスク／VMが壊れた</td><td>スナップショット＋構築スクリプトから別ゾーンへ復元</td><td><b>RTO目標 30〜60分</b></td><td>前回スナップショット時点まで戻る</td></tr>
+<tr><td>Cloudflare Tunnelが切れた</td><td>cloudflared も systemd 常駐＋自動再接続</td><td>数十秒</td><td>一時的に開けない</td></tr>
+</tbody></table></div>
+<ul>
+<li><b>RTO（復旧目標時間）は「訓練で実測した値」しか約束しない。</b> トライアル開始前に<b>一度、実際にスナップショットから別ゾーンへ復元してTunnelを繋ぎ直し、実測時間を記録する</b>（§7-3）。</li>
+<li><b>RPO（どこまで戻るか）＝日次スナップショットなら最大24時間。</b> ジョブ結果は再実行できるので実害は小さいが、明示しておく。</li>
+<li>稼働中のスナップショットは原則「クラッシュ整合」（電源をいきなり抜いた状態と同等）。本システムはデータベースを持たずファイルを書くだけなので実害は小さいが、<b>取得は利用の少ない時間帯に回す</b>。</li>
+<li><b>同時アクセスの捌き方</b>：<code>serve.py</code> は <code>ThreadingHTTPServer</code>（リクエストごとにスレッド）でバックログも拡張済み。100人の閲覧なら問題ない。<b>大人数の説明会をやる回だけ <code>SIM_AUTOWARM=0</code></b>（下図の裏側での作り置きを止める）にしてCPUを利用者に全部回す。</li>
+</ul>
+<h3>2-4. 順番待ちの永続化（Stage 1 に前倒し／L7）</h3>
+<p>現状は<b>キューもジョブ状態もプロセスのメモリの中だけ</b>なので、再起動すると「待っていた人の順番」も「実行中のジョブ」も消える。トライアルでこれは説明しづらいので、<b>最小限の SQLite（1ファイルで動く軽量データベース）台帳</b>を入れる。</p>
+<ul>
+<li>保存するもの：<code>job_id</code> / 所有者（Accessのメール）/ 再実行に必要な入力の参照 / 状態（queued・running・succeeded・failed・interrupted）/ 投入・開始・終了時刻 / 試行回数 / 出力先。</li>
+<li>再起動時の扱い：<code>queued</code> は<b>そのまま再投入</b>、<code>running</code> は <code>interrupted</code> に落として画面に「中断されました。もう一度実行してください」と出す。<b>途中から再開する機能は作らない</b>（過剰）。</li>
+<li>これはプロセス再起動には効くが、<b>VM・ディスクごと壊れる障害には効かない</b>（そこはスナップショットの担当）。</li>
+<li>副産物として<b>監査ログ（誰がいつ何を回したか）が残る</b>＝§4-4 の要求も同時に満たす。</li>
+</ul>
+<hr>
+<h2 id="h2-4">3. 構成案 3択</h2>
+<h3>案A（推奨）— クラウドVM 1台に丸ごと引っ越す</h3>
+<pre><code>  JREの利用者 ──https──&gt; [Cloudflare Access]（メール個別許可＋ワンタイムPIN・50人まで無料）
+                              │
+                        [Cloudflare Tunnel]（無料）
+                              │  ※サーバへの受信は全拒否＝外から直接叩けない
+                              ▼
+  ┌───────────────────────────────────────────────┐
+  │  GCE e2-standard-8（東京 asia-northeast1）      │
+  │  8 vCPU / 32GB / pd-balanced 100GB             │
+  │  外部IPは付けるが VPC・OS とも受信全拒否         │
+  │    （※外部IPが無いとCloudflareにも地理院にも     │
+  │      出られない。Cloud NAT を置く手もあるが      │
+  │      1台なら「外部IP＋受信全拒否」が最も安い）    │
+  │                                                │
+  │  systemd: cloudflared / sim-web / sim-relay    │
+  │  SIM_MAX_CONCURRENT_JOBS=3                     │
+  │  cache/ 479MB（事前に転送して持ち込む）          │
+  │  SQLiteジョブ台帳（L7）／日次スナップショット      │
+  └───────────────────────────────────────────────┘
+                              │ 外向きのみ
+                       cyberjapandata.gsi.go.jp（未生成タイルの補充）</code></pre>
+<ul>
+<li><b>スペック根拠</b>：§2-2。8vCPU＝同時3ジョブ＋web/タイル/出力用に2コア残す。</li>
+<li><b>スケール手段</b>：停止→マシンタイプ変更→起動で 16vCPU に上げられる（数分・データはそのまま）。説明会の日だけ上げて翌日戻す、が可能。</li>
+<li><b>弱点</b>：①1台＝SPOF（計画停止中は使えない）②月額はVPSの約4倍 ③従量課金なので予算アラートが必須。</li>
+</ul>
+<h3>案B（Stage 1 では非推奨）— コンテナ＋ワーカー分離（Cloud Run 等）</h3>
+<p>「Webはコンテナ、重い計算はジョブワーカー」という<b>一般論としては正しい形で、本番（Stage 3）の行き先はこれ</b>。だが<b>今のコードのままでは Stage 1 に採れない</b>。</p>
+<ul>
+<li><b>時間の問題ではない</b>：Cloud Run のリクエスト上限は<b>60分</b>、Cloud Run Jobs は<b>168時間</b>なので、6分の処理は余裕で収まる。</li>
+<li><b>合わない本当の理由（3つとも作り替えが要る）</b><ol><li><b>順番待ちキューとジョブ状態がプロセスのメモリ内</b>。最小インスタンス1にしてもコンテナは任意に作り直されるので、そのたびにキューと実行中ジョブが消える。→ データベース化が必要（＝L7を大きく超える規模）。</li><li><b>結果 <code>out/</code> と下図 <code>cache/</code> がローカルディスク</b>。Cloud Run のファイルシステムは<b>メモリ上</b>で停止時に消える＝毎回479MBのキャッシュが飛び、1枚37〜104秒の再生成地獄になる。Cloud Storage FUSE（オブジェクトストレージをフォルダのように見せる仕組み）は上書き・リネーム・ディレクトリ操作の挙動が普通のファイルシステムと違うので、そのままでは動かない。</li><li><b>UIが1秒ごとに <code>/job_status</code> を叩くポーリング方式</b>＝「同じインスタンスに繋がり続ける」前提。複数インスタンスになると状態が見えなくなる。</li></ol></li>
+<li><b>結論</b>：「Cloud Run でも工夫すれば動くが、VMより複雑で信頼性が下がる」＝Stage 1 では不採用。<b>Stage 3（§7）で正解になる。</b></li>
+</ul>
+<h3>案C（コスト最優先）— 国内VPS 1台</h3>
+<ul>
+<li>中身は案Aとまったく同じ（同じLinux・同じsystemd・同じCloudflare Tunnel/Access）。<b>違うのは箱と課金だけ。</b></li>
+<li><b>月額が案Aの1/4程度</b>。転送量無制限・固定料金で読みやすい。</li>
+<li><b>弱点</b>：①スナップショット/復元やスペック変更がクラウドほど柔軟でない ②最低利用期間がある（さくらは3ヶ月）＝トライアル終了で即止められない ③<b>新規契約の手続きが要る</b>＝トライアル開始が遅れうる ④SDの既存クラウド管理（権限・監査・請求）の外に出る ⑤<b>「8コア」の実性能はGCEと同じとは限らない</b>（共有CPU・混雑時の性能低下）。<b>§7-3 の技術検証を通してから選ぶこと。「機能面は何も落ちない」と無条件には言えない。</b></li>
+<li><b>こういう時に選ぶ</b>：トライアルが確実に3ヶ月以上続く／コスト最優先／SD側にVPS運用の担当がいる。</li>
+</ul>
+<h3>案D（参考）— 現状維持（施主PC＋Cloudflare Tunnel）</h3>
+<p>費用0円だが<b>JREに出す構成としては不可</b>。理由＝①PCの電源・スリープ・再起動でサービスが落ちる ②施主がPCを業務で使う＝重い作業とジョブが食い合う（空きメモリが657MBまで落ちてPlaywrightが落ちた実測記録あり）③GPUドライバ起因のブルースクリーン実績あり ④個人PCに顧客の検討データが載る。<b>比較の基準線としてのみ記載。</b></p>
+<hr>
+<h2 id="h2-5">4. 認証・セキュリティ（10アカウントの管理）</h2>
+<h3>4-1. 選択肢の軽重比較</h3>
+<div class="tw"><table>
+<thead><tr><th>方式</th><th>費用</th><th>JRE側の手間</th><th>個人単位の発行/失効</th><th>「他人の結果が見えない」を保てるか</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td><b>Cloudflare Access（推奨・すでに稼働中）</b></td><td><b>0円</b>（50ユーザーまで無料。超過分 $7/人/月）</td><td>メールアドレスを教えるだけ。アプリ導入なし。ログインは<b>届いたPINを入れるだけ</b></td><td><b>○</b>（ダッシュボードでメール1件ずつ追加・削除）</td><td><b>○</b>（署名検証済みトークンのメールでジョブ所有者を判定＝実装済み）</td><td><b>◎ 採用</b></td></tr>
+<tr><td>Basic認証（ID/PWをブラウザが聞く方式）</td><td>0円</td><td>共有ID/PWを配る</td><td><b>✕</b>（全員同じ鍵。1人抜けたら全員変更）</td><td><b>✕</b>（誰のジョブか分からず所有者分離が無効化）</td><td>✕</td></tr>
+<tr><td>IP制限（JRE社内の固定IPだけ許可）</td><td>0円</td><td><b>情シスへの依頼が必要</b>（固定グローバルIPの確認）。在宅・出張で使えない</td><td>✕</td><td>✕</td><td>△ Accessとの併用のみ</td></tr>
+<tr><td>Google IAP（Identity-Aware Proxy）</td><td>ロードバランサ代が別途</td><td><b>JRE側がGoogleアカウント必須</b>。Microsoft 365 系の企業だと詰む</td><td>○</td><td>○</td><td>△ GCP前提すぎる</td></tr>
+<tr><td>Tailscale等のVPN</td><td>有料（ユーザー課金）</td><td><b>各端末にアプリのインストールが必要</b>＝情シス審査が要る</td><td>○</td><td>○</td><td>✕ トライアルには重い</td></tr>
+</tbody></table></div>
+<h3>4-2. 推奨構成の中身</h3>
+<p><b>Cloudflare Tunnel ＋ Cloudflare Access（One-time PIN・Emails個別Allow）を、そのままクラウドVMへ持っていく。</b></p>
+<ul>
+<li><b>なぜ強いか</b>：Tunnel は VM から Cloudflare へ<b>外向きに</b>つなぐ方式なので、<b>受信を全拒否できる</b>（管理用SSHも Cloudflare 経由に寄せられる）＝ポートスキャンや総当たりの対象にならない。Cloudflare 公式もこの構成を案内している。</li>
+<li><b>費用</b>＝<b>50ユーザーまで無料</b>。超えたら Standard $7/ユーザー/月。</li>
+</ul>
+<p>出典: <a href="https://www.cloudflare.com/plans/zero-trust-services/" target="_blank" rel="noopener">Cloudflare Zero Trust プラン</a> / <a href="https://community.cloudflare.com/t/what-happens-if-i-exceed-50-users/479340" target="_blank" rel="noopener">50ユーザー超過時の扱い（Cloudflare Community）</a></p>
+<ul>
+<li><b>必ずやること（<code>docs/security_p0_hotfix.md</code> の申し送り）</b>：<ul><li>ポリシーは <b>Emails（個別列挙）</b> で作る。「ログイン方法＝One-time PIN」だけのルールにしない（それだけだと<b>有効なメールを持つ人なら誰でも通る</b>）。</li><li><code>SIM_ACCESS_JWT=verify</code>（トークンの署名検証・<b>現行の既定</b>）を維持する。</li><li><code>.sim_env</code> の <code>SIM_ACCESS_KEY</code> と Tunnel のトークンは、クラウドへ移す際に<b>新しい値へ振り直す</b>（施主PC由来の鍵をそのまま持ち込まない）。トライアル終了時にも失効させる。</li></ul></li>
+</ul>
+<h3>4-3. 「10アカウント／100人」問題（要判断）</h3>
+<ul>
+<li><b>10個のIDを100人で共有する</b>：Cloudflare の費用は0円のままだが、<b>「誰がそのジョブを回したか」が分からなくなり、<code>SIM_PUBLIC_OUT=session</code> の所有者分離も10グループ単位になる</b>（同じIDの人同士は互いの結果が見える）。JRE内部の情報管理として許容されるか、先方に確認が要る。</li>
+<li><b>100人全員を個別に登録する</b>：監査性は完璧だが、<b>Cloudflare の無料枠50人を超える</b>＝50人超過分に $7/人/月（100人なら $350/月 ≒ 5.6万円/月）。</li>
+<li><b>推奨の落としどころ</b>：まず<b>実際に使う人数を先方に確認</b>する。50人以内なら全員個別登録が無料で最良。50人を超えるなら「部署単位で共有IDにするが、アプリ側の SQLite 台帳（L7）に投入者を必ず残し、共有IDの範囲内では互いの結果が見える」ことを明記して合意する。</li>
+</ul>
+<h3>4-4. JRE案件として追加で決めておくこと（Codexレビュー指摘）</h3>
+<div class="tw"><table>
+<thead><tr><th>項目</th><th>現状</th><th>対応</th></tr></thead>
+<tbody>
+<tr><td><b>監査ログの保持期間</b></td><td>Cloudflare の無料プランは Access のログ保持が<b>24時間</b>＝監査証跡としては短すぎる</td><td><b>アプリ側で「誰が・いつ・どのジョブを投入/閲覧/再実行したか」を SQLite 台帳＋構造化ログに残し、90〜180日保持</b>（L7の副産物として実現）</td></tr>
+<tr><td><b>データ所在地</b></td><td>「GCP東京だから全部日本国内」とは言えない。<b>Cloudflare はエッジでTLSを終端し、ログ・メタデータは標準ではグローバルに保存され得る</b></td><td>先方の要求水準を確認。厳格な国内要件があるなら Cloudflare の Data Localization（Enterprise相当）か、Access をやめて別方式の検討が要る</td></tr>
+<tr><td><b>スナップショットの所在</b></td><td>GCEのスナップショットは既定でグローバルリソース</td><td>所在地要件があるなら<b>リージョナルスコープ（東京固定）を明示指定</b></td></tr>
+<tr><td><b>秘密情報の扱い</b></td><td><code>.sim_env</code> に鍵が平文</td><td>パーミッション <code>0600</code>、可能なら Secret Manager。VMのサービスアカウントは最小権限</td></tr>
+<tr><td><b>退去手順</b></td><td>未定</td><td><b>トライアル終了後のデータ削除期限と削除報告</b>、Tunnel/Accessの失効、VM・ディスク・スナップショットの破棄を合意書に入れる</td></tr>
+<tr><td><b>インシデント対応</b></td><td>未定</td><td>連絡先・一次報告までの時間・OSパッチ適用方針を決める</td></tr>
+<tr><td><b>予算暴走</b></td><td>—</td><td>予算アラートを月額の1.5倍で設定</td></tr>
+<tr><td><b>JRE側ネットワークの事前疎通</b></td><td>未確認</td><td>①公開URLのドメインが社内プロキシで許可されるか ②<b>ワンタイムPINメールが受信できるか（迷惑メール判定されないか）</b>。<b>この2つはトライアル開始前に必ず実機で確認する</b>（塞がれていると当日詰む）</td></tr>
+</tbody></table></div>
+<hr>
+<h2 id="h2-6">5. 運用（デプロイ・監視・データの持ち込み）</h2>
+<h3>5-1. 初回構築の手順</h3>
+<ol>
+<li>VM作成（東京・Ubuntu 22.04 LTS・8vCPU/32GB・pd-balanced 100GB）。<b>VPC・OSとも受信全拒否</b>。外部IPは付ける（付けないと外に出られない）。</li>
+<li><code>apt</code> で Python 3.11・<code>fonts-noto-cjk</code>（日本語フォント）・<code>cloudflared</code> を導入。</li>
+<li><code>git clone</code> → <code>python -m venv</code> → <code>pip install -r requirements.txt</code>（L5で作る）→ <code>playwright install --with-deps chromium</code>（バージョン固定）。</li>
+<li><b><code>data/</code> と <code>cache/</code> を転送</b>（§5-3）。</li>
+<li><code>.sim_env</code> を配置（<b>鍵は新規発行</b>・<code>SIM_MAX_CONCURRENT_JOBS=3</code>・<code>SIM_PUBLIC_CHAT=0</code>・<code>SIM_PUBLIC_JOBS=session</code>・<code>SIM_PUBLIC_OUT=session</code>）。</li>
+<li>systemd ユニット3本（<code>cloudflared</code> / <code>sim-web</code> / <code>sim-relay</code>）を <code>Restart=always</code> で登録。<code>TZ=Asia/Tokyo</code>。</li>
+<li>Cloudflare 側で Tunnel の向き先をこのVMに変更＋Access ポリシーにメールを登録。</li>
+<li><b>構築を全部スクリプト化しておく</b>（＝復旧手順そのものになる）。</li>
+<li>検収＝門番45本＋<code>tests/verify_jre_ui_e2e.py</code> ＋ <b>L1のPDF/pptxレイアウト76通り再測定</b> ＋ <b>PPTXをWindows版PowerPointで開く</b>。</li>
+</ol>
+<h3>5-2. 更新（master → サーバ反映）</h3>
+<pre><code>サーバ上で:  git pull  →  systemctl restart sim-web sim-relay</code></pre>
+<ul>
+<li><b>実行中ジョブがある間は再起動しない</b>（L7導入後は待ちジョブが復元されるが、実行中ジョブは中断扱い）。<code>/jobs</code> で0件を確認してから。</li>
+<li>静的ファイル（HTML/JS）だけの更新は <code>git pull</code> のみで反映（<code>serve.py</code> はディスクから毎回読む）。<b>Pythonの <code>phase3_engine</code> / <code>phase2_relay.py</code> を変えたときだけ再起動が要る</b>（現行運用と同じ）。</li>
+<li>ロールバック＝<code>git checkout &lt;前のcommit&gt;</code> ＋ 再起動。データは触らないので数分で戻せる。</li>
+</ul>
+<h3>5-3. タイルキャッシュ（479MB）の持ち込み ← <b>省略すると事故る</b></h3>
+<ul>
+<li><b>理由</b>：現地で0から作ると <b>1枚37〜104秒 × 354タイル ＝ 最大10時間</b>かかり、そのあいだ地理院サイト（<code>cyberjapandata.gsi.go.jp</code>）を354回叩く。相手先への礼儀としても良くない。</li>
+<li><b>やり方</b>：<code>cache/basemap</code>（417MB）＋<code>cache/gsi_pbf</code>（62MB）を tar.gz で固めて転送し、同じパスに展開する。数分で終わる。</li>
+<li><b>必ず確認</b>：<code>tools/basemap_tiles.SCHEMA_VERSION</code>（現行 <b>3</b>）とキャッシュ内の <code>schema_version</code> が一致すること。ずれていると<b>配信側が黙って捨てて作り直す</b>＝持ち込んだ意味が消える。展開後に <code>GET /prewarm_status</code> が <b>354/354</b> を返すことを実測する。</li>
+<li>サーバ上では <code>SIM_AUTOWARM=1</code>（暇な時だけ自動補充）を維持。説明会の回だけ0にする（§2-3）。</li>
+</ul>
+<h3>5-4. 監視</h3>
+<div class="tw"><table>
+<thead><tr><th>見るもの</th><th>方法</th><th>通知先</th></tr></thead>
+<tbody>
+<tr><td>プロセス生死</td><td>systemd <code>Restart=always</code> ＋ 5分毎に <code>GET /ping</code>・<code>GET /prewarm_status</code> を叩く cron</td><td>異常時のみ Discord（<code>phase2_relay.py</code> に Discord 通知の口が既にある）</td></tr>
+<tr><td>ジョブ失敗</td><td>SQLite台帳の <code>failed</code> / <code>interrupted</code> を集計</td><td>同上</td></tr>
+<tr><td>ディスク</td><td>使用率80%で警告（<code>out/</code> が30MB/ジョブで増える）</td><td>同上</td></tr>
+<tr><td>費用</td><td>予算アラート（月額の1.5倍）</td><td>メール</td></tr>
+<tr><td>バックアップ</td><td>日次スナップショット（保持7日）＋<b>開始前に一度、実際に復元して所要時間を記録</b></td><td>—</td></tr>
+</tbody></table></div>
+<p><code>out/</code> の掃除＝90日より古いジョブを月次でアーカイブ。500ジョブでも約15GB なので3ヶ月のトライアル中は放置でよい。</p>
+<hr>
+<h2 id="h2-7">6. コスト表</h2>
+<p><b>為替＝1 USD = 159.8円（2026-09-01・<a href="https://tradingeconomics.com/japan/currency" target="_blank" rel="noopener">TradingEconomics</a>）。</b><br><b>比較の公平のため、以下はすべて「税込」で並べる</b>（GCPは税抜表示＋消費税10%、国内VPSは税込表示）。</p>
+<h3>6-1. 案別 月額（安い順・税込）</h3>
+<div class="tw"><table>
+<thead><tr><th>案</th><th>中身</th><th>月額（円・税込）</th><th>3ヶ月（円・税込）</th><th>備考</th></tr></thead>
+<tbody>
+<tr><td><b>C-1 Xserver VPS 16GB</b></td><td>8コア/16GB/NVMe 800GB・転送無制限</td><td><b>11,770</b></td><td><b>35,310</b></td><td>1ヶ月契約可・初期0円</td></tr>
+<tr><td><b>C-2 さくらのVPS 16GB 東京</b></td><td>8コア/16GB/SSD 800GB・転送無制限</td><td><b>15,400</b></td><td><b>46,200</b></td><td><b>最低3ヶ月</b>・初期0円・法人実績</td></tr>
+<tr><td><b>A' GCE 8vCPU 夜間週末停止</b></td><td>平日8-20時のみ（約264時間/月）</td><td><b>約 19,400</b></td><td>約 58,200</td><td>停止中もディスク・IP代は発生</td></tr>
+<tr><td><b>A GCE e2-standard-8 24時間（推奨）</b></td><td>8vCPU/32GB・pd-balanced 100GB</td><td><b>約 47,600</b></td><td><b>約 142,800</b></td><td><b>推奨</b></td></tr>
+<tr><td>（参考）B Cloud Run 8vCPU/16GB 常時</td><td>—</td><td>約 81,000</td><td>約 243,000</td><td>§3-B の理由で不採用。常時稼働ならVMより高い</td></tr>
+</tbody></table></div>
+<h3>6-2. 推奨案（A）の内訳</h3>
+<div class="tw"><table>
+<thead><tr><th>項目</th><th>単価</th><th>数量</th><th>月額(USD)</th><th>月額(円・税抜)</th><th>出典</th></tr></thead>
+<tbody>
+<tr><td>GCE <code>e2-standard-8</code>（東京・オンデマンド）</td><td>$0.3439/時</td><td>730時間</td><td>$251.02</td><td>40,113</td><td><a href="https://cloud.google.com/compute/vm-instance-pricing" target="_blank" rel="noopener">公式VM料金</a> ／ <a href="https://gcloud-compute.com/e2-standard-8.html" target="_blank" rel="noopener">gcloud-compute.com（GCP価格APIミラー）</a></td></tr>
+<tr><td>永続ディスク pd-balanced</td><td>$0.13/GiB・月</td><td>100GB</td><td>$13.00</td><td>2,077</td><td><a href="https://cloud.google.com/compute/disks-image-pricing" target="_blank" rel="noopener">公式ディスク料金</a></td></tr>
+<tr><td>スナップショット（7日分・差分 約50GiB）</td><td>$0.064/GiB・月</td><td>50GiB</td><td>$3.20</td><td>511</td><td>同上</td></tr>
+<tr><td>外部IPv4アドレス（稼働中VMに付与）</td><td>約 $0.005/時（<b>2024年2月から有料化</b>・正確な単価は要確認）</td><td>1個</td><td>約 $3.65</td><td>約 583</td><td><a href="https://cloud.google.com/vpc/pricing-announce-external-ips" target="_blank" rel="noopener">外部IPv4の料金改定告知（公式）</a></td></tr>
+<tr><td>下り通信（egress）</td><td>$0.12/GiB（<b>月200GiBまで無料</b>）</td><td>約15GB/月</td><td>$0</td><td>0</td><td><a href="https://cloud.google.com/vpc/network-pricing" target="_blank" rel="noopener">公式ネットワーク料金</a>。無料枠内</td></tr>
+<tr><td>Cloudflare Tunnel</td><td>無料</td><td>—</td><td>$0</td><td>0</td><td><a href="https://www.cloudflare.com/plans/zero-trust-services/" target="_blank" rel="noopener">Cloudflare</a></td></tr>
+<tr><td>Cloudflare Access</td><td>50ユーザーまで無料</td><td>〜50人</td><td>$0</td><td>0</td><td>同上</td></tr>
+<tr><td>TLS証明書</td><td>無料（Cloudflareが終端）</td><td>—</td><td>$0</td><td>0</td><td>—</td></tr>
+<tr><td><b>小計（税抜）</b></td><td></td><td></td><td><b>約 $270.9</b></td><td><b>約 43,300</b></td><td></td></tr>
+<tr><td><b>合計（消費税10%込）</b></td><td></td><td></td><td></td><td><b>約 47,600</b></td><td></td></tr>
+</tbody></table></div>
+<ul>
+<li><b>E2シリーズには継続利用割引（SUD）が付かない</b>ことを公式で確認済み（SUD対象は N1/N2/N2D/C2/M1/M2 のみ）。出典: <a href="https://docs.cloud.google.com/compute/docs/sustained-use-discounts" target="_blank" rel="noopener">Sustained use discounts | Google Cloud</a></li>
+<li>1年の確約利用割引（CUD）なら約37%引き（$158/月）だが、<b>3ヶ月のトライアルで1年契約は損</b>なので採らない。</li>
+<li><b>Spot VM（安い代わりにいつでも強制停止される枠）は使わない。</b> 中断時の自動再起動もSLAも無く、<b>メモリ内キューとの組み合わせが最悪</b>。</li>
+<li><b>初期費用</b>：クラウド・VPSとも0円。かかるのは<b>移植・検証 5〜7人日</b>（§1-4）。</li>
+</ul>
+<h3>6-3. 他社比較（参考・8vCPU/32GB 24時間・税抜）</h3>
+<div class="tw"><table>
+<thead><tr><th></th><th>月額(USD)</th><th>月額(円)</th></tr></thead>
+<tbody>
+<tr><td>GCE <code>e2-standard-8</code></td><td>$251.0</td><td>40,113</td></tr>
+<tr><td>GCE <code>n2-standard-8</code>（現行世代・より高性能）</td><td>$363.8</td><td>58,140</td></tr>
+<tr><td>AWS <code>m7i.2xlarge</code>（東京）</td><td>$380.2</td><td>60,753</td></tr>
+</tbody></table></div>
+<p>出典: <a href="https://gcloud-compute.com/" target="_blank" rel="noopener">gcloud-compute.com</a> / <a href="https://aws-pricing.com/ap-northeast-1.html" target="_blank" rel="noopener">aws-pricing.com ap-northeast-1</a><br>→ <b>この用途（汎用・CPU律速）では GCP の E2 が明確に安い。</b> AWSに寄せる理由は無い。</p>
+<h3>6-4. 未確定・要再確認の数字</h3>
+<ul>
+<li><b><code>e2-custom-8-16384</code>（8vCPU/16GB）の東京単価</b>：$0.284/時＝約207ドル/月と<b>推計</b>（e2-standard-8 から vCPU/メモリ単価を逆算）。当たっていれば<b>月約7,000円安くなる</b>が、公式ページで直接確認できていないので本文の金額には反映していない。<b>技術検証（§7-3）でメモリ実測を取った上で、公式の料金計算ツールで確認してから採用する。</b></li>
+<li>Cloud NAT を使う場合の料金（未確認）。本提案は「外部IP＋受信全拒否」で$0にしているので不要。</li>
+<li>Cloudflare Access の 50ユーザー無料枠と $7/ユーザーは公式サイトと公式コミュニティで確認したが、<b>プラン改定の可能性があるので契約直前に再確認</b>。</li>
+<li>Xserver VPS・さくらのVPS の東京リージョン明記の有無。Xserver は「1ヶ月契約 11,770円・税込・初期0円」を公式ページで確認済み（36ヶ月契約なら8,690円）。</li>
+</ul>
+<hr>
+<h2 id="h2-8">7. 推奨案と、本リリースへの移行段階</h2>
+<h3>7-1. 推奨＝<b>案A改（GCE 8vCPU 東京 1台・24時間・Cloudflare Tunnel＋Access・同時3ジョブ・SQLite台帳つき）</b></h3>
+<p>決め手は3つ。①<b>今のコードがそのまま載る</b>＝移植5〜7人日で済み、トライアルの中身（諸制度の判定ロジック）に一切手を入れずに済む。②<b>重いのはCPUだけ</b>なので、分散させるより1台を太らせるほうが安く・単純で・壊れにくい。③<b>調達ゼロで即日始められて、終われば消すだけで課金が止まる</b>。</p>
+<p>コスト最優先の指示が出たら <b>案C-1（Xserver VPS 16GB・月11,770円）へ差し替えられる。構成もコードも運用手順も同一</b>なので、<b>§7-3 の技術検証を通してから最後に決めればよい</b>。</p>
+<h3>7-2. 段階案（トライアル → 本リリース）</h3>
+<p><b>Stage 1（本提案・βトライアル3ヶ月）</b>：VM1台・同時3ジョブ・Cloudflare Access。SQLite台帳で「待ち行列の復元」と「監査ログ」だけ確保。「実行中ジョブは再起動で中断」「計画停止中は使えない」「RTO 30〜60分／RPO 24時間」を先方に明示して合意する。<br>↓ <b>ここで得たい実データ＝1日あたりの実ジョブ数・同時押しの実際の山・待ち時間の許容度。Stage 2 の設計はこの実測で決める（今は想像で作らない）。</b></p>
+<p><b>Stage 2（本リリース初期・〜数十社）</b>：ボトルネックが出た順に、①<b>ジョブ台帳を本格的なデータベースへ</b> ②<b><code>out/</code> をオブジェクトストレージへ</b>（保存期限管理とサーバ入れ替えが可能になる）③<b>計算ワーカーを別VMへ分離</b>（計算だけ増やせる）。①〜③が済んで初めてWeb側の複数台化に意味が出る。認証は Cloudflare Access のまま、顧客企業のIdP（SAML/OIDC＝会社のログイン基盤との連携）へ拡張。</p>
+<p><b>Stage 3（本格運用・課金開始後）</b>：Web＝Cloud Run、受付＝Cloud Tasks/Pub/Sub、計算＝Cloud Run Jobs（1タスク最大168時間なので余裕）、成果物＝Cloud Storage、下図キャッシュ＝共有ストレージ＋CDN。<b>§3-B の案Bはここで正解になる。トライアルの段階で先取りしない</b>（先取りすると壊れる箇所が増えるだけで、まだ得るものが無い）。</p>
+<h3>7-3. 着手順（優先順位つき）</h3>
+<ol>
+<li><b>JREとサービス水準を合意する</b>（先に決めないと機械が決まらない）。「最後の人が24分待ちで許容か」「10アカウントと100人の意味」「計画停止の枠」「RTO/RPO」「トライアル終了後のデータ削除」。</li>
+<li><b>JRE側ネットワークの疎通確認</b>（ドメイン許可・PINメール受信）。塞がれていたら構成ごと見直しになる。</li>
+<li><b>使い捨てのLinux VMで1〜2日の技術検証</b>。8vCPUで同時1・3・4本を実測（所要時間・ピークメモリ・CPU・Chromium失敗率）、PDF/PPTXのレイアウト76通り、鉄道表示など全機能の目視確認。<b>ここで「8vCPU/16GBで足りるか」「VPSでも同等か」が確定する。</b></li>
+<li><b>移植（L1〜L8・5〜7人日）</b>。最優先は L1（フォント）と L2（Windowsパスの黙った機能欠落）。</li>
+<li><b>復旧の実証</b>。スナップショットから別ゾーンへ復元し、Tunnel を繋ぎ直して<b>実測RTOを記録</b>。この値だけを先方に約束する。</li>
+<li><b>セキュリティ・運用の付属書1枚</b>（§4-4 の表を先方向けに書き起こす）。</li>
+</ol>
+<hr>
+<h2 id="h2-9">8. 施主判断が要る点（まとめ）</h2>
+<ol>
+<li><b>案A（月約4.8万・即開始）と案C-1（月約1.2万・契約手続きが要る）のどちらにするか。</b> 3ヶ月の差額は約10.7万円。この10.7万円で買うのは「調達ゼロ・即開始」「いつでも止められる」「スペック変更が再起動だけ」「SDの既存クラウド管理下（権限・監査・請求が一本化）」の4つ。<b>JR東日本向け案件では開始が数週間ずれるコストのほうが大きい</b>と判断して案Aを推奨するが、コスト最優先なら案C-1でも構成は同じ。</li>
+<li><b>24時間稼働か、夜間週末停止か</b>（停止なら月4.8万→1.9万。ただし「夜間・週末は開けません」と先方に言う必要がある）。</li>
+<li><b>「10アカウント／100人」の実態</b>（§4-3）。50人以内なら全員個別登録が無料で最良。</li>
+<li>公開ドメインを <code>sim.mud-ai.com</code>（MUD-Ai名義）のままにするか、<b>SD名義の新ドメイン</b>にするか。JRE向けの正式配布なら後者が自然。</li>
+<li>JRE側情シスへの事前確認を、いつ・誰から依頼するか。</li>
+<li><b>移植・検証（5〜7人日）を誰がいつやるか。</b> L1（フォントによるレイアウト崩れ）と L2（Windowsパス由来の黙った機能欠落＝鉄道が3Dビューから消える等）は、実測で潰すまで「完了」と言えない。</li>
+</ol>
+<hr>
+<h2 id="h2-10">付録：この提案書の作り方（検証の透明性）</h2>
+<ul>
+<li><b>現行システムの数字</b>は全て <code>C:\Users\user\projects\site-trace-mvp</code>（HEAD <code>8fc4fd6</code>）を読み取り専用で調べた実測値。書き込み・コミットは一切していない。</li>
+<li><b>料金</b>は 2026-09-01 時点の公式ページ（cloud.google.com / cloudflare.com / vps.xserver.ne.jp 等）を確認。一次確認が取れなかったものは §6-4 に列挙した。</li>
+<li><b>構成の妥当性は Codex（gpt-5.6-sol）に第三者レビューを依頼</b>し、指摘を反映済み。主な訂正＝①待ち時間の計算誤り（24分は「完成」であって「開始」ではない）②「Pythonコードに Windows パスの直書きはゼロ」は<code>grep</code>のミスによる誤り（実際は7箇所あり、うち鉄道データは黙って機能が欠ける）③依存ライブラリは4つでなく7つ ④外部IP／Cloud NAT が構成から抜けていた ⑤スナップショットはVMディスク内に保存されない ⑥「冗長性」という語を「限定可用性＋RTO/RPO」に改めた ⑦SQLite台帳をStage 1へ前倒し ⑧監査ログ保持・データ所在地・退去手順の追加。</li>
+</ul>
+<footer>
+<p><b>合同会社MUD-Ai</b> ｜ 本ページはレビュー用の内部資料です。</p>
+<p>元資料: jre_backend_proposal.md（作成 2026-09-01）をHTML化。数値・料金は本文記載時点のもので、契約直前に公式ページで再確認すること。</p>
+</footer>
+</div></body></html>
