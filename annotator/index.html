@@ -22,25 +22,38 @@ body {
   display: none;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   background: #1e1e1e;
   border-bottom: 1px solid #333;
   align-items: center;
 }
 
 .tool-btn {
-  padding: 8px 12px;
-  border: 2px solid transparent;
-  border-radius: 8px;
+  padding: 5px 9px;
+  min-height: 34px;
+  border: 2px solid #3a3a3a;
+  border-radius: 7px;
   background: #2e2e2e;
   color: #ccc;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.35;
   white-space: nowrap;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
   transition: background 0.1s;
+}
+/* 指で押す端末・スマホ幅では最小タップ寸法（36px）を割らない */
+@media (pointer: coarse), (max-width: 700px) {
+  .tool-btn { min-height: 36px; }
+}
+/* スマホ幅：グループ化でツールバーが伸びた分を詰める（キャンバスの面積を守る） */
+@media (max-width: 700px) {
+  #toolbar { gap: 4px; padding: 4px 6px; }
+  .tool-group { gap: 3px; padding: 1px 4px 1px 3px; }
+  .tool-btn { padding: 3px 6px; font-size: 11px; }
+  .cat-label { font-size: 9px; }
 }
 .tool-btn:active { background: #3e3e3e; }
 .tool-btn.active {
@@ -49,22 +62,69 @@ body {
   border-color: #4a9eff;
 }
 
+/* ===== カテゴリ（線／囲い／塗り）とユーティリティのグループ ===== */
+.tool-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;      /* スマホ幅でグループがはみ出して押せなくならないように */
+  max-width: 100%;
+  gap: 4px;
+  padding: 2px 6px 2px 5px;
+  border: 1px solid #333;
+  border-radius: 9px;
+  background: #191919;
+}
+.cat-label {
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  color: #888;
+  padding-right: 2px;
+  user-select: none;
+  -webkit-user-select: none;
+  white-space: nowrap;
+}
+
+/* 線＝青系 */
+.cat-line { border-color: #2b4a70; }
+.cat-line .cat-label { color: #7fb6ff; }
+.cat-line .tool-btn { border-color: #3f7fd0; }
+.cat-line .tool-btn.active { background: #1a6bcc; border-color: #a9d2ff; color: #fff; }
+
+/* 囲い＝緑系 */
+.cat-box { border-color: #235c45; }
+.cat-box .cat-label { color: #5fd6a0; }
+.cat-box .tool-btn { border-color: #2e9e6b; }
+.cat-box .tool-btn.active { background: #16805a; border-color: #9df0c8; color: #fff; }
+
+/* 塗り＝橙系 */
+.cat-fill { border-color: #6b4614; }
+.cat-fill .cat-label { color: #ffb861; }
+.cat-fill .tool-btn { border-color: #c8802a; }
+.cat-fill .tool-btn.active { background: #ad6a12; border-color: #ffd6a0; color: #fff; }
+
+/* ユーティリティ＝グレー系（左端ブロック） */
+.cat-util { border-color: #3a3a3a; }
+.cat-util .cat-label { color: #999; }
+.cat-util .tool-btn { border-color: #4a4a4a; }
+.cat-util .tool-btn.active { background: #555; border-color: #999; color: #fff; }
+
 #color-picker {
-  width: 40px;
-  height: 36px;
+  width: 36px;
+  height: 32px;
   border: none;
-  border-radius: 8px;
+  border-radius: 7px;
   cursor: pointer;
   padding: 2px;
   background: #2e2e2e;
 }
 
 #stroke-size {
-  width: 70px;
+  width: 64px;
   accent-color: #4a9eff;
 }
 
-/* ツールのグループ区切り（ペン系／図形系／塗り系／その他） */
+/* ツールのグループ区切り（旧レイアウト互換） */
 .sep { width: 2px; background: #4a4a4a; border-radius: 1px; margin: 2px 6px; align-self: stretch; }
 
 #drop-zone {
@@ -149,36 +209,48 @@ canvas {
 <body>
 
 <div id="toolbar">
-  <!-- ペン系（自由・線） -->
-  <button class="tool-btn" data-tool="pen">✏ ペン</button>
-  <button class="tool-btn" data-tool="underline">／ 線</button>
-  <button class="tool-btn" data-tool="arrow">➤ 矢印</button>
-  <div class="sep"></div>
-  <!-- 図形系（枠線） -->
-  <button class="tool-btn" data-tool="rect">▭ 四角</button>
-  <button class="tool-btn" data-tool="circle">○ 丸</button>
-  <button class="tool-btn" data-tool="cloud">☁ 雲</button>
-  <button class="tool-btn" data-tool="polygon">⬠ 多角形</button>
-  <div class="sep"></div>
-  <!-- 塗り系 -->
-  <button class="tool-btn active" data-tool="black">■ 黒塗り</button>
-  <button class="tool-btn" data-tool="mosaic">⊞ モザイク</button>
-  <button class="tool-btn" data-tool="marker">▬ マーカー</button>
-  <button class="tool-btn" data-tool="fillcircle">● 塗り丸</button>
-  <button class="tool-btn" data-tool="fillcloud">🌩 塗り雲</button>
-  <div class="sep"></div>
-  <!-- その他 -->
-  <button class="tool-btn" data-tool="callout">💬 引き出し</button>
-  <button class="tool-btn" data-tool="trim">✂ トリム</button>
-  <div class="sep"></div>
+  <!-- ユーティリティ（左端ブロック・よく使う順／破壊的操作は端） -->
+  <div class="tool-group cat-util" id="group-util">
+    <span class="cat-label">操作</span>
+    <button class="tool-btn" id="save-btn" style="background:#1a6bcc;color:#fff;border-color:#4a9eff">💾 保存</button>
+    <button class="tool-btn" id="copy-btn" style="background:#1a5c4a;color:#fff;border-color:#2e9e6b">📋 コピー</button>
+    <button class="tool-btn" id="undo-btn">↩ 戻す</button>
+    <button class="tool-btn" data-tool="trim">✂ トリム</button>
+    <button class="tool-btn" id="reset-btn">⟲ リセット</button>
+    <button class="tool-btn" id="clear-btn">🗑 別の画像</button>
+  </div>
+
+  <!-- 線 -->
+  <div class="tool-group cat-line" id="group-line">
+    <span class="cat-label">線</span>
+    <button class="tool-btn" data-tool="pen">✏ ペン</button>
+    <button class="tool-btn" data-tool="underline">／ 線</button>
+    <button class="tool-btn" data-tool="arrow">➤ 矢印</button>
+    <button class="tool-btn" data-tool="callout">💬 引き出し</button>
+    <button class="tool-btn" data-tool="text">T テキスト</button>
+  </div>
+
+  <!-- 囲い -->
+  <div class="tool-group cat-box" id="group-box">
+    <span class="cat-label">囲い</span>
+    <button class="tool-btn" data-tool="rect">▭ 四角</button>
+    <button class="tool-btn" data-tool="circle">○ 丸</button>
+    <button class="tool-btn" data-tool="cloud">☁ 雲</button>
+    <button class="tool-btn" data-tool="polygon">⬠ 多角形</button>
+  </div>
+
+  <!-- 塗り -->
+  <div class="tool-group cat-fill" id="group-fill">
+    <span class="cat-label">塗り</span>
+    <button class="tool-btn active" data-tool="black">■ 黒塗り</button>
+    <button class="tool-btn" data-tool="mosaic">⊞ モザイク</button>
+    <button class="tool-btn" data-tool="marker">▬ マーカー</button>
+    <button class="tool-btn" data-tool="fillcircle">● 塗り丸</button>
+    <button class="tool-btn" data-tool="fillcloud">🌩 塗り雲</button>
+  </div>
+
   <input type="color" id="color-picker" value="#ffff00" title="色">
   <input type="range" id="stroke-size" min="1" max="30" value="4" title="太さ">
-  <div class="sep"></div>
-  <button class="tool-btn" id="undo-btn">↩ 戻す</button>
-  <button class="tool-btn" id="reset-btn">⟲ リセット</button>
-  <button class="tool-btn" id="clear-btn">🗑 別の画像</button>
-  <button class="tool-btn" id="copy-btn" style="background:#1a5c4a;color:#fff">📋 コピー</button>
-  <button class="tool-btn" id="save-btn" style="background:#1a6bcc;color:#fff">💾 保存</button>
 </div>
 
 <div id="drop-zone">
@@ -227,6 +299,7 @@ const UNDO_MAX_BYTES = 256 * 1024 * 1024;
 // 多角形ツール
 let polyPts = [];
 let polyBase = null;        // 多角形開始前のキャンバス内容
+let polyCur = null;         // 直近のカーソル位置（Shift 押下でプレビューを描き直すため）
 let lastTouch = false;      // 直近の入力がタッチか（スナップ半径の切替用）
 const POLY_SNAP_CSS = 12;   // 起点スナップ半径（画面CSSpx／マウス）
 const POLY_SNAP_CSS_TOUCH = 24; // 同（指タッチ）
@@ -242,6 +315,18 @@ const CALLOUT_PAD = 6;
 const CALLOUT_BORDER = 2;
 const CALLOUT_FONT = `700 ${CALLOUT_FONT_PX}px "Noto Sans JP", sans-serif`;
 
+// 単純テキストボックス（T テキスト）：引き出し線の入力オーバーレイを流用する
+let editorMode = 'callout';   // 'callout' | 'text'
+let editorFontPx = CALLOUT_FONT_PX;
+let editorColor = CALLOUT_COLOR;
+// 太さスライダー（1〜30）→ フォントサイズ。既定の 4 で 16px（引き出しと同じ）
+function textFontPx() {
+  return Math.max(10, Math.round(parseInt(strokeSize.value) * 4));
+}
+function textFont(px) {
+  return `700 ${px}px "Noto Sans JP", sans-serif`;
+}
+
 const hints = {
   black: 'ドラッグして黒塗り範囲を指定',
   mosaic: 'ドラッグしてモザイク範囲を指定',
@@ -254,8 +339,9 @@ const hints = {
   fillcloud: 'ドラッグして塗りつぶしの雲を描く（Shiftで正方形範囲）',
   pen: 'なぞってフリーハンド描画',
   arrow: 'ドラッグして矢印を描く（始点→終点）',
-  polygon: 'クリックで頂点を追加／起点クリック・ダブルクリック・Enterで閉じる（Escで中断）',
+  polygon: 'クリックで頂点を追加（Shiftで水平・垂直）／ダブルクリック・Enterで確定（開いたまま）・起点クリックで閉じる（Escで中断）',
   callout: 'クリック1＝指し先、クリック2＝ボックス位置、入力してEnter（Escで中断）',
+  text: 'クリックした位置にテキストを入力してEnter（Shift+Enterで改行・Escで中断）',
   trim: 'ドラッグしてトリミング範囲を指定',
 };
 
@@ -290,8 +376,9 @@ function cancelPending() {
 // 進行中の状態だけ捨てる（キャンバスは触らない＝画像入れ替え・undo時用）
 function discardPending() {
   abortDrag();
-  polyPts = []; polyBase = null;
+  polyPts = []; polyBase = null; polyCur = null;
   calloutTarget = null; calloutBase = null; calloutBox = null;
+  editorMode = 'callout';
   textEditor.style.display = 'none';
   textEditor.value = '';
 }
@@ -459,8 +546,9 @@ function onStart(e) {
 
   // クリック型ツール（ドラッグ描画には入らない）
   const isTouch = !!(e.touches || e.changedTouches);
-  if (currentTool === 'polygon') { handlePolyClick(getPos(e), isTouch); return; }
+  if (currentTool === 'polygon') { handlePolyClick(getPos(e), isTouch, !!e.shiftKey); return; }
   if (currentTool === 'callout') { handleCalloutClick(getPos(e)); return; }
+  if (currentTool === 'text') { handleTextClick(getPos(e)); return; }
 
   drawing = true;
   dragTool = currentTool;
@@ -481,7 +569,9 @@ function onMove(e) {
   // 多角形：確定済み頂点＋カーソルまでのラバーバンドをプレビュー
   if (currentTool === 'polygon' && polyPts.length) {
     e.preventDefault();
-    drawPolyPreview(getPos(e));
+    polyCur = getPos(e);
+    lastShift = !!e.shiftKey;
+    drawPolyPreview(polySnap(polyCur, lastShift));
     return;
   }
   if (!drawing) return;
@@ -714,6 +804,12 @@ function constrain(x, y, shift) {
 // Shift の押下／解放でプレビューを即座に更新（マウスを動かさなくても効く）
 function onShiftToggle(e) {
   if (e.key !== 'Shift') return;
+  // 多角形：ドラッグしていなくても Shift でラバーバンドのスナップを切り替える
+  if (currentTool === 'polygon' && polyPts.length && polyCur) {
+    lastShift = (e.type === 'keydown');
+    drawPolyPreview(polySnap(polyCur, lastShift));
+    return;
+  }
   if (!drawing || !lastPos || !snapshot || !SHIFT_TOOLS.has(dragTool || currentTool)) return;
   lastShift = (e.type === 'keydown');
   renderShape(lastPos.x, lastPos.y, lastShift);
@@ -779,20 +875,35 @@ function polySnapR(touch) {
   return (touch ? POLY_SNAP_CSS_TOUCH : POLY_SNAP_CSS) * pxScale();
 }
 
-function handlePolyClick(p, touch) {
+// Shift 押下中は直前の頂点から水平・垂直にスナップ（移動量が大きい方の軸に揃える＝0°/90°）
+function polySnap(p, shift) {
+  if (!p || !shift || !polyPts.length) return p;
+  const a = polyPts[polyPts.length - 1];
+  const dx = p.x - a.x, dy = p.y - a.y;
+  return Math.abs(dx) >= Math.abs(dy) ? { x: p.x, y: a.y } : { x: a.x, y: p.y };
+}
+
+function handlePolyClick(p, touch, shift) {
   if (!polyPts.length) {
     polyBase = ctx.getImageData(0, 0, canvas.width, canvas.height);
     polyPts = [p];
+    polyCur = p;
     lastTouch = !!touch;
     drawPolyPreview(null);
     return;
   }
   lastTouch = !!touch;
+  polyCur = p;
   // ダブルクリックの2発目など、ほぼ同じ位置の重複クリックは無視
   if (dist(p, polyPts[polyPts.length - 1]) < POLY_DUP_CSS * pxScale()) return;
-  // 起点スナップで閉じる
-  if (polyPts.length >= 2 && dist(p, polyPts[0]) <= polySnapR(touch)) { closePolygon(); return; }
-  polyPts.push(p);
+  const sp = polySnap(p, shift);
+  // 起点スナップで閉じる（閉じるのは「起点クリック」だけ）
+  if (polyPts.length >= 2 &&
+      (dist(p, polyPts[0]) <= polySnapR(touch) || dist(sp, polyPts[0]) <= polySnapR(touch))) {
+    finalizePolygon(true);
+    return;
+  }
+  polyPts.push(sp);
   drawPolyPreview(null);
 }
 
@@ -824,16 +935,18 @@ function drawPolyPreview(cur) {
   ctx.stroke();
 }
 
-function closePolygon() {
+// 確定。closed=true なら閉じた多角形、false なら開いた折れ線のまま確定する
+// （「必ず閉じる」は廃止＝ダブルクリック／Enter は開いたまま確定・起点クリックだけが閉じる）
+function finalizePolygon(closed) {
   if (!polyBase) return;
-  if (polyPts.length < 3) { cancelPending(); return; }
+  if (polyPts.length < (closed ? 3 : 2)) { cancelPending(); return; }
   ctx.putImageData(polyBase, 0, 0);
   ctx.setLineDash([]);
   ctx.strokeStyle = colorPicker.value;
   ctx.lineWidth = parseInt(strokeSize.value);
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  strokePolyPath(true, null);
+  strokePolyPath(closed, null);
   discardPending();
   saveState();
 }
@@ -841,13 +954,15 @@ function closePolygon() {
 canvas.addEventListener('dblclick', (e) => {
   if (currentTool !== 'polygon') return;
   e.preventDefault();
-  closePolygon();
+  finalizePolygon(false);
 });
 
 /* ============ 引き出し線テキスト ============ */
 function handleCalloutClick(p) {
   if (textEditor.style.display === 'block') return; // 入力中（blur で確定される）
   if (!calloutTarget) {
+    editorMode = 'callout';
+    editorFontPx = CALLOUT_FONT_PX;
     calloutBase = ctx.getImageData(0, 0, canvas.width, canvas.height);
     calloutTarget = p;
     // 指し先マーカー（プレビューのみ）
@@ -861,15 +976,18 @@ function handleCalloutClick(p) {
   openTextEditor(p);
 }
 
+function editorPad()    { return editorMode === 'text' ? 2 : CALLOUT_PAD; }
+function editorBorder() { return editorMode === 'text' ? 1 : CALLOUT_BORDER; }
+
 function placeTextEditor() {
   if (!calloutBox || textEditor.style.display !== 'block') return;
   const rect = canvas.getBoundingClientRect();
   const s = rect.width / canvas.width;
   textEditor.style.left = (rect.left + calloutBox.x * s) + 'px';
   textEditor.style.top = (rect.top + calloutBox.y * s) + 'px';
-  textEditor.style.fontSize = (CALLOUT_FONT_PX * s) + 'px';
-  textEditor.style.padding = (CALLOUT_PAD * s) + 'px';
-  textEditor.style.borderWidth = (CALLOUT_BORDER * s) + 'px';
+  textEditor.style.fontSize = (editorFontPx * s) + 'px';
+  textEditor.style.padding = (editorPad() * s) + 'px';
+  textEditor.style.borderWidth = (editorBorder() * s) + 'px';
 }
 
 // スクロール・リサイズ・スマホのソフトキーボードで位置がズレないよう追随させる
@@ -879,9 +997,49 @@ window.addEventListener('scroll', placeTextEditor, true);
 window.visualViewport?.addEventListener('resize', placeTextEditor);
 window.visualViewport?.addEventListener('scroll', placeTextEditor);
 
+/* ---- 単純テキストボックス（T テキスト）---- */
+// クリックした位置にテキストを置く。色＝カラーピッカー／サイズ＝太さスライダー連動
+function handleTextClick(p) {
+  // 入力中に別の場所を押したら、まず今の入力を確定させる
+  // （mousedown で preventDefault しているため blur は明示的に呼ぶ）
+  if (textEditor.style.display === 'block') { textEditor.blur(); return; }
+  editorMode = 'text';
+  editorColor = colorPicker.value;
+  editorFontPx = textFontPx();
+  if (document.fonts?.load) document.fonts.load(textFont(editorFontPx), 'あ').catch(() => {});
+  calloutBase = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  calloutTarget = null;      // テキストは指し先なし
+  calloutBox = p;
+  openTextEditor(p);
+}
+
+// テキスト本体の描画（枠・引き出し線なし）
+function drawPlainText(pos, text, color, fontPx) {
+  const lines = text.split('\n');
+  const lh = Math.round(fontPx * 1.4);
+  ctx.save();
+  ctx.setLineDash([]);
+  ctx.font = textFont(fontPx);
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = color;
+  const pad = editorPad();
+  lines.forEach((l, i) => ctx.fillText(l, pos.x + pad, pos.y + pad + i * lh));
+  ctx.restore();
+}
+
 function openTextEditor(p) {
   textEditor.value = '';
   textEditor.style.display = 'block';
+  if (editorMode === 'text') {
+    textEditor.style.color = editorColor;
+    textEditor.style.borderColor = editorColor;
+    textEditor.style.borderStyle = 'dashed';
+  } else {
+    textEditor.style.color = CALLOUT_COLOR;
+    textEditor.style.borderColor = CALLOUT_COLOR;
+    textEditor.style.borderStyle = 'solid';
+  }
   placeTextEditor();
   textEditor.rows = 1;
   textEditor.style.height = 'auto';
@@ -916,11 +1074,14 @@ textEditor.addEventListener('blur', () => {
 function commitCallout() {
   if (textEditor.style.display !== 'block') return;
   const text = textEditor.value.replace(/\s+$/, '');
+  const mode = editorMode;
   const target = calloutTarget, box = calloutBox, base = calloutBase;
+  const color = editorColor, fontPx = editorFontPx;
   textEditor.style.display = 'none';
-  if (!text || !target || !box || !base) { cancelPending(); return; }
+  if (!text || !box || !base || (mode === 'callout' && !target)) { cancelPending(); return; }
   ctx.putImageData(base, 0, 0);
-  drawCallout(target, box, text);
+  if (mode === 'text') drawPlainText(box, text, color, fontPx);
+  else drawCallout(target, box, text);
   discardPending();
   saveState();
   hint.textContent = hints[currentTool] || '';
@@ -985,7 +1146,7 @@ document.addEventListener('keydown', (e) => {
 
   if (e.key === 'Enter' && currentTool === 'polygon' && polyPts.length) {
     e.preventDefault();
-    closePolygon();
+    finalizePolygon(false);   // 開いた折れ線として確定（閉じるのは起点クリック）
     return;
   }
   if (e.key === 'Escape') {
@@ -1020,7 +1181,7 @@ document.addEventListener('keydown', (e) => {
   const keys = {
     '1':'black','2':'mosaic','3':'marker','4':'underline','5':'circle','6':'pen',
     '7':'trim','8':'polygon','9':'callout','0':'rect','a':'arrow',
-    'c':'cloud','f':'fillcircle','g':'fillcloud',
+    'c':'cloud','f':'fillcircle','g':'fillcloud','t':'text',
   };
   if (keys[e.key]) {
     const btn = document.querySelector(`[data-tool="${keys[e.key]}"]`);
